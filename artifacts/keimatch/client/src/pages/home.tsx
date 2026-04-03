@@ -3,10 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ArrowRight, CheckCircle2, Zap, Bell, CreditCard,
-  FileText, MapPin, Users, Building2, ChevronRight
-} from "lucide-react";
+import { CheckCircle2, Building2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { Announcement } from "@shared/schema";
 
@@ -145,43 +142,31 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-14">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground" style={{ letterSpacing: "-0.01em" }}>
-              4ステップで採用が完結
+              3ステップで採用が完結
             </h2>
-            <p className="mt-3 text-muted-foreground">面倒な手続き不要。登録からIndeed掲載まで最短1日。</p>
+            <p className="mt-3 text-muted-foreground">最短1分で求人を公開。あとは応募を待つだけ。</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
               {
                 step: "01",
-                icon: <FileText className="w-6 h-6 text-primary" />,
-                title: "求人を登録",
-                desc: "会社情報・エリア・職種・給与などを入力するだけ。数分で完了。",
+                title: "求人をAI登録（1分）",
+                desc: "会社情報を入力するとAIが求人文を自動生成。面倒な文章作りは不要です。",
               },
               {
                 step: "02",
-                icon: <Zap className="w-6 h-6 text-primary" />,
-                title: "Indeed に自動掲載",
-                desc: "XMLフィードで求人がIndeedへ自動公開。追加作業ゼロ。",
+                title: "Indeedに自動で公開",
+                desc: "登録した求人はIndeedへ自動連携。追加の操作は一切不要。",
               },
               {
                 step: "03",
-                icon: <Bell className="w-6 h-6 text-primary" />,
-                title: "応募を即通知",
-                desc: "応募が届いたらLINE・メールでリアルタイム通知。見逃しなし。",
+                title: "応募が来たらメールで即通知",
+                desc: "応募が届いた瞬間にメールでお知らせ。ダッシュボードで応募者を確認できます。",
               },
-              {
-                step: "04",
-                icon: <CreditCard className="w-6 h-6 text-primary" />,
-                title: "成果課金",
-                desc: "応募通知1件につき3,000円。採用できなければ費用なし。",
-              },
-            ].map(({ step, icon, title, desc }) => (
+            ].map(({ step, title, desc }) => (
               <Card key={step} className="relative overflow-hidden border border-border">
                 <CardContent className="p-6">
                   <p className="text-5xl font-black text-primary/10 leading-none mb-4 select-none">{step}</p>
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    {icon}
-                  </div>
                   <h3 className="font-bold text-foreground text-base mb-2">{title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                 </CardContent>
@@ -202,38 +187,32 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
-                icon: <MapPin className="w-8 h-8 text-primary" />,
-                title: "軽貨物特化",
+                title: "初期費用０・月額費用０",
                 points: [
-                  "軽貨物・運送業に最適化した求人フォーム",
-                  "都道府県・職種・雇用形態で細かく設定",
-                  "Indeedの軽貨物カテゴリに最適化されたXML配信",
+                  "アカウント登録は完全無料",
+                  "求人掲載中も費用はかかりません",
+                  "応募が来るまで一切費用は発生しません",
                 ],
               },
               {
-                icon: <Bell className="w-8 h-8 text-primary" />,
-                title: "即時通知で機会損失ゼロ",
+                title: "応募を見逃さない通知",
                 points: [
-                  "応募からLINE通知まで数秒",
-                  "メールでも並行通知",
-                  "ダッシュボードで応募者一覧を一元管理",
+                  "応募が届いた瞬間にメールで通知",
+                  "ダッシュボードで応募者を一元管理",
+                  "既読・未読・採否を簡単に管理",
                 ],
               },
               {
-                icon: <CreditCard className="w-8 h-8 text-primary" />,
-                title: "シンプルな課金",
+                title: "シンプルな成果課金",
                 points: [
-                  "初期費用・月額費用ゼロ",
-                  "応募通知1件 3,000円のみ",
-                  "Square決済で安全・自動課金",
+                  "料金は3,000円 / 応募のみ",
+                  "採用できなければ費用なし",
+                  "複雑なプランは一切なし",
                 ],
               },
-            ].map(({ icon, title, points }) => (
+            ].map(({ title, points }) => (
               <Card key={title}>
                 <CardContent className="p-6">
-                  <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
-                    {icon}
-                  </div>
                   <h3 className="text-lg font-bold text-foreground mb-4">{title}</h3>
                   <ul className="space-y-2">
                     {points.map((p) => (
@@ -281,7 +260,7 @@ export default function Home() {
               </ul>
               <Link href="/register">
                 <Button className="w-full" size="lg" data-testid="button-pricing-register">
-                  <Users className="w-4 h-4 mr-2" />
+                  <Building2 className="w-4 h-4 mr-2" />
                   無料で企業登録
                 </Button>
               </Link>
@@ -307,7 +286,6 @@ export default function Home() {
                 data-testid="button-cta-register"
               >
                 企業登録 – 無料で始める
-                <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
             <Link href="/contact">
