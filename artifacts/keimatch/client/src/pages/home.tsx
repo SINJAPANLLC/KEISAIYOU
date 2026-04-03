@@ -308,7 +308,7 @@ export default function Home() {
       </section>
 
       {/* ─── SIN LOGO WALL ─── */}
-      <section className="py-10 bg-gray-50 border-y border-border/40">
+      <section className="py-10 bg-white border-y border-border/40">
         <style>{`
           .sin-slider{height:120px;overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
           .sin-slide-track{display:flex;width:calc(200px * 8);animation:sinScroll 22s linear infinite;will-change:transform;}
