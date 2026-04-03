@@ -243,7 +243,6 @@ export default function Home() {
                   "初期費用・月額費用なし",
                   "メール即時通知",
                   "応募者ダッシュボード",
-                  "Square自動課金",
                   "請求履歴管理",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2 text-sm text-foreground">
