@@ -84,21 +84,36 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
           <div className="text-center max-w-3xl mx-auto">
             <p className="text-sm font-semibold text-white/70 tracking-widest uppercase mb-4">
-              軽貨物特化 採用プラットフォーム
+              軽貨物ドライバー 採用プラットフォーム
             </p>
             <h1
               className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight"
               style={{ letterSpacing: "-0.02em" }}
               data-testid="text-hero-title"
             >
-              軽貨物ドライバー採用は、<br className="hidden sm:block" />
-              これだけでいい。
+              軽貨物ドライバー採用は<br className="hidden sm:block" />
+              これだけでいい
             </h1>
-            <p className="mt-6 text-base sm:text-lg text-white/80 leading-relaxed max-w-xl mx-auto" data-testid="text-hero-subtitle">
-              求人を登録するだけで Indeed に自動掲載。<br />
-              応募が来たら LINE・メールで即通知。<br />
-              課金は採用成果ベース、<strong className="text-white">3,000円 / 件</strong>のシンプルな料金体系。
+            <p className="mt-5 text-lg sm:text-xl font-bold text-white" data-testid="text-hero-free">
+              初期費用０・月額費用０
             </p>
+            <p className="mt-1 text-sm text-white/80" data-testid="text-hero-free-sub">
+              応募が来るまで一切費用はかかりません
+            </p>
+            <ul className="mt-6 space-y-2 text-base sm:text-lg text-white/85 leading-relaxed max-w-xl mx-auto text-left inline-block" data-testid="text-hero-subtitle">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-white/70" />
+                求人をAI登録するだけ（1分）
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-white/70" />
+                応募が来たらメールですぐ通知
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 shrink-0 text-white/70" />
+                料金は<strong className="text-white">3,000円 / 応募</strong>のシンプルな料金プラン
+              </li>
+            </ul>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register">
                 <Button
