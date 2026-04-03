@@ -8,15 +8,15 @@ import type { Notification } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import logoImage from "@assets/logo-keisaiyou.jpg";
 
 function BrandLogo({ size = "normal" }: { size?: "small" | "normal" }) {
   return (
-    <span
-      className={`font-extrabold tracking-tight text-primary ${size === "small" ? "text-lg" : "text-xl sm:text-2xl"}`}
-      style={{ letterSpacing: "-0.02em" }}
-    >
-      KEI SAIYOU
-    </span>
+    <img
+      src={logoImage}
+      alt="KEI SAIYOU"
+      className={size === "small" ? "h-7 w-auto" : "h-8 sm:h-9 w-auto"}
+    />
   );
 }
 

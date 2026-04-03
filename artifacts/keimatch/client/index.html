@@ -26,8 +26,8 @@
   <body>
     <div id="splash-screen" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#fff;transition:opacity 0.5s ease-out">
       <div class="splash-inner" style="text-align:center">
-        <div style="font-size:2.2rem;font-weight:800;color:#e85d04;letter-spacing:-0.02em;font-family:'Open Sans',sans-serif">KEI SAIYOU</div>
-        <div style="font-size:0.85rem;color:#888;margin-top:8px;font-family:'Open Sans',sans-serif">軽貨物特化 採用プラットフォーム</div>
+        <img src="/logo-keisaiyou.jpg" alt="KEI SAIYOU" class="splash-logo" />
+        <div style="font-size:0.8rem;color:#999;margin-top:10px;font-family:'Open Sans',sans-serif">軽貨物特化 採用プラットフォーム</div>
       </div>
     </div>
     <style>
@@ -35,6 +35,12 @@
         animation: splashFadeUp 0.7s ease-out forwards;
         opacity: 0;
         transform: translateY(16px);
+      }
+      .splash-logo {
+        height: 48px;
+        width: auto;
+        margin: 0 auto;
+        display: block;
       }
       @keyframes splashFadeUp {
         0% { opacity:0; transform:translateY(16px) }

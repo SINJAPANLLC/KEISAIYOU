@@ -39,7 +39,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <span className="text-2xl font-extrabold text-primary" style={{ letterSpacing: "-0.02em" }}>KEI SAIYOU</span>
+            <img src="/logo-keisaiyou.jpg" alt="KEI SAIYOU" className="h-10 w-auto" />
           </div>
           <CardTitle className="text-2xl">ログイン</CardTitle>
           <p className="text-sm text-muted-foreground">KEI SAIYOUにログインしてください</p>
