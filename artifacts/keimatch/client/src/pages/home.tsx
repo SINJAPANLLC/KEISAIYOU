@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle2, Building2 } from "lucide-react";
+import logoWhite from "@assets/logo-white.jpg";
 import { useQuery } from "@tanstack/react-query";
 import type { Announcement } from "@shared/schema";
 
@@ -91,6 +92,9 @@ export default function Home() {
               軽貨物ドライバー採用は<br className="hidden sm:block" />
               これだけでいい
             </h1>
+            <div className="mt-6 flex justify-center">
+              <img src={logoWhite} alt="KEI SAIYOU" className="h-12 sm:h-14 w-auto rounded" />
+            </div>
             <p className="mt-5 text-lg sm:text-xl font-bold text-white" data-testid="text-hero-free">
               初期費用０・月額費用０
             </p>
