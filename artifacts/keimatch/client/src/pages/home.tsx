@@ -307,6 +307,42 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ─── SIN LOGO WALL ─── */}
+      <section className="py-10 bg-gray-50 border-y border-border/40">
+        <style>{`
+          .sin-slider{height:120px;overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);}
+          .sin-slide-track{display:flex;width:calc(200px * 8);animation:sinScroll 22s linear infinite;will-change:transform;}
+          .sin-slide{width:200px;height:120px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+          .sin-slide img{max-width:160px;max-height:80px;object-fit:contain;display:block;filter:grayscale(20%);opacity:0.85;transition:opacity .2s;}
+          .sin-slide img:hover{opacity:1;filter:none;}
+          @keyframes sinScroll{0%{transform:translateX(0);}100%{transform:translateX(calc(-200px * 4));}}
+          @media(max-width:768px){
+            .sin-slider{height:100px;}
+            .sin-slide-track{width:calc(170px * 8);animation-duration:18s;}
+            .sin-slide{width:170px;height:100px;}
+            .sin-slide img{max-width:130px;max-height:65px;}
+            @keyframes sinScroll{100%{transform:translateX(calc(-170px * 4));}}
+          }
+        `}</style>
+        <div className="sin-slider">
+          <div className="sin-slide-track">
+            {(() => {
+              const sinLogos = [
+                "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1c9b1920-d996-013e-3faf-0a58a9feac02/70617d441cf711e88062963aecd2c947.jpg",
+                "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/095c3f70-d994-013e-82c3-0a58a9feac02/m_logo.png",
+                "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/0f974c20-d994-013e-82c4-0a58a9feac02/nikko-logo.jpg",
+                "https://s3-ap-northeast-1.amazonaws.com/s3.peraichi.com/userData/5b45aaad-02a4-4454-911d-14fb0a0000c5/img/1412ad40-d994-013e-82c6-0a58a9feac02/tmp-75613e906c3e5ab6ea00c4f39150e44f-cff486a9ddccba3a97b5c4297fb3c057.jpg",
+              ];
+              return [...sinLogos, ...sinLogos].map((src, i) => (
+                <div key={`sin-${i}`} className="sin-slide">
+                  <img src={src} alt={`導入企業ロゴ${(i % sinLogos.length) + 1}`} />
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+      </section>
+
       {/* ─── CTA ─── */}
       <section className="bg-primary py-16 sm:py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
