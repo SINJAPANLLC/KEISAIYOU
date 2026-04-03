@@ -35,8 +35,8 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd artifacts/keimatch && NODE_ENV=development /home/runner/.npm/_npx/fd45a72a545557e9/node_modules/.bin/tsx server/index.ts"
-waitForPort = 5000
+args = "cd artifacts/keimatch && PORT=3000 NODE_ENV=development /home/runner/.npm/_npx/fd45a72a545557e9/node_modules/.bin/tsx server/index.ts"
+waitForPort = 3000
 
 [agent]
 stack = "PNPM_WORKSPACE"
