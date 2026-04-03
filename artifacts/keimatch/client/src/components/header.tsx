@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Truck, Package, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, CheckCheck, Trash2, Settings, Building2, Phone, MapPin, Home } from "lucide-react";
+import { Briefcase, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, CheckCheck, Trash2, Settings, Building2, Phone, MapPin, Home } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -8,7 +8,17 @@ import type { Notification } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import logoImage from "@assets/logo.png";
+
+function BrandLogo({ size = "normal" }: { size?: "small" | "normal" }) {
+  return (
+    <span
+      className={`font-extrabold tracking-tight text-primary ${size === "small" ? "text-lg" : "text-xl sm:text-2xl"}`}
+      style={{ letterSpacing: "-0.02em" }}
+    >
+      KEI SAIYOU
+    </span>
+  );
+}
 
 function NotificationDropdown() {
   const [open, setOpen] = useState(false);
@@ -65,8 +75,7 @@ function NotificationDropdown() {
 
   const typeIcon = (type: string) => {
     switch (type) {
-      case "cargo_new": return <Package className="w-4 h-4 text-blue-500" />;
-      case "truck_new": return <Truck className="w-4 h-4 text-green-500" />;
+      case "application_new": return <Briefcase className="w-4 h-4 text-blue-500" />;
       case "user_approved": return <Check className="w-4 h-4 text-emerald-500" />;
       case "user_registered": return <UserPlus className="w-4 h-4 text-purple-500" />;
       default: return <Bell className="w-4 h-4 text-muted-foreground" />;
@@ -254,7 +263,7 @@ export default function Header() {
           <div className="flex items-center justify-between gap-4 h-12">
             <div className="flex items-center gap-4">
               <Link href="/home" className="flex items-center shrink-0" data-testid="text-logo">
-                <img src={logoImage} alt="軽貨物マッチ" className="h-8 w-auto" />
+                <BrandLogo size="small" />
               </Link>
             </div>
 
@@ -273,7 +282,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between gap-4 flex-wrap h-16">
           <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center shrink-0" data-testid="text-logo">
-            <img src={logoImage} alt="軽貨物マッチ" className="h-9 sm:h-10 w-auto" />
+            <BrandLogo />
           </Link>
 
           {navItems.length > 0 && (

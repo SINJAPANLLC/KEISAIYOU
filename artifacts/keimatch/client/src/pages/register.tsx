@@ -8,7 +8,6 @@ import { UserPlus, Upload, FileText, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import logoImage from "@assets/logo.png";
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -89,10 +88,10 @@ export default function Register() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={logoImage} alt="KEI MATCH" className="h-10 w-auto" />
+            <span className="text-2xl font-extrabold text-primary" style={{ letterSpacing: "-0.02em" }}>KEI SAIYOU</span>
           </div>
-          <CardTitle className="text-2xl">新規登録</CardTitle>
-          <p className="text-sm text-muted-foreground">KEI MATCHのアカウントを作成</p>
+          <CardTitle className="text-2xl">企業登録</CardTitle>
+          <p className="text-sm text-muted-foreground">KEI SAIYOUに企業アカウントを作成</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

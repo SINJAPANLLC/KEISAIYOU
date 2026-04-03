@@ -1,48 +1,47 @@
 import { Link } from "wouter";
-import logoImage from "@assets/logo.png";
 
 export default function Footer() {
   return (
-    <footer className="bg-primary mt-auto text-shadow">
+    <footer className="bg-primary mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:flex-1">
-            <div className="flex items-center mb-4">
-              <img src={logoImage} alt="軽貨物マッチ" className="h-10 w-auto brightness-0 invert" />
+            <div className="mb-3">
+              <span className="text-2xl font-extrabold text-white tracking-tight" style={{ letterSpacing: "-0.02em" }}>
+                KEI SAIYOU
+              </span>
             </div>
-            <p className="text-base text-primary-foreground leading-relaxed mb-4">
-              軽貨物ドライバーをつなぐ、AI案件マッチングサービス
+            <p className="text-sm text-primary-foreground/90 leading-relaxed mb-4">
+              軽貨物・運送会社のドライバー採用に特化したプラットフォーム。<br />
+              求人登録でIndeed自動掲載、応募通知・課金まで一括管理。
             </p>
-            <div className="text-sm text-primary-foreground space-y-1">
-              <p className="font-semibold">合同会社SIN JAPAN</p>
-              <p>〒243-0303</p>
-              <p>神奈川県愛甲郡愛川町中津7287</p>
-              <p>TEL 046-212-2325</p>
-              <p>FAX 046-212-2326</p>
+            <div className="text-sm text-primary-foreground/80 space-y-1">
+              <p className="font-semibold text-white">合同会社SIN JAPAN</p>
+              <p>〒243-0303 神奈川県愛甲郡愛川町中津7287</p>
+              <p>TEL 046-212-2325　FAX 046-212-2326</p>
               <p>Mail info@sinjapan.jp</p>
             </div>
           </div>
           <div className="flex gap-8 sm:gap-16 md:gap-20 md:self-end md:pb-2">
             <div>
-              <h3 className="text-base font-semibold text-primary-foreground mb-3">サポート</h3>
-              <ul className="space-y-2 text-base text-primary-foreground">
-                <li><Link href="/guide" className="hover:underline" data-testid="link-guide">ご利用ガイド</Link></li>
-                <li><Link href="/faq" className="hover:underline" data-testid="link-faq">よくある質問</Link></li>
-                <li><Link href="/contact" className="hover:underline" data-testid="link-contact">お問い合わせ</Link></li>
-                <li><Link href="/column" className="hover:underline" data-testid="link-columns">コラム記事</Link></li>
+              <h3 className="text-sm font-semibold text-white mb-3">サポート</h3>
+              <ul className="space-y-2 text-sm text-primary-foreground/80">
+                <li><Link href="/guide" className="hover:text-white transition-colors" data-testid="link-guide">ご利用ガイド</Link></li>
+                <li><Link href="/faq" className="hover:text-white transition-colors" data-testid="link-faq">よくある質問</Link></li>
+                <li><Link href="/contact" className="hover:text-white transition-colors" data-testid="link-contact">お問い合わせ</Link></li>
               </ul>
             </div>
             <div>
-              <h3 className="text-base font-semibold text-primary-foreground mb-3">会社情報</h3>
-              <ul className="space-y-2 text-base text-primary-foreground">
-                <li><Link href="/company-info" className="hover:underline" data-testid="link-company-info">会社情報</Link></li>
-                <li><Link href="/terms" className="hover:underline" data-testid="link-terms">利用規約</Link></li>
-                <li><Link href="/privacy" className="hover:underline" data-testid="link-privacy">プライバシーポリシー</Link></li>
+              <h3 className="text-sm font-semibold text-white mb-3">会社情報</h3>
+              <ul className="space-y-2 text-sm text-primary-foreground/80">
+                <li><Link href="/company-info" className="hover:text-white transition-colors" data-testid="link-company-info">会社情報</Link></li>
+                <li><Link href="/terms" className="hover:text-white transition-colors" data-testid="link-terms">利用規約</Link></li>
+                <li><Link href="/privacy" className="hover:text-white transition-colors" data-testid="link-privacy">プライバシーポリシー</Link></li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="mt-8 pt-6 border-t border-primary-foreground/30 text-center text-base text-primary-foreground">
+        <div className="mt-8 pt-6 border-t border-white/20 text-center text-sm text-primary-foreground/70">
           &copy; 2026 SIN JAPAN LLC All rights reserved.
         </div>
       </div>

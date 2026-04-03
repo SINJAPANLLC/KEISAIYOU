@@ -7,7 +7,6 @@ import { LogIn } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import logoImage from "@assets/logo.png";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -40,10 +39,10 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={logoImage} alt="KEI MATCH" className="h-10 w-auto" />
+            <span className="text-2xl font-extrabold text-primary" style={{ letterSpacing: "-0.02em" }}>KEI SAIYOU</span>
           </div>
           <CardTitle className="text-2xl">ログイン</CardTitle>
-          <p className="text-sm text-muted-foreground">KEI MATCHにログインしてください</p>
+          <p className="text-sm text-muted-foreground">KEI SAIYOUにログインしてください</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
