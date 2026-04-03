@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:flex-1">
             <div className="mb-3">
-              <img src="/logo-white.jpg" alt="KEI SAIYOU" className="h-9 w-auto" />
+              <img src="/logo-white.png" alt="KEI SAIYOU" className="h-9 w-auto" />
             </div>
             <div className="text-sm text-primary-foreground/80 space-y-1">
               <p className="font-semibold text-white">合同会社SIN JAPAN</p>

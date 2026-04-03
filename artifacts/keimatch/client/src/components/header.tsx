@@ -8,7 +8,7 @@ import type { Notification } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import logoImage from "@assets/logo-keisaiyou.jpg";
+import logoImage from "@assets/logo-keisaiyou.png";
 
 function BrandLogo({ size = "normal" }: { size?: "small" | "normal" }) {
   return (

@@ -88,7 +88,7 @@ export default function Register() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src="/logo-keisaiyou.jpg" alt="KEI SAIYOU" className="h-10 w-auto" />
+            <img src="/logo-keisaiyou.png" alt="KEI SAIYOU" className="h-10 w-auto" />
           </div>
           <CardTitle className="text-2xl">企業登録</CardTitle>
           <p className="text-sm text-muted-foreground">KEI SAIYOUに企業アカウントを作成</p>

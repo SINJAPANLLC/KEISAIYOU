@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CheckCircle2, Building2 } from "lucide-react";
-import logoWhite from "@assets/logo-white.jpg";
+import logoWhite from "@assets/logo-white.png";
 import { useQuery } from "@tanstack/react-query";
 import type { Announcement } from "@shared/schema";
 
