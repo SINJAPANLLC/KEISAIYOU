@@ -11,10 +11,6 @@ export default function Footer() {
                 KEI SAIYOU
               </span>
             </div>
-            <p className="text-sm text-primary-foreground/90 leading-relaxed mb-4">
-              軽貨物・運送会社のドライバー採用に特化したプラットフォーム。<br />
-              求人登録から応募通知・課金まで一括管理。
-            </p>
             <div className="text-sm text-primary-foreground/80 space-y-1">
               <p className="font-semibold text-white">合同会社SIN JAPAN</p>
               <p>〒243-0303 神奈川県愛甲郡愛川町中津7287</p>
