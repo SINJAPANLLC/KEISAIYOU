@@ -142,11 +142,11 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-14">
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground" style={{ letterSpacing: "-0.01em" }}>
-              3ステップで採用が完結
+              2ステップで採用が完結
             </h2>
-            <p className="mt-3 text-muted-foreground">最短1分で求人を公開。あとは応募を待つだけ。</p>
+            <p className="mt-3 text-muted-foreground">最短1分で求人を登録。あとは応募を待つだけ。</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
             {[
               {
                 step: "01",
@@ -155,11 +155,6 @@ export default function Home() {
               },
               {
                 step: "02",
-                title: "Indeedに自動で公開",
-                desc: "登録した求人はIndeedへ自動連携。追加の操作は一切不要。",
-              },
-              {
-                step: "03",
                 title: "応募が来たらメールで即通知",
                 desc: "応募が届いた瞬間にメールでお知らせ。ダッシュボードで応募者を確認できます。",
               },
@@ -246,8 +241,7 @@ export default function Home() {
               <ul className="text-left space-y-3 mb-8">
                 {[
                   "初期費用・月額費用なし",
-                  "Indeed XML自動配信",
-                  "LINE・メール即時通知",
+                  "メール即時通知",
                   "応募者ダッシュボード",
                   "Square自動課金",
                   "請求履歴管理",
