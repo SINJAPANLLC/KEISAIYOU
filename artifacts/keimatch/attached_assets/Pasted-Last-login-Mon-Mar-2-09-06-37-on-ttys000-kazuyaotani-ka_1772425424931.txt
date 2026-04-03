@@ -1,0 +1,829 @@
+Last login: Mon Mar  2 09:06:37 on ttys000
+kazuyaotani@kazuya-MacBook-Air ~ % # 1. デスクトップのフォルダに移動
+cd ~/Desktop/keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu
+
+# 2. Gitリポジトリを初期化
+git init
+
+# 3. リモートリポジトリを追加
+git remote add origin https://github.com/SINJAPANLLC/keimatch.git
+
+# 4. 全ファイルをステージング
+git add .
+
+# 5. コミット
+git commit -m "Initial commit: KEI MATCH"
+
+# 6. メインブランチとしてプッシュ
+git branch -M main
+git push -u origin main --force
+zsh: command not found: #
+zsh: command not found: #
+Reinitialized existing Git repository in /Users/kazuyaotani/Desktop/keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/.git/
+zsh: command not found: #
+zsh: command not found: #
+zsh: command not found: #
+On branch main
+nothing to commit, working tree clean
+zsh: command not found: #
+Enumerating objects: 904, done.
+Counting objects: 100% (904/904), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (892/892), done.
+Writing objects: 100% (904/904), 21.12 MiB | 423.00 KiB/s, done.
+Total 904 (delta 435), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (435/435), done.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Google OAuth Client ID ————————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:19
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:3
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:17
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFq1KtTtyIbcHMFwJZsABFIY4
+remote:     
+remote:     
+remote:       —— Google OAuth Client Secret ————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:20
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:4
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:18
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpw3hgv2UDc1pD0XD0xJiVlr
+remote:     
+remote:     
+remote:       —— Google OAuth Refresh Token ————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:21
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:5
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:19
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpvM4pi5sMX01u9NJogUQP5b
+remote:     
+remote:     
+remote:       —— OpenAI API Key ————————————————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671878734.txt:289
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt:289
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt:305
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt:841
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-t-srv1087935-var-www-tramatch-pm2-logs-tramatch-lines-1_1771434707851.txt:49
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpzEtyfmKtb6GDwYoBplbOt9
+remote:     
+remote: 
+remote: 
+To https://github.com/SINJAPANLLC/keimatch.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/SINJAPANLLC/keimatch.git'
+kazuyaotani@kazuya-MacBook-Air keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % # 1. .gitignoreにattached_assetsを追加
+echo "attached_assets/" >> .gitignore
+
+# 2. Gitのキャッシュからattached_assetsを削除
+git rm -r --cached attached_assets/
+
+# 3. コミットし直す
+git add .
+git commit -m "Remove attached_assets with secrets"
+
+# 4. プッシュ
+git push -u origin main --force
+zsh: command not found: #
+zsh: command not found: #
+rm 'attached_assets/IMG_0028_1771436176968.JPG'
+rm 'attached_assets/IMG_0046_1771206816410.jpg'
+rm 'attached_assets/IMG_0046_1771226022407.jpg'
+rm 'attached_assets/IMG_0046_1771666319581.jpg'
+rm 'attached_assets/IMG_0049_1771221036504.jpg'
+rm 'attached_assets/IMG_0077_1771571165478.JPG'
+rm 'attached_assets/IMG_0211_1772418813989.JPG'
+rm 'attached_assets/IMG_0213_1772414648452.jpg'
+rm 'attached_assets/IMG_0215_1772415171642.PNG'
+rm 'attached_assets/Pasted---1771401862278_1771401862279.txt'
+rm 'attached_assets/Pasted--4-2-HTML--1771394723269_1771394723269.txt'
+rm 'attached_assets/Pasted--C-root-srv1087935-var-www-tramatch-cat-env-DATABASE-UR_1771434733949.txt'
+rm 'attached_assets/Pasted--Done-in-254ms-PM2-Starting-root-nvm-versions-node-v20-_1772035175693.txt'
+rm 'attached_assets/Pasted--ENV-NEON-DATABASE-URL-SESSION-SECRET-OPENAI-API-KEY-SM_1772038669493.txt'
+rm 'attached_assets/Pasted--Node-js-v20-20-0-1-Exit-1-node-dist-index-cjs-curl-7-F_1771671194411.txt'
+rm 'attached_assets/Pasted--PM2-Saving-current-proc-1772035549918_1772035549918.txt'
+rm 'attached_assets/Pasted--PM2-Saving-current-process-list-PM2-Successfully-saved_1771671983174.txt'
+rm 'attached_assets/Pasted--Run-npm-audit-for-details-root-srv1087935-var-www-tram_1771434636126.txt'
+rm 'attached_assets/Pasted--SEO-Web-SEO-SEO--1771963569583_1771963569583.txt'
+rm 'attached_assets/Pasted--SEO-Web-https-tramatch-sinjapan-com-SEO--1771963327458_1771963327458.txt'
+rm 'attached_assets/Pasted--Starting-usr-bin-bash-in-fork-mode-1-instance-PM2-Done_1772037658492.txt'
+rm 'attached_assets/Pasted--TAILING-Tailing-last-20-lines-for-poker-process-change_1772037518328.txt'
+rm 'attached_assets/Pasted--Type-unauthorized-Detail-84-32-84-32-Invalid-response-_1771435046554.txt'
+rm 'attached_assets/Pasted--backend-service-Work-Now-Backend-FastAPI-Loaded-loaded_1772038563113.txt'
+rm 'attached_assets/Pasted--built-in-6-81s-building-server-dist-index-cjs-2-9mb-Do_1771438034024.txt'
+rm 'attached_assets/Pasted--curl-http-localhost-5050-DATABASE-URL-postgresql-neond_1771671128339.txt'
+rm 'attached_assets/Pasted--dist-public-assets-cargo-form-Dim9YnS6-js-120-61-kB-gz_1772031550384.txt'
+rm 'attached_assets/Pasted--div-class-logo-wall-1-div-class-slider-div-class-slide_1771394471082.txt'
+rm 'attached_assets/Pasted--etc-nginx-sites-enabled-worknow-nginx-t-systemctl-relo_1772038531002.txt'
+rm 'attached_assets/Pasted--id-name--1771939885487_1771939885487.txt'
+rm 'attached_assets/Pasted--id-name--1772038094963_1772038094963.txt'
+rm 'attached_assets/Pasted--id-name--1772038633034_1772038633034.txt'
+rm 'attached_assets/Pasted--name-mode-status-cpu-memory--1772035223600_1772035223601.txt'
+rm 'attached_assets/Pasted--name-mode-status-cpu-memory--1772038192412_1772038192412.txt'
+rm 'attached_assets/Pasted--poker-fork-0-online-0-17-3mb-0-tramatch--1772035336065_1772035336066.txt'
+rm 'attached_assets/Pasted--poker-fork-17-errored-0-0b-3-sinjapan-manager--1772037_1772037462491.txt'
+rm 'attached_assets/Pasted--rest-express-1-0-0-build-tsx-script-build-ts-building-_1771666478806.txt'
+rm 'attached_assets/Pasted--rest-express-1-0-0-build-tsx-script-build-ts-building-_1772033189165.txt'
+rm 'attached_assets/Pasted--rest-express-1-0-0-dev-NODE-ENV-development-tsx-server_1772115239063.txt'
+rm 'attached_assets/Pasted--title-TRAMATCH-AI-title-meta-name-description-content-_1771437641393.txt'
+rm 'attached_assets/Pasted--var-www-tramatch-npm-run-build-cp-client-public-favico_1771470470805.txt'
+rm 'attached_assets/Pasted--venv-root-srv1087935-var-www-worknow-pm2-delet-1772038_1772038120891.txt'
+rm 'attached_assets/Pasted--worknow-7-id-1772037568776_1772037568776.txt'
+rm 'attached_assets/Pasted-2-Saving-current-process-list-PM2-Successfully-saved-in_1772038250979.txt'
+rm 'attached_assets/Pasted-2ace3674543cee4773afbaae2-bin-create-mode-100644-local-_1772031876235.txt'
+rm 'attached_assets/Pasted-B-dist-public-assets-cancelled-cargo-BSmZdqjK-js-21-60-_1772037409271.txt'
+rm 'attached_assets/Pasted-Expanded-Security-Maintenance-for-Applications-is-not-e_1771441887523.txt'
+rm 'attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771665425209.txt'
+rm 'attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771665841863.txt'
+rm 'attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771666657668.txt'
+rm 'attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771666712120.txt'
+rm 'attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771666843222.txt'
+rm 'attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771668645746.txt'
+rm 'attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771671318934.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-14-21-38-42-on-ttys001-kazuyaotani-M_1771433808003.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-14-21-38-42-on-ttys001-kazuyaotani-M_1771433840388.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-14-21-38-42-on-ttys001-kazuyaotani-M_1771433887033.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670650872.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670696627.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670733271.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670778745.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-43-20-on-ttys002-kazuyaotani-M_1771671407083.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-55-56-on-ttys001-kazuyaotani-M_1771671687476.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671779316.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671800691.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671847933.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671878734.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671906296.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671930483.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771672011996.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-55-on-ttys002-kazuyaotani-M_1771939084997.txt'
+rm 'attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-55-on-ttys002-kazuyaotani-M_1771939188714.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590078425.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590189824.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590273123.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590567884.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590931520.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771591418489.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771591552389.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771591872653.txt'
+rm 'attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771592898703.txt'
+rm 'attached_assets/Pasted-Last-login-Tue-Feb-24-22-16-16-on-ttys001-kazuyaotani-M_1771965945157.txt'
+rm 'attached_assets/Pasted-Last-login-Tue-Feb-24-22-16-16-on-ttys001-kazuyaotani-M_1771966249433.txt'
+rm 'attached_assets/Pasted-Last-login-Wed-Feb-25-05-40-46-on-ttys001-kazuyaotani-M_1771989990643.txt'
+rm 'attached_assets/Pasted-Last-login-Wed-Feb-25-12-20-04-on-ttys001-kazuyaotani-k_1772035066901.txt'
+rm 'attached_assets/Pasted-Last-login-Wed-Feb-25-12-20-04-on-ttys001-kazuyaotani-k_1772035130110.txt'
+rm 'attached_assets/Pasted-M2-tramatch-19--1772033131790_1772033131790.txt'
+rm 'attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt'
+rm 'attached_assets/Pasted-PM2-tramatch-0--1772035265303_1772035265303.txt'
+rm 'attached_assets/Pasted-Privacy-Policy--1771402203675_1771402203676.txt'
+rm 'attached_assets/Pasted-Saving-current-process-list-PM2-Successfully-saved-in-r_1772037881518.txt'
+rm 'attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt'
+rm 'attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt'
+rm 'attached_assets/Pasted-d-models-inflating-toramatutiTRAMATCHorGuo-Nei-Zui-Da-J_1771442005187.txt'
+rm 'attached_assets/Pasted-date-env-to-update-environment-variables-PM2-Applying-a_1771437852222.txt'
+rm 'attached_assets/Pasted-device-60-3-100-60-3-100-libavfilter-9-12-100-9-12-100-_1772035097904.txt'
+rm 'attached_assets/Pasted-ent-src-lib-inflating-toramatutiTRAMATCHorGuo-Nei-Zui-D_1771441945509.txt'
+rm 'attached_assets/Pasted-id-name-mode-status-cpu-memory--1771671166027_1771671166027.txt'
+rm 'attached_assets/Pasted-ist-index-cjs-2-9mb-Done-in-296ms-Use-update-env-to-upd_1771435830857.txt'
+rm 'attached_assets/Pasted-m2-restart-tramatch-rest-express-1-0-0-build-tsx-script_1771676992056.txt'
+rm 'attached_assets/Pasted-now-frontend-service-loaded-activating-auto-restart-Wor_1772038229847.txt'
+rm 'attached_assets/Pasted-oot-pm2-logs-worknow-error-log-last-5-lines-15-worknow-_1772038174465.txt'
+rm 'attached_assets/Pasted-oot-srv1087935-var-www-tramatch-cd-var-www-tramatch-cat_1771437406167.txt'
+rm 'attached_assets/Pasted-oot-srv1087935-var-www-tramatch-pm2-logs-tramatch-lines_1771671054013.txt'
+rm 'attached_assets/Pasted-public-assets-truck-form-D0-ZZJkS-js-7-95-kB-gzip-3-05-_1771677568869.txt'
+rm 'attached_assets/Pasted-r-fork-15-errored-0-0b-3-sinjapan-manager-for-177203758_1772037585050.txt'
+rm 'attached_assets/Pasted-ranch-main-set-up-to-track-origin-main-kazuyaotani-Mac-_1771939741457.txt'
+rm 'attached_assets/Pasted-root-srv1087935-var-www-tramatch-cat-var-www-tramatch-e_1771434850616.txt'
+rm 'attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-gi_1771670903259.txt'
+rm 'attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-gi_1771670942504.txt'
+rm 'attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-gi_1771672379729.txt'
+rm 'attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-rm_1771670977216.txt'
+rm 'attached_assets/Pasted-root-srv1087935-var-www-tramatch-mv-var-www-tramatch-ec_1771434806724.txt'
+rm 'attached_assets/Pasted-st-login-Thu-Feb-19-02-37-15-on-ttys002-kazuyaotani-Mac_1771441618953.txt'
+rm 'attached_assets/Pasted-t-index-cjs-pm2-restart-tramatch-root-212-85-24-206-s-p_1772031500777.txt'
+rm 'attached_assets/Pasted-t-srv1087935-var-www-poker-pm2-delete-worknow-pm2-save-_1772037730026.txt'
+rm 'attached_assets/Pasted-t-srv1087935-var-www-tramatch-cat-var-www-tramatch-ecos_1771434761520.txt'
+rm 'attached_assets/Pasted-t-srv1087935-var-www-tramatch-pm2-logs-tramatch-lines-1_1771434707851.txt'
+rm 'attached_assets/Pasted-tarting-root-nvm-versions-node-v20-20-0-bin-npm-in-fork_1772037548223.txt'
+rm 'attached_assets/Pasted-tch-fork-0-online-0-19-0mb--1772038692429_1772038692429.txt'
+rm 'attached_assets/Pasted-zuyaotani-Mac-toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noA_1772033721272.txt'
+rm 'attached_assets/google9e31791c0612c5a4_1771435571760.html'
+rm 'attached_assets/image_1771415894627.png'
+rm 'attached_assets/list_1771382941050.xlsx'
+rm 'attached_assets/tra_match_logo_footer.png'
+rm 'attached_assets/tra_match_logo_white.jpg'
+rm 'attached_assets/スクリーンショット_2026-02-16_14.47.10_1771220833774.png'
+rm 'attached_assets/スクリーンショット_2026-02-16_14.59.26_1771221573184.png'
+rm 'attached_assets/スクリーンショット_2026-02-16_15.02.59_1771221783189.png'
+rm 'attached_assets/スクリーンショット_2026-02-16_15.09.41_1771222186150.png'
+rm 'attached_assets/スクリーンショット_2026-02-16_15.19.50_1771222793390.png'
+rm 'attached_assets/スクリーンショット_2026-02-16_15.22.58_1771222981894.png'
+rm 'attached_assets/スクリーンショット_2026-02-16_16.02.39_1771225362915.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_1.42.27_1771260152259.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_1.47.56_1771260481436.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_1.49.09_1771260553341.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_15.43.33_1771310619842.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_17.35.21_1771317325603.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_18.21.56_1771320119746.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_2.01.41_1771261305559.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_2.01.50_1771261314005.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_2.59.11_1771264754130.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_21.43.00_1771332184743.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_21.50.10_1771332615181.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_21.54.16_1771332859234.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_22.12.12_1771333936180.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_22.12.26_1771333949672.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_22.32.19_1771335142665.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_22.34.38_1771335281186.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_22.38.08_1771335490676.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_22.41.33_1771335696858.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_22.49.36_1771336178622.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_23.05.32_1771337137411.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_23.05.43_1771337146532.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_23.20.37_1771338040246.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_23.37.53_1771339077802.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_23.38.15_1771339098389.png'
+rm 'attached_assets/スクリーンショット_2026-02-17_3.06.39_1771265203480.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_0.07.30_1771340852518.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_0.10.41_1771341044828.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_0.34.52_1771342495817.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_0.36.49_1771342612650.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_0.42.55_1771342979476.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_0.43.08_1771342992639.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_0.50.41_1771343444005.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_11.47.04_1771382828589.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_11.48.51_1771382935328.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_12.00.11_1771383614972.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_12.21.49_1771384913607.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_12.40.19_1771386023768.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_14.58.02_1771394286930.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_15.03.20_1771394605914.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_15.11.01_1771395065068.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_15.15.46_1771395353023.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_15.23.06_1771395789050.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_15.30.26_1771396229459.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_16.46.56_1771400824138.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_16.50.11_1771401015729.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_16.52.49_1771401175729.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_17.14.13_1771402456732.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_17.46.41_1771404405742.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_17.50.33_1771404636033.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_17.52.33_1771404757041.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.10.15_1771405819635.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.12.59_1771405982621.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.22.24_1771406547048.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.27.28_1771406851827.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.29.42_1771406985404.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.32.06_1771407130473.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.47.53_1771408077112.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_18.49.50_1771408193567.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_19.00.17_1771408822233.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_19.16.59_1771409824814.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_20.34.46_1771414489714.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_21.33.34_1771418018965.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_21.36.24_1771418188365.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_21.37.35_1771418261483.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_21.39.19_1771418365231.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_22.17.33_1771420657407.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_23.05.53_1771423606074.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_23.20.31_1771424433406.png'
+rm 'attached_assets/スクリーンショット_2026-02-18_23.47.10_1771426033260.png'
+rm 'attached_assets/スクリーンショット_2026-02-19_11.58.14_1771469902972.png'
+rm 'attached_assets/スクリーンショット_2026-02-19_2.08.18_1771434500899.png'
+rm 'attached_assets/スクリーンショット_2026-02-19_3.05.37_1771437950555.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_16.04.16_1771571059552.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_16.14.15_1771571660276.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_16.19.55_1771571997423.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_16.24.40_1771572284044.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_16.25.37_1771572339804.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_16.27.46_1771572468421.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_16.51.19_1771573881591.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_17.18.57_1771575542611.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_17.30.22_1771576225217.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_17.35.03_1771576506631.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_17.41.03_1771576865311.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_17.44.10_1771577052678.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_17.47.47_1771577271248.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_18.35.26_1771580129285.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_19.01.11_1771581673513.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_20.05.11_1771585513784.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_20.48.47_1771588129833.png'
+rm 'attached_assets/スクリーンショット_2026-02-20_21.04.36_1771589079083.png'
+rm 'attached_assets/スクリーンショット_2026-02-21_18.53.04_1771667590898.png'
+rm 'attached_assets/スクリーンショット_2026-02-21_19.46.57_1771670820669.png'
+rm 'attached_assets/スクリーンショット_2026-02-21_19.50.22_1771671030028.png'
+rm 'attached_assets/スクリーンショット_2026-02-21_21.36.39_1771677401855.png'
+rm 'attached_assets/スクリーンショット_2026-02-21_21.50.27_1771678231393.png'
+rm 'attached_assets/スクリーンショット_2026-02-22_5.31.28_1771705890160.png'
+rm 'attached_assets/スクリーンショット_2026-02-22_5.38.16_1771706298011.png'
+rm 'attached_assets/スクリーンショット_2026-02-22_5.40.35_1771706437803.png'
+rm 'attached_assets/スクリーンショット_2026-02-22_5.46.46_1771706808316.png'
+rm 'attached_assets/スクリーンショット_2026-02-22_5.52.14_1771707136726.png'
+rm 'attached_assets/スクリーンショット_2026-02-22_5.55.00_1771707306264.png'
+rm 'attached_assets/スクリーンショット_2026-02-22_5.59.23_1771707565430.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_19.16.05_1771928167660.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_19.19.19_1771928361760.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_19.21.44_1771928507085.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_19.35.32_1771929334276.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_21.19.18_1771935560314.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_21.40.19_1771936821165.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_21.45.42_1771937144347.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_21.49.41_1771937384833.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_21.51.12_1771937475252.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_21.52.46_1771937567981.png'
+rm 'attached_assets/スクリーンショット_2026-02-24_22.21.01_1771939264310.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_10.44.22_1771983869200.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_12.09.48_1771988990482.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_12.16.00_1771989362337.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_23.48.00_1772030882539.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_23.48.08_1772030890467.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_6.01.33_1771966897804.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_6.02.06_1771966930217.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_6.03.12_1771966996052.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_9.18.25_1771978709881.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_9.20.11_1771978816320.png'
+rm 'attached_assets/スクリーンショット_2026-02-25_9.23.41_1771979025129.png'
+rm 'attached_assets/スクリーンショット_2026-02-26_0.00.22_1772031625890.png'
+rm 'attached_assets/スクリーンショット_2026-02-26_0.19.24_1772032768333.png'
+rm 'attached_assets/スクリーンショット_2026-02-26_0.19.55_1772032811795.png'
+rm 'attached_assets/スクリーンショット_2026-02-26_0.33.21_1772033605668.png'
+rm 'attached_assets/スクリーンショット_2026-02-26_1.47.11_1772038035778.png'
+rm 'attached_assets/スクリーンショット_2026-02-26_1.53.17_1772038403023.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.19.31_1772122774427.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.22.14_1772122936834.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.22.52_1772122976372.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.23.02_1772122984974.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.24.37_1772123080143.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.24.52_1772123094857.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.24.59_1772123102457.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.25.08_1772123111100.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.26.07_1772123170776.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.27.55_1772123278822.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.32.29_1772123552643.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.33.35_1772123617543.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.44.49_1772124292733.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.49.36_1772124579332.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_1.51.24_1772124686580.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_2.02.56_1772125378952.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_2.08.14_1772125696795.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_2.09.55_1772125799123.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_2.12.53_1772125975785.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_2.16.40_1772126202737.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_2.30.42_1772127044914.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_2.33.46_1772127229103.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_3.16.25_1772129788624.png'
+rm 'attached_assets/スクリーンショット_2026-02-27_3.33.46_1772130830537.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.41.07_1772415669816.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.42.57_1772415780290.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.44.09_1772415852403.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.45.11_1772415914493.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.45.53_1772415956360.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.47.42_1772416066118.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.49.54_1772416197911.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.51.19_1772416281381.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_10.52.46_1772416369194.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_11.00.10_1772416813860.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_11.18.40_1772417923166.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_11.26.59_1772418420827.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_11.32.55_1772420288246.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_11.33.01_1772420288246.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_12.05.45_1772420749883.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_12.11.15_1772421078596.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_12.24.50_1772421893890.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_13.02.38_1772424160925.png'
+rm 'attached_assets/スクリーンショット_2026-03-02_13.04.57_1772424300674.png'
+rm 'attached_assets/ダウンロード_(1)_1771668225192.png'
+rm 'attached_assets/ダウンロード_(1)_1771668398427.png'
+rm 'attached_assets/名称未設定のデザイン_-_2_1771220391447.PNG'
+rm 'attached_assets/名称未設定のデザイン_-_2_1771436843433.PNG'
+zsh: command not found: #
+[main 0149766] Remove attached_assets with secrets
+ 312 files changed, 1 insertion(+), 47120 deletions(-)
+ delete mode 100644 attached_assets/IMG_0028_1771436176968.JPG
+ delete mode 100644 attached_assets/IMG_0046_1771206816410.jpg
+ delete mode 100644 attached_assets/IMG_0046_1771226022407.jpg
+ delete mode 100644 attached_assets/IMG_0046_1771666319581.jpg
+ delete mode 100644 attached_assets/IMG_0049_1771221036504.jpg
+ delete mode 100644 attached_assets/IMG_0077_1771571165478.JPG
+ delete mode 100644 attached_assets/IMG_0211_1772418813989.JPG
+ delete mode 100644 attached_assets/IMG_0213_1772414648452.jpg
+ delete mode 100644 attached_assets/IMG_0215_1772415171642.PNG
+ delete mode 100644 attached_assets/Pasted---1771401862278_1771401862279.txt
+ delete mode 100644 attached_assets/Pasted--4-2-HTML--1771394723269_1771394723269.txt
+ delete mode 100644 attached_assets/Pasted--C-root-srv1087935-var-www-tramatch-cat-env-DATABASE-UR_1771434733949.txt
+ delete mode 100644 attached_assets/Pasted--Done-in-254ms-PM2-Starting-root-nvm-versions-node-v20-_1772035175693.txt
+ delete mode 100644 attached_assets/Pasted--ENV-NEON-DATABASE-URL-SESSION-SECRET-OPENAI-API-KEY-SM_1772038669493.txt
+ delete mode 100644 attached_assets/Pasted--Node-js-v20-20-0-1-Exit-1-node-dist-index-cjs-curl-7-F_1771671194411.txt
+ delete mode 100644 attached_assets/Pasted--PM2-Saving-current-proc-1772035549918_1772035549918.txt
+ delete mode 100644 attached_assets/Pasted--PM2-Saving-current-process-list-PM2-Successfully-saved_1771671983174.txt
+ delete mode 100644 attached_assets/Pasted--Run-npm-audit-for-details-root-srv1087935-var-www-tram_1771434636126.txt
+ delete mode 100644 attached_assets/Pasted--SEO-Web-SEO-SEO--1771963569583_1771963569583.txt
+ delete mode 100644 attached_assets/Pasted--SEO-Web-https-tramatch-sinjapan-com-SEO--1771963327458_1771963327458.txt
+ delete mode 100644 attached_assets/Pasted--Starting-usr-bin-bash-in-fork-mode-1-instance-PM2-Done_1772037658492.txt
+ delete mode 100644 attached_assets/Pasted--TAILING-Tailing-last-20-lines-for-poker-process-change_1772037518328.txt
+ delete mode 100644 attached_assets/Pasted--Type-unauthorized-Detail-84-32-84-32-Invalid-response-_1771435046554.txt
+ delete mode 100644 attached_assets/Pasted--backend-service-Work-Now-Backend-FastAPI-Loaded-loaded_1772038563113.txt
+ delete mode 100644 attached_assets/Pasted--built-in-6-81s-building-server-dist-index-cjs-2-9mb-Do_1771438034024.txt
+ delete mode 100644 attached_assets/Pasted--curl-http-localhost-5050-DATABASE-URL-postgresql-neond_1771671128339.txt
+ delete mode 100644 attached_assets/Pasted--dist-public-assets-cargo-form-Dim9YnS6-js-120-61-kB-gz_1772031550384.txt
+ delete mode 100644 attached_assets/Pasted--div-class-logo-wall-1-div-class-slider-div-class-slide_1771394471082.txt
+ delete mode 100644 attached_assets/Pasted--etc-nginx-sites-enabled-worknow-nginx-t-systemctl-relo_1772038531002.txt
+ delete mode 100644 attached_assets/Pasted--id-name--1771939885487_1771939885487.txt
+ delete mode 100644 attached_assets/Pasted--id-name--1772038094963_1772038094963.txt
+ delete mode 100644 attached_assets/Pasted--id-name--1772038633034_1772038633034.txt
+ delete mode 100644 attached_assets/Pasted--name-mode-status-cpu-memory--1772035223600_1772035223601.txt
+ delete mode 100644 attached_assets/Pasted--name-mode-status-cpu-memory--1772038192412_1772038192412.txt
+ delete mode 100644 attached_assets/Pasted--poker-fork-0-online-0-17-3mb-0-tramatch--1772035336065_1772035336066.txt
+ delete mode 100644 attached_assets/Pasted--poker-fork-17-errored-0-0b-3-sinjapan-manager--1772037_1772037462491.txt
+ delete mode 100644 attached_assets/Pasted--rest-express-1-0-0-build-tsx-script-build-ts-building-_1771666478806.txt
+ delete mode 100644 attached_assets/Pasted--rest-express-1-0-0-build-tsx-script-build-ts-building-_1772033189165.txt
+ delete mode 100644 attached_assets/Pasted--rest-express-1-0-0-dev-NODE-ENV-development-tsx-server_1772115239063.txt
+ delete mode 100644 attached_assets/Pasted--title-TRAMATCH-AI-title-meta-name-description-content-_1771437641393.txt
+ delete mode 100644 attached_assets/Pasted--var-www-tramatch-npm-run-build-cp-client-public-favico_1771470470805.txt
+ delete mode 100644 attached_assets/Pasted--venv-root-srv1087935-var-www-worknow-pm2-delet-1772038_1772038120891.txt
+ delete mode 100644 attached_assets/Pasted--worknow-7-id-1772037568776_1772037568776.txt
+ delete mode 100644 attached_assets/Pasted-2-Saving-current-process-list-PM2-Successfully-saved-in_1772038250979.txt
+ delete mode 100644 attached_assets/Pasted-2ace3674543cee4773afbaae2-bin-create-mode-100644-local-_1772031876235.txt
+ delete mode 100644 attached_assets/Pasted-B-dist-public-assets-cancelled-cargo-BSmZdqjK-js-21-60-_1772037409271.txt
+ delete mode 100644 attached_assets/Pasted-Expanded-Security-Maintenance-for-Applications-is-not-e_1771441887523.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771665425209.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771665841863.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771666657668.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771666712120.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771666843222.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771668645746.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Fri-Feb-20-21-15-03-on-ttys001-kazuyaotani-M_1771671318934.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-14-21-38-42-on-ttys001-kazuyaotani-M_1771433808003.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-14-21-38-42-on-ttys001-kazuyaotani-M_1771433840388.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-14-21-38-42-on-ttys001-kazuyaotani-M_1771433887033.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670650872.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670696627.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670733271.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-18-14-37-on-ttys001-kazuyaotani-M_1771670778745.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-43-20-on-ttys002-kazuyaotani-M_1771671407083.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-55-56-on-ttys001-kazuyaotani-M_1771671687476.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671779316.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671800691.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671847933.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671878734.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671906296.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671930483.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771672011996.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-55-on-ttys002-kazuyaotani-M_1771939084997.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-55-on-ttys002-kazuyaotani-M_1771939188714.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590078425.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590189824.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590273123.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590567884.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771590931520.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771591418489.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771591552389.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771591872653.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Thu-Feb-19-14-28-57-on-ttys002-kazuyaotani-M_1771592898703.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Tue-Feb-24-22-16-16-on-ttys001-kazuyaotani-M_1771965945157.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Tue-Feb-24-22-16-16-on-ttys001-kazuyaotani-M_1771966249433.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Wed-Feb-25-05-40-46-on-ttys001-kazuyaotani-M_1771989990643.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Wed-Feb-25-12-20-04-on-ttys001-kazuyaotani-k_1772035066901.txt
+ delete mode 100644 attached_assets/Pasted-Last-login-Wed-Feb-25-12-20-04-on-ttys001-kazuyaotani-k_1772035130110.txt
+ delete mode 100644 attached_assets/Pasted-M2-tramatch-19--1772033131790_1772033131790.txt
+ delete mode 100644 attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt
+ delete mode 100644 attached_assets/Pasted-PM2-tramatch-0--1772035265303_1772035265303.txt
+ delete mode 100644 attached_assets/Pasted-Privacy-Policy--1771402203675_1771402203676.txt
+ delete mode 100644 attached_assets/Pasted-Saving-current-process-list-PM2-Successfully-saved-in-r_1772037881518.txt
+ delete mode 100644 attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt
+ delete mode 100644 attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt
+ delete mode 100644 attached_assets/Pasted-d-models-inflating-toramatutiTRAMATCHorGuo-Nei-Zui-Da-J_1771442005187.txt
+ delete mode 100644 attached_assets/Pasted-date-env-to-update-environment-variables-PM2-Applying-a_1771437852222.txt
+ delete mode 100644 attached_assets/Pasted-device-60-3-100-60-3-100-libavfilter-9-12-100-9-12-100-_1772035097904.txt
+ delete mode 100644 attached_assets/Pasted-ent-src-lib-inflating-toramatutiTRAMATCHorGuo-Nei-Zui-D_1771441945509.txt
+ delete mode 100644 attached_assets/Pasted-id-name-mode-status-cpu-memory--1771671166027_1771671166027.txt
+ delete mode 100644 attached_assets/Pasted-ist-index-cjs-2-9mb-Done-in-296ms-Use-update-env-to-upd_1771435830857.txt
+ delete mode 100644 attached_assets/Pasted-m2-restart-tramatch-rest-express-1-0-0-build-tsx-script_1771676992056.txt
+ delete mode 100644 attached_assets/Pasted-now-frontend-service-loaded-activating-auto-restart-Wor_1772038229847.txt
+ delete mode 100644 attached_assets/Pasted-oot-pm2-logs-worknow-error-log-last-5-lines-15-worknow-_1772038174465.txt
+ delete mode 100644 attached_assets/Pasted-oot-srv1087935-var-www-tramatch-cd-var-www-tramatch-cat_1771437406167.txt
+ delete mode 100644 attached_assets/Pasted-oot-srv1087935-var-www-tramatch-pm2-logs-tramatch-lines_1771671054013.txt
+ delete mode 100644 attached_assets/Pasted-public-assets-truck-form-D0-ZZJkS-js-7-95-kB-gzip-3-05-_1771677568869.txt
+ delete mode 100644 attached_assets/Pasted-r-fork-15-errored-0-0b-3-sinjapan-manager-for-177203758_1772037585050.txt
+ delete mode 100644 attached_assets/Pasted-ranch-main-set-up-to-track-origin-main-kazuyaotani-Mac-_1771939741457.txt
+ delete mode 100644 attached_assets/Pasted-root-srv1087935-var-www-tramatch-cat-var-www-tramatch-e_1771434850616.txt
+ delete mode 100644 attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-gi_1771670903259.txt
+ delete mode 100644 attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-gi_1771670942504.txt
+ delete mode 100644 attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-gi_1771672379729.txt
+ delete mode 100644 attached_assets/Pasted-root-srv1087935-var-www-tramatch-cd-var-www-tramatch-rm_1771670977216.txt
+ delete mode 100644 attached_assets/Pasted-root-srv1087935-var-www-tramatch-mv-var-www-tramatch-ec_1771434806724.txt
+ delete mode 100644 attached_assets/Pasted-st-login-Thu-Feb-19-02-37-15-on-ttys002-kazuyaotani-Mac_1771441618953.txt
+ delete mode 100644 attached_assets/Pasted-t-index-cjs-pm2-restart-tramatch-root-212-85-24-206-s-p_1772031500777.txt
+ delete mode 100644 attached_assets/Pasted-t-srv1087935-var-www-poker-pm2-delete-worknow-pm2-save-_1772037730026.txt
+ delete mode 100644 attached_assets/Pasted-t-srv1087935-var-www-tramatch-cat-var-www-tramatch-ecos_1771434761520.txt
+ delete mode 100644 attached_assets/Pasted-t-srv1087935-var-www-tramatch-pm2-logs-tramatch-lines-1_1771434707851.txt
+ delete mode 100644 attached_assets/Pasted-tarting-root-nvm-versions-node-v20-20-0-bin-npm-in-fork_1772037548223.txt
+ delete mode 100644 attached_assets/Pasted-tch-fork-0-online-0-19-0mb--1772038692429_1772038692429.txt
+ delete mode 100644 attached_assets/Pasted-zuyaotani-Mac-toramatutiTRAMATCHorGuo-Nei-Zui-Da-Ji-noA_1772033721272.txt
+ delete mode 100644 attached_assets/google9e31791c0612c5a4_1771435571760.html
+ delete mode 100644 attached_assets/image_1771415894627.png
+ delete mode 100644 attached_assets/list_1771382941050.xlsx
+ delete mode 100644 attached_assets/tra_match_logo_footer.png
+ delete mode 100644 attached_assets/tra_match_logo_white.jpg
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-16_14.47.10_1771220833774.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-16_14.59.26_1771221573184.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-16_15.02.59_1771221783189.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-16_15.09.41_1771222186150.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-16_15.19.50_1771222793390.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-16_15.22.58_1771222981894.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-16_16.02.39_1771225362915.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_1.42.27_1771260152259.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_1.47.56_1771260481436.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_1.49.09_1771260553341.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_15.43.33_1771310619842.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_17.35.21_1771317325603.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_18.21.56_1771320119746.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_2.01.41_1771261305559.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_2.01.50_1771261314005.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_2.59.11_1771264754130.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_21.43.00_1771332184743.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_21.50.10_1771332615181.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_21.54.16_1771332859234.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_22.12.12_1771333936180.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_22.12.26_1771333949672.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_22.32.19_1771335142665.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_22.34.38_1771335281186.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_22.38.08_1771335490676.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_22.41.33_1771335696858.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_22.49.36_1771336178622.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_23.05.32_1771337137411.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_23.05.43_1771337146532.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_23.20.37_1771338040246.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_23.37.53_1771339077802.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_23.38.15_1771339098389.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-17_3.06.39_1771265203480.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_0.07.30_1771340852518.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_0.10.41_1771341044828.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_0.34.52_1771342495817.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_0.36.49_1771342612650.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_0.42.55_1771342979476.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_0.43.08_1771342992639.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_0.50.41_1771343444005.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_11.47.04_1771382828589.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_11.48.51_1771382935328.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_12.00.11_1771383614972.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_12.21.49_1771384913607.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_12.40.19_1771386023768.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_14.58.02_1771394286930.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_15.03.20_1771394605914.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_15.11.01_1771395065068.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_15.15.46_1771395353023.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_15.23.06_1771395789050.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_15.30.26_1771396229459.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_16.46.56_1771400824138.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_16.50.11_1771401015729.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_16.52.49_1771401175729.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_17.14.13_1771402456732.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_17.46.41_1771404405742.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_17.50.33_1771404636033.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_17.52.33_1771404757041.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.10.15_1771405819635.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.12.59_1771405982621.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.22.24_1771406547048.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.27.28_1771406851827.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.29.42_1771406985404.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.32.06_1771407130473.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.47.53_1771408077112.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_18.49.50_1771408193567.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_19.00.17_1771408822233.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_19.16.59_1771409824814.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_20.34.46_1771414489714.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_21.33.34_1771418018965.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_21.36.24_1771418188365.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_21.37.35_1771418261483.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_21.39.19_1771418365231.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_22.17.33_1771420657407.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_23.05.53_1771423606074.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_23.20.31_1771424433406.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-18_23.47.10_1771426033260.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-19_11.58.14_1771469902972.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-19_2.08.18_1771434500899.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-19_3.05.37_1771437950555.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_16.04.16_1771571059552.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_16.14.15_1771571660276.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_16.19.55_1771571997423.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_16.24.40_1771572284044.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_16.25.37_1771572339804.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_16.27.46_1771572468421.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_16.51.19_1771573881591.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_17.18.57_1771575542611.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_17.30.22_1771576225217.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_17.35.03_1771576506631.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_17.41.03_1771576865311.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_17.44.10_1771577052678.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_17.47.47_1771577271248.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_18.35.26_1771580129285.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_19.01.11_1771581673513.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_20.05.11_1771585513784.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_20.48.47_1771588129833.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-20_21.04.36_1771589079083.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-21_18.53.04_1771667590898.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-21_19.46.57_1771670820669.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-21_19.50.22_1771671030028.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-21_21.36.39_1771677401855.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-21_21.50.27_1771678231393.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-22_5.31.28_1771705890160.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-22_5.38.16_1771706298011.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-22_5.40.35_1771706437803.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-22_5.46.46_1771706808316.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-22_5.52.14_1771707136726.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-22_5.55.00_1771707306264.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-22_5.59.23_1771707565430.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_19.16.05_1771928167660.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_19.19.19_1771928361760.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_19.21.44_1771928507085.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_19.35.32_1771929334276.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_21.19.18_1771935560314.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_21.40.19_1771936821165.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_21.45.42_1771937144347.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_21.49.41_1771937384833.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_21.51.12_1771937475252.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_21.52.46_1771937567981.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-24_22.21.01_1771939264310.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_10.44.22_1771983869200.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_12.09.48_1771988990482.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_12.16.00_1771989362337.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_23.48.00_1772030882539.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_23.48.08_1772030890467.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_6.01.33_1771966897804.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_6.02.06_1771966930217.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_6.03.12_1771966996052.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_9.18.25_1771978709881.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_9.20.11_1771978816320.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-25_9.23.41_1771979025129.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-26_0.00.22_1772031625890.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-26_0.19.24_1772032768333.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-26_0.19.55_1772032811795.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-26_0.33.21_1772033605668.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-26_1.47.11_1772038035778.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-26_1.53.17_1772038403023.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.19.31_1772122774427.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.22.14_1772122936834.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.22.52_1772122976372.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.23.02_1772122984974.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.24.37_1772123080143.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.24.52_1772123094857.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.24.59_1772123102457.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.25.08_1772123111100.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.26.07_1772123170776.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.27.55_1772123278822.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.32.29_1772123552643.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.33.35_1772123617543.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.44.49_1772124292733.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.49.36_1772124579332.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_1.51.24_1772124686580.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_2.02.56_1772125378952.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_2.08.14_1772125696795.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_2.09.55_1772125799123.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_2.12.53_1772125975785.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_2.16.40_1772126202737.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_2.30.42_1772127044914.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_2.33.46_1772127229103.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_3.16.25_1772129788624.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-02-27_3.33.46_1772130830537.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.41.07_1772415669816.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.42.57_1772415780290.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.44.09_1772415852403.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.45.11_1772415914493.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.45.53_1772415956360.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.47.42_1772416066118.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.49.54_1772416197911.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.51.19_1772416281381.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_10.52.46_1772416369194.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_11.00.10_1772416813860.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_11.18.40_1772417923166.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_11.26.59_1772418420827.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_11.32.55_1772420288246.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_11.33.01_1772420288246.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_12.05.45_1772420749883.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_12.11.15_1772421078596.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_12.24.50_1772421893890.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_13.02.38_1772424160925.png"
+ delete mode 100644 "attached_assets/\343\202\271\343\202\257\343\203\252\343\203\274\343\203\263\343\202\267\343\203\247\343\203\203\343\203\210_2026-03-02_13.04.57_1772424300674.png"
+ delete mode 100644 "attached_assets/\343\202\277\343\202\231\343\202\246\343\203\263\343\203\255\343\203\274\343\203\210\343\202\231_(1)_1771668225192.png"
+ delete mode 100644 "attached_assets/\343\202\277\343\202\231\343\202\246\343\203\263\343\203\255\343\203\274\343\203\210\343\202\231_(1)_1771668398427.png"
+ delete mode 100644 "attached_assets/\345\220\215\347\247\260\346\234\252\350\250\255\345\256\232\343\201\256\343\203\206\343\202\231\343\202\265\343\202\231\343\202\244\343\203\263_-_2_1771220391447.PNG"
+ delete mode 100644 "attached_assets/\345\220\215\347\247\260\346\234\252\350\250\255\345\256\232\343\201\256\343\203\206\343\202\231\343\202\265\343\202\231\343\202\244\343\203\263_-_2_1771436843433.PNG"
+zsh: command not found: #
+Enumerating objects: 907, done.
+Counting objects: 100% (907/907), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (895/895), done.
+Writing objects: 100% (907/907), 21.11 MiB | 456.00 KiB/s, done.
+Total 907 (delta 438), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (438/438), done.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing agai
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— OpenAI API Key ————————————————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted--C-root-srv1087935-var-www-tramatch-cat-env-DATABASE-UR_1771434733949.txt:5
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671878734.txt:289
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671906296.txt:289
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671906296.txt:305
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-t-srv1087935-var-www-tramatch-pm2-logs-tramatch-lines-1_1771434707851.txt:49
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpzEtyfmKtb6GDwYoBplbOt9
+remote:     
+remote:     
+remote:       —— Google OAuth Client ID ————————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:19
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:3
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:17
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFq1KtTtyIbcHMFwJZsABFIY4
+remote:     
+remote:     
+remote:       —— Google OAuth Client Secret ————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:20
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:4
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:18
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpw3hgv2UDc1pD0XD0xJiVlr
+remote:     
+remote:     
+remote:       —— Google OAuth Refresh Token ————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:21
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:5
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:19
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpvM4pi5sMX01u9NJogUQP5b
+remote:     
+remote: 
+remote: 
+To https://github.com/SINJAPANLLC/keimatch.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/SINJAPANLLC/keimatch.git'
+kazuyaotani@kazuya-MacBook-Air keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 

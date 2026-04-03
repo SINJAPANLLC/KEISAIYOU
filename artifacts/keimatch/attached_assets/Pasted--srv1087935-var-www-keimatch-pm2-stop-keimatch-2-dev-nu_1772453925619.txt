@@ -1,0 +1,57 @@
+@srv1087935:/var/www/keimatch# pm2 stop keimatch 2>/dev/null; pm2 delete keimatch 2>/dev/null
+
+cat > /var/www/keimatch/start.sh << 'SHEOF'
+#!/bin/bash
+set -a
+source /var/www/keimatch/.env
+set +a
+cd /var/www/keimatch
+exec node dist/index.cjs
+SHEOF
+
+chmod +x /var/www/keimatch/start.sh
+pm2 start /var/www/keimatch/start.sh --name keimatch
+pm2 save
+sleep 3
+pm2 logs keimatch --lines 15
+[PM2] Applying action stopProcessId on app [keimatch](ids: [ 17 ])
+[PM2] [keimatch](17) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 6  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 69.7mb   │
+│ 17 │ keimatch           │ fork     │ 0    │ stopped   │ 0%       │ 0b       │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 142.8mb  │
+│ 4  │ onlyu              │ fork     │ 0    │ online    │ 0%       │ 97.3mb   │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 59.8mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 102.2mb  │
+│ 13 │ tramatch           │ fork     │ 3    │ online    │ 0%       │ 238.0mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Applying action deleteProcessId on app [keimatch](ids: [ 17 ])
+[PM2] [keimatch](17) ✓
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 6  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 69.7mb   │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 142.8mb  │
+│ 4  │ onlyu              │ fork     │ 0    │ online    │ 0%       │ 97.3mb   │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 59.8mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 101.8mb  │
+│ 13 │ tramatch           │ fork     │ 3    │ online    │ 0%       │ 238.0mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Starting /var/www/keimatch/start.sh in fork_mode (1 instance)
+[PM2] Done.
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 6  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 69.7mb   │
+│ 18 │ keimatch           │ fork     │ 0    │ online    │ 0%       │ 3.4mb    │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 142.8mb  │
+│ 4  │ onlyu              │ fork     │ 0    │ online    │ 0%       │ 97.3mb   │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 59.8mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 101.8mb  │
+│ 13 │ tramatch           │ fork     │ 3    │ online    │ 0%       │ 238.0mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+

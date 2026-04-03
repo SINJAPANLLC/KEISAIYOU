@@ -1,0 +1,572 @@
+import { sql } from "drizzle-orm";
+import { pgTable, text, varchar, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  companyName: text("company_name").notNull(),
+  address: text("address"),
+  contactName: text("contact_name"),
+  phone: text("phone").notNull(),
+  fax: text("fax"),
+  email: text("email").notNull().unique(),
+  truckCount: text("truck_count"),
+  permitFile: text("permit_file"),
+  userType: text("user_type").notNull(),
+  role: text("role").notNull().default("user"),
+  approved: boolean("approved").notNull().default(false),
+  paymentTerms: text("payment_terms"),
+  businessDescription: text("business_description"),
+  companyNameKana: text("company_name_kana"),
+  postalCode: text("postal_code"),
+  websiteUrl: text("website_url"),
+  invoiceRegistrationNumber: text("invoice_registration_number"),
+  registrationDate: text("registration_date"),
+  representative: text("representative"),
+  establishedDate: text("established_date"),
+  capital: text("capital"),
+  employeeCount: text("employee_count"),
+  officeLocations: text("office_locations"),
+  annualRevenue: text("annual_revenue"),
+  bankInfo: text("bank_info"),
+  majorClients: text("major_clients"),
+  closingDay: text("closing_day"),
+  paymentMonth: text("payment_month"),
+  businessArea: text("business_area"),
+  autoInvoiceAcceptance: text("auto_invoice_acceptance"),
+  memberOrganization: text("member_organization"),
+  transportLicenseNumber: text("transport_license_number"),
+  digitalTachographCount: text("digital_tachograph_count"),
+  gpsCount: text("gps_count"),
+  safetyExcellenceCert: text("safety_excellence_cert"),
+  greenManagementCert: text("green_management_cert"),
+  iso9000: text("iso9000"),
+  iso14000: text("iso14000"),
+  iso39001: text("iso39001"),
+  cargoInsurance: text("cargo_insurance"),
+  plan: text("plan").notNull().default("premium"),
+  lineUserId: text("line_user_id"),
+  notifySystem: boolean("notify_system").notNull().default(true),
+  notifyEmail: boolean("notify_email").notNull().default(true),
+  notifyLine: boolean("notify_line").notNull().default(false),
+  closingMonth: text("closing_month"),
+  paymentDay: text("payment_day"),
+  bankName: text("bank_name"),
+  bankBranch: text("bank_branch"),
+  accountType: text("account_type"),
+  accountNumber: text("account_number"),
+  accountHolderKana: text("account_holder_kana"),
+  accountingContactName: text("accounting_contact_name"),
+  accountingContactEmail: text("accounting_contact_email"),
+  accountingContactPhone: text("accounting_contact_phone"),
+  accountingContactFax: text("accounting_contact_fax"),
+  adminMemo: text("admin_memo"),
+  lastLoginAt: text("last_login_at"),
+  lastLoginIp: text("last_login_ip"),
+  lastLoginLocation: text("last_login_location"),
+  addedByUserId: varchar("added_by_user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const cargoListings = pgTable("cargo_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  cargoNumber: integer("cargo_number"),
+  title: text("title").notNull(),
+  departureArea: text("departure_area").notNull(),
+  departureAddress: text("departure_address"),
+  departureTime: text("departure_time"),
+  arrivalArea: text("arrival_area").notNull(),
+  arrivalAddress: text("arrival_address"),
+  arrivalTime: text("arrival_time"),
+  cargoType: text("cargo_type").notNull(),
+  weight: text("weight").notNull(),
+  desiredDate: text("desired_date").notNull(),
+  arrivalDate: text("arrival_date"),
+  vehicleType: text("vehicle_type").notNull(),
+  bodyType: text("body_type"),
+  temperatureControl: text("temperature_control"),
+  price: text("price"),
+  highwayFee: text("highway_fee"),
+  transportType: text("transport_type"),
+  consolidation: text("consolidation"),
+  driverWork: text("driver_work"),
+  packageCount: text("package_count"),
+  loadingMethod: text("loading_method"),
+  description: text("description"),
+  urgency: text("urgency"),
+  movingJob: text("moving_job"),
+  vehicleSpec: text("vehicle_spec"),
+  equipment: text("equipment"),
+  loadingTime: text("loading_time"),
+  unloadingTime: text("unloading_time"),
+  paymentDate: text("payment_date"),
+  contactPerson: text("contact_person"),
+  truckCount: text("truck_count"),
+  taxType: text("tax_type"),
+  companyName: text("company_name").notNull(),
+  contactPhone: text("contact_phone").notNull(),
+  contactEmail: text("contact_email"),
+  privateNote: text("private_note"),
+  status: text("status").notNull().default("active"),
+  listingType: text("listing_type").notNull().default("own"),
+  userId: varchar("user_id"),
+  acceptedByUserId: varchar("accepted_by_user_id"),
+  viewCount: integer("view_count").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const truckListings = pgTable("truck_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  currentArea: text("current_area").notNull(),
+  currentAddress: text("current_address"),
+  destinationArea: text("destination_area").notNull(),
+  destinationAddress: text("destination_address"),
+  vehicleType: text("vehicle_type").notNull(),
+  bodyType: text("body_type"),
+  maxWeight: text("max_weight").notNull(),
+  truckCount: text("truck_count"),
+  availableDate: text("available_date").notNull(),
+  price: text("price"),
+  description: text("description"),
+  companyName: text("company_name").notNull(),
+  contactPhone: text("contact_phone").notNull(),
+  contactEmail: text("contact_email"),
+  status: text("status").notNull().default("active"),
+  userId: varchar("user_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedId: varchar("related_id"),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const announcements = pgTable("announcements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull().default("general"),
+  isPublished: boolean("is_published").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const dispatchRequests = pgTable("dispatch_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  cargoId: varchar("cargo_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  status: text("status").notNull().default("draft"),
+  transportCompany: text("transport_company"),
+  shipperCompany: text("shipper_company"),
+  contactPerson: text("contact_person"),
+  loadingDate: text("loading_date"),
+  loadingTime: text("loading_time"),
+  loadingPlace: text("loading_place"),
+  unloadingDate: text("unloading_date"),
+  unloadingTime: text("unloading_time"),
+  unloadingPlace: text("unloading_place"),
+  cargoType: text("cargo_type"),
+  totalWeight: text("total_weight"),
+  weightVehicle: text("weight_vehicle"),
+  notes: text("notes"),
+  vehicleEquipment: text("vehicle_equipment"),
+  fare: text("fare"),
+  highwayFee: text("highway_fee"),
+  waitingFee: text("waiting_fee"),
+  additionalWorkFee: text("additional_work_fee"),
+  exportFee: text("export_fee"),
+  parkingFee: text("parking_fee"),
+  customsFee: text("customs_fee"),
+  fuelSurcharge: text("fuel_surcharge"),
+  totalAmount: text("total_amount"),
+  tax: text("tax"),
+  paymentMethod: text("payment_method"),
+  paymentDueDate: text("payment_due_date"),
+  primeContractorName: text("prime_contractor_name"),
+  primeContractorPhone: text("prime_contractor_phone"),
+  primeContractorContact: text("prime_contractor_contact"),
+  contractLevel: text("contract_level"),
+  actualShipperName: text("actual_shipper_name"),
+  actualTransportCompany: text("actual_transport_company"),
+  vehicleNumber: text("vehicle_number"),
+  driverName: text("driver_name"),
+  driverPhone: text("driver_phone"),
+  transportCompanyNotes: text("transport_company_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  sentAt: timestamp("sent_at"),
+});
+
+export const partners = pgTable("partners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  companyName: text("company_name").notNull(),
+  companyNameKana: text("company_name_kana"),
+  representative: text("representative"),
+  contactName: text("contact_name"),
+  phone: text("phone"),
+  fax: text("fax"),
+  email: text("email"),
+  postalCode: text("postal_code"),
+  address: text("address"),
+  businessType: text("business_type"),
+  truckCount: text("truck_count"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const transportRecords = pgTable("transport_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  cargoId: varchar("cargo_id"),
+  transportCompany: text("transport_company").notNull(),
+  shipperName: text("shipper_name"),
+  driverName: text("driver_name"),
+  driverPhone: text("driver_phone"),
+  vehicleNumber: text("vehicle_number"),
+  vehicleType: text("vehicle_type"),
+  departureArea: text("departure_area"),
+  arrivalArea: text("arrival_area"),
+  transportDate: text("transport_date"),
+  cargoDescription: text("cargo_description"),
+  fare: text("fare"),
+  status: text("status").notNull().default("active"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const seoArticles = pgTable("seo_articles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  topic: text("topic").notNull(),
+  keywords: text("keywords"),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().default(""),
+  metaDescription: text("meta_description"),
+  content: text("content").notNull(),
+  status: text("status").notNull().default("draft"),
+  autoGenerated: boolean("auto_generated").default(false),
+  category: text("category").default("kyukakyusha"),
+  viewCount: integer("view_count").default(0),
+  wordCount: integer("word_count").default(0),
+  faq: text("faq"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const payments = pgTable("payments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: text("user_id").notNull(),
+  amount: integer("amount").notNull(),
+  currency: text("currency").notNull().default("JPY"),
+  squarePaymentId: text("square_payment_id"),
+  status: text("status").notNull().default("pending"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const notificationTemplates = pgTable("notification_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull(),
+  channel: text("channel").notNull().default("system"),
+  name: text("name").notNull(),
+  subject: text("subject"),
+  body: text("body").notNull(),
+  htmlBody: text("html_body"),
+  triggerEvent: text("trigger_event"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const adminSettings = pgTable("admin_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, role: true, approved: true });
+export const insertCargoListingSchema = createInsertSchema(cargoListings).omit({ id: true, cargoNumber: true, createdAt: true, status: true, userId: true, viewCount: true });
+export const insertTruckListingSchema = createInsertSchema(truckListings).omit({ id: true, createdAt: true, status: true, userId: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true, isRead: true });
+export const insertAnnouncementSchema = createInsertSchema(announcements).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertDispatchRequestSchema = createInsertSchema(dispatchRequests).omit({ id: true, createdAt: true, sentAt: true });
+export const insertPartnerSchema = createInsertSchema(partners).omit({ id: true, createdAt: true });
+export const insertTransportRecordSchema = createInsertSchema(transportRecords).omit({ id: true, createdAt: true });
+export const insertSeoArticleSchema = createInsertSchema(seoArticles).omit({ id: true, createdAt: true });
+export const insertPaymentSchema = createInsertSchema(payments).omit({ id: true, createdAt: true });
+export const insertNotificationTemplateSchema = createInsertSchema(notificationTemplates).omit({ id: true, createdAt: true, updatedAt: true });
+
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  userName: text("user_name"),
+  action: text("action").notNull(),
+  targetType: text("target_type").notNull(),
+  targetId: varchar("target_id"),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type InsertCargoListing = z.infer<typeof insertCargoListingSchema>;
+export type CargoListing = typeof cargoListings.$inferSelect;
+export type InsertTruckListing = z.infer<typeof insertTruckListingSchema>;
+export type TruckListing = typeof truckListings.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertAnnouncement = z.infer<typeof insertAnnouncementSchema>;
+export type Announcement = typeof announcements.$inferSelect;
+export type InsertDispatchRequest = z.infer<typeof insertDispatchRequestSchema>;
+export type DispatchRequest = typeof dispatchRequests.$inferSelect;
+export type InsertPartner = z.infer<typeof insertPartnerSchema>;
+export type Partner = typeof partners.$inferSelect;
+export type InsertTransportRecord = z.infer<typeof insertTransportRecordSchema>;
+export type TransportRecord = typeof transportRecords.$inferSelect;
+export type InsertSeoArticle = z.infer<typeof insertSeoArticleSchema>;
+export type SeoArticle = typeof seoArticles.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type AdminSetting = typeof adminSettings.$inferSelect;
+export type InsertNotificationTemplate = z.infer<typeof insertNotificationTemplateSchema>;
+export type NotificationTemplate = typeof notificationTemplates.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
+
+export const contactInquiries = pgTable("contact_inquiries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  category: text("category").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull().default("unread"),
+  adminNote: text("admin_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertContactInquirySchema = createInsertSchema(contactInquiries).omit({ id: true, status: true, adminNote: true, createdAt: true });
+export type InsertContactInquiry = z.infer<typeof insertContactInquirySchema>;
+export type ContactInquiry = typeof contactInquiries.$inferSelect;
+
+export const planChangeRequests = pgTable("plan_change_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  currentPlan: text("current_plan").notNull(),
+  requestedPlan: text("requested_plan").notNull(),
+  status: text("status").notNull().default("pending"),
+  adminNote: text("admin_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const insertPlanChangeRequestSchema = createInsertSchema(planChangeRequests).omit({ id: true, status: true, adminNote: true, createdAt: true, reviewedAt: true });
+export type InsertPlanChangeRequest = z.infer<typeof insertPlanChangeRequestSchema>;
+export type PlanChangeRequest = typeof planChangeRequests.$inferSelect;
+
+export const userAddRequests = pgTable("user_add_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requesterId: varchar("requester_id").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  password: text("password").notNull().default(""),
+  role: text("role").notNull().default("member"),
+  note: text("note"),
+  status: text("status").notNull().default("pending"),
+  adminNote: text("admin_note"),
+  createdAt: timestamp("created_at").defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const insertUserAddRequestSchema = createInsertSchema(userAddRequests).omit({ id: true, status: true, adminNote: true, createdAt: true, reviewedAt: true });
+export type InsertUserAddRequest = z.infer<typeof insertUserAddRequestSchema>;
+export type UserAddRequest = typeof userAddRequests.$inferSelect;
+
+export const invoices = pgTable("invoices", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceNumber: text("invoice_number").notNull().unique(),
+  userId: varchar("user_id").notNull(),
+  companyName: text("company_name").notNull(),
+  email: text("email").notNull(),
+  planType: text("plan_type").notNull(),
+  amount: integer("amount").notNull(),
+  tax: integer("tax").notNull(),
+  totalAmount: integer("total_amount").notNull(),
+  billingMonth: text("billing_month").notNull(),
+  dueDate: text("due_date").notNull(),
+  status: text("status").notNull().default("unpaid"),
+  paymentMethod: text("payment_method"),
+  paidAt: timestamp("paid_at"),
+  sentAt: timestamp("sent_at"),
+  adminNote: text("admin_note"),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({ id: true, status: true, paidAt: true, sentAt: true, createdAt: true });
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type Invoice = typeof invoices.$inferSelect;
+
+export const agents = pgTable("agents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  prefecture: text("prefecture").notNull(),
+  companyName: text("company_name").notNull(),
+  representativeName: text("representative_name"),
+  contactName: text("contact_name"),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  postalCode: text("postal_code"),
+  websiteUrl: text("website_url"),
+  businessArea: text("business_area"),
+  note: text("note"),
+  status: text("status").notNull().default("active"),
+  userId: varchar("user_id"),
+  loginEmail: text("login_email"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAgentSchema = createInsertSchema(agents).omit({ id: true, createdAt: true });
+export type InsertAgent = z.infer<typeof insertAgentSchema>;
+export type Agent = typeof agents.$inferSelect;
+
+export const aiTrainingExamples = pgTable("ai_training_examples", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull().default("cargo"),
+  inputText: text("input_text").notNull(),
+  expectedOutput: text("expected_output").notNull(),
+  note: text("note"),
+  isActive: boolean("is_active").notNull().default(true),
+  useCount: integer("use_count").notNull().default(0),
+  successRate: integer("success_rate").notNull().default(0),
+  createdBy: varchar("created_by"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAiTrainingExampleSchema = createInsertSchema(aiTrainingExamples).omit({ id: true, useCount: true, successRate: true, createdAt: true });
+export type InsertAiTrainingExample = z.infer<typeof insertAiTrainingExampleSchema>;
+export type AiTrainingExample = typeof aiTrainingExamples.$inferSelect;
+
+export const aiCorrectionLogs = pgTable("ai_correction_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: text("category").notNull().default("cargo"),
+  originalInput: text("original_input").notNull(),
+  aiOutput: text("ai_output").notNull(),
+  correctedOutput: text("corrected_output").notNull(),
+  correctedFields: text("corrected_fields"),
+  userId: varchar("user_id"),
+  promoted: boolean("promoted").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertAiCorrectionLogSchema = createInsertSchema(aiCorrectionLogs).omit({ id: true, promoted: true, createdAt: true });
+export type InsertAiCorrectionLog = z.infer<typeof insertAiCorrectionLogSchema>;
+export type AiCorrectionLog = typeof aiCorrectionLogs.$inferSelect;
+
+export const youtubeVideos = pgTable("youtube_videos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  videoId: text("video_id").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  thumbnailUrl: text("thumbnail_url"),
+  publishedAt: timestamp("published_at"),
+  channelTitle: text("channel_title"),
+  duration: text("duration"),
+  viewCount: integer("view_count").default(0),
+  isVisible: boolean("is_visible").notNull().default(true),
+  fetchedAt: timestamp("fetched_at").defaultNow().notNull(),
+});
+
+export const insertYoutubeVideoSchema = createInsertSchema(youtubeVideos).omit({ id: true, fetchedAt: true });
+export type InsertYoutubeVideo = z.infer<typeof insertYoutubeVideoSchema>;
+export type YoutubeVideo = typeof youtubeVideos.$inferSelect;
+
+export const youtubeAutoPublishJobs = pgTable("youtube_auto_publish_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  topic: text("topic").notNull(),
+  script: text("script"),
+  audioUrl: text("audio_url"),
+  videoUrl: text("video_url"),
+  youtubeVideoId: text("youtube_video_id"),
+  youtubeTitle: text("youtube_title"),
+  youtubeDescription: text("youtube_description"),
+  status: text("status").notNull().default("pending"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertYoutubeAutoPublishJobSchema = createInsertSchema(youtubeAutoPublishJobs).omit({ id: true, createdAt: true, completedAt: true });
+export type InsertYoutubeAutoPublishJob = z.infer<typeof insertYoutubeAutoPublishJobSchema>;
+export type YoutubeAutoPublishJob = typeof youtubeAutoPublishJobs.$inferSelect;
+
+export const emailCampaigns = pgTable("email_campaigns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  recipients: text("recipients").notNull(),
+  totalCount: integer("total_count").notNull().default(0),
+  sentCount: integer("sent_count").notNull().default(0),
+  failedCount: integer("failed_count").notNull().default(0),
+  status: text("status").notNull().default("draft"),
+  sentAt: timestamp("sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEmailCampaignSchema = createInsertSchema(emailCampaigns).omit({ id: true, sentCount: true, failedCount: true, sentAt: true, createdAt: true });
+export type InsertEmailCampaign = z.infer<typeof insertEmailCampaignSchema>;
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;
+
+export const emailLeads = pgTable("email_leads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull(),
+  email: text("email"),
+  fax: text("fax"),
+  phone: text("phone"),
+  website: text("website"),
+  address: text("address"),
+  industry: text("industry"),
+  source: text("source"),
+  status: text("status").notNull().default("new"),
+  sentAt: timestamp("sent_at"),
+  sentSubject: text("sent_subject"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEmailLeadSchema = createInsertSchema(emailLeads).omit({ id: true, sentAt: true, sentSubject: true, createdAt: true });
+export type InsertEmailLead = z.infer<typeof insertEmailLeadSchema>;
+export type EmailLead = typeof emailLeads.$inferSelect;
+
+export const landingPages = pgTable("landing_pages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  html: text("html").notNull(),
+  published: boolean("published").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertLandingPageSchema = createInsertSchema(landingPages).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertLandingPage = z.infer<typeof insertLandingPageSchema>;
+export type LandingPage = typeof landingPages.$inferSelect;

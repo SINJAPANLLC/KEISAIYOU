@@ -1,0 +1,21 @@
+: 
+remote: 
+To https://github.com/SINJAPANLLC/keimatch.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/SINJAPANLLC/keimatch.git'
+kazuyaotani@Mac keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu 3 % grep -rn "npg_\|sk-proj-" . --include="*.txt" --include="*.ts" --include="*.js" --include="*.json" | grep -v node_modules | grep -v dist | grep -v .git | head -20
+kazuyaotani@Mac keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu 3 % grep -rn "npg_\|sk-proj-\|sk-\|OPENAI_API_KEY=" . | grep -v node_modules | grep -v dist | grep -v .git | head -20
+Binary file ./.local/state/replit/agent/.agent_state_e6e8cae6e634448dc2d8395fe24d9d3addefe6e4.bin matches
+./package-lock.json:8208:      "resolved": "https://registry.npmjs.org/queue-microtask/-/queue-microtask-1.2.3.tgz",
+./attached_assets/Pasted--id-name--1772038633034_1772038633034.txt:76:OPENAI_API_KEY=***
+Binary file ./attached_assets/スクリーンショット_2026-02-17_22.12.12_1771333936180.png matches
+./attached_assets/Pasted--4-2-HTML--1771394723269_1771394723269.txt:51:  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);
+./attached_assets/Pasted--4-2-HTML--1771394723269_1771394723269.txt:52:  mask-image: linear-gradient(to right, transparent 0%, #000 10%, #000 90%, transparent 100%);
+./attached_assets/Pasted--div-class-logo-wall-1-div-class-slider-div-class-slide_1771394471082.txt:57:  -webkit-mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);
+./attached_assets/Pasted--div-class-logo-wall-1-div-class-slider-div-class-slide_1771394471082.txt:58:  mask-image:linear-gradient(to right,transparent 0%,#000 10%,#000 90%,transparent 100%);
+./attached_assets/Pasted--ENV-NEON-DATABASE-URL-SESSION-SECRET-OPENAI-API-KEY-SM_1772038669493.txt:5:OPENAI_API_KEY=***
+./attached_assets/Pasted--Starting-usr-bin-bash-in-fork-mode-1-instance-PM2-Done_1772037658492.txt:356:├ ○ /risk-disclosure                      3.03 kB        99.3 kB
+./client/src/pages/home.tsx:573:              .listing-slider{overflow:hidden;width:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);mask-image:linear-gradient(to right,transparent 0%,#000 5%,#000 95%,transparent 100%);}
+./client/src/pages/cargo-form.tsx:804:                    data-testid="button-ask-price"
+./client/src/pages/truck-list.tsx:976:                  data-testid="button-truck-ask-price"
+kazuyaotani@Mac keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu 3 % 

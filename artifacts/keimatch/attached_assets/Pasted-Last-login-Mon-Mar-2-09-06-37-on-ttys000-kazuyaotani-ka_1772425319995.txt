@@ -1,0 +1,109 @@
+Last login: Mon Mar  2 09:06:37 on ttys000
+kazuyaotani@kazuya-MacBook-Air ~ % # 1. デスクトップのフォルダに移動
+cd ~/Desktop/keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu
+
+# 2. Gitリポジトリを初期化
+git init
+
+# 3. リモートリポジトリを追加
+git remote add origin https://github.com/SINJAPANLLC/keimatch.git
+
+# 4. 全ファイルをステージング
+git add .
+
+# 5. コミット
+git commit -m "Initial commit: KEI MATCH"
+
+# 6. メインブランチとしてプッシュ
+git branch -M main
+git push -u origin main --force
+zsh: command not found: #
+zsh: command not found: #
+Reinitialized existing Git repository in /Users/kazuyaotani/Desktop/keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu/.git/
+zsh: command not found: #
+zsh: command not found: #
+zsh: command not found: #
+On branch main
+nothing to commit, working tree clean
+zsh: command not found: #
+Enumerating objects: 904, done.
+Counting objects: 100% (904/904), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (892/892), done.
+Writing objects: 100% (904/904), 21.12 MiB | 423.00 KiB/s, done.
+Total 904 (delta 435), reused 0 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (435/435), done.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Google OAuth Client ID ————————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:19
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:3
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:17
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFq1KtTtyIbcHMFwJZsABFIY4
+remote:     
+remote:     
+remote:       —— Google OAuth Client Secret ————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:20
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:4
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:18
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpw3hgv2UDc1pD0XD0xJiVlr
+remote:     
+remote:     
+remote:       —— Google OAuth Refresh Token ————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:21
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:5
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:19
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpvM4pi5sMX01u9NJogUQP5b
+remote:     
+remote:     
+remote:       —— OpenAI API Key ————————————————————————————————————
+remote:        locations:
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771671878734.txt:289
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt:289
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt:305
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-Last-login-Sat-Feb-21-19-57-10-on-ttys001-kazuyaotani-M_1771677338055.txt:841
+remote:          - commit: 31ea3b72abb20b61e074752db582538220b933cd
+remote:            path: attached_assets/Pasted-t-srv1087935-var-www-tramatch-pm2-logs-tramatch-lines-1_1771434707851.txt:49
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/keimatch/security/secret-scanning/unblock-secret/3ANFpzEtyfmKtb6GDwYoBplbOt9
+remote:     
+remote: 
+remote: 
+To https://github.com/SINJAPANLLC/keimatch.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/SINJAPANLLC/keimatch.git'
+kazuyaotani@kazuya-MacBook-Air keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu % 

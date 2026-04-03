@@ -25,3 +25,29 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## KeiMatch Application
+
+Located in `artifacts/keimatch/` — 軽貨物案件マッチングサービス (Light cargo job matching service).
+
+### Tech Stack
+- React + Vite (frontend)
+- Express 5 (backend)
+- PostgreSQL + Drizzle ORM
+- Tailwind CSS + shadcn/ui
+- Session-based auth (bcrypt + passport-local)
+- TypeScript
+
+### Running
+- Dev server: `cd artifacts/keimatch && NODE_ENV=development /home/runner/.npm/_npx/fd45a72a545557e9/node_modules/.bin/tsx server/index.ts`
+- Workflow: "Start application" (port 5000)
+- DB schema push: `cd artifacts/keimatch && npx drizzle-kit push`
+
+### Features
+- Cargo job listings (案件管理)
+- Truck listings (車両管理)
+- User/company registration
+- Admin dashboard
+- Email notifications
+- Column articles
+- YouTube video integration

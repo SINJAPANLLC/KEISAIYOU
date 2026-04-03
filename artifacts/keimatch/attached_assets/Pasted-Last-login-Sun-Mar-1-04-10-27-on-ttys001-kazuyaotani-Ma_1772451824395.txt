@@ -1,0 +1,976 @@
+Last login: Sun Mar  1 04:10:27 on ttys001
+kazuyaotani@Mac ~ % ssh root@212.85.24.206
+root@212.85.24.206's password: 
+Welcome to Ubuntu 24.04.4 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Mon Mar  2 11:34:55 UTC 2026
+
+  System load:  0.0                 Processes:             150
+  Usage of /:   10.8% of 192.69GB   Users logged in:       0
+  Memory usage: 16%                 IPv4 address for eth0: 212.85.24.206
+  Swap usage:   0%                  IPv6 address for eth0: 2a02:4780:59:cc86::1
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+3 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+12 additional security updates can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+
+1 updates could not be installed automatically. For more details,
+see /var/log/unattended-upgrades/unattended-upgrades.log
+
+*** System restart required ***
+Last login: Thu Feb 26 20:03:01 2026 from 59.132.70.16
+root@srv1087935:~# pm2 list
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 6  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 70.1mb   │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 142.0mb  │
+│ 4  │ onlyu              │ fork     │ 0    │ online    │ 0%       │ 100.9mb  │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 59.5mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 102.1mb  │
+│ 13 │ tramatch           │ fork     │ 3    │ online    │ 0%       │ 240.0mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+root@srv1087935:~# # Node.js 20をインストール
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+apt-get install -y nodejs
+
+# Nginx, Git, PM2をインストール
+apt-get install -y nginx git
+npm install -g pm2
+
+# バージョン確認
+node -v && npm -v && nginx -v
+2026-03-02 11:35:32 - Installing pre-requisites
+Hit:1 https://deb.nodesource.com/node_24.x nodistro InRelease
+Hit:2 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble-backports InRelease     
+Hit:3 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble InRelease               
+Hit:4 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble-security InRelease      
+Hit:5 https://repository.monarx.com/repository/ubuntu-noble noble InRelease    
+Hit:6 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble-updates InRelease
+Hit:7 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:8 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:9 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+Hit:10 http://archive.ubuntu.com/ubuntu noble-security InRelease
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+4 packages can be upgraded. Run 'apt list --upgradable' to see them.
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+apt-transport-https is already the newest version (2.8.3).
+ca-certificates is already the newest version (20240203).
+curl is already the newest version (8.5.0-2ubuntu10.7).
+gnupg is already the newest version (2.4.4-2ubuntu17.4).
+0 upgraded, 0 newly installed, 0 to remove and 4 not upgraded.
+Hit:1 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble-backports InRelease
+Hit:2 https://repository.monarx.com/repository/ubuntu-noble noble InRelease    
+Hit:3 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble InRelease               
+Hit:4 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble-security InRelease      
+Get:5 https://deb.nodesource.com/node_20.x nodistro InRelease [12.1 kB]        
+Hit:6 https://cdn.ubuntu.repo.cloudeka.id/ubuntu noble-updates InRelease       
+Hit:7 http://archive.ubuntu.com/ubuntu noble InRelease
+Hit:8 http://archive.ubuntu.com/ubuntu noble-updates InRelease
+Hit:9 http://archive.ubuntu.com/ubuntu noble-backports InRelease
+Get:10 https://deb.nodesource.com/node_20.x nodistro/main amd64 Packages [13.6 kB]
+Hit:11 http://archive.ubuntu.com/ubuntu noble-security InRelease
+Fetched 25.8 kB in 1s (18.7 kB/s)
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+4 packages can be upgraded. Run 'apt list --upgradable' to see them.
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:1 and /etc/apt/sources.list.d/ubuntu-mirrors.list:5
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:2 and /etc/apt/sources.list.d/ubuntu-mirrors.list:6
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:3 and /etc/apt/sources.list.d/ubuntu-mirrors.list:7
+W: Target Packages (main/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (main/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (main/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (main/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (main/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (restricted/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (restricted/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (restricted/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (restricted/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (universe/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (universe/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (universe/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (universe/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-amd64/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Packages (multiverse/binary-all/Packages) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target Translations (multiverse/i18n/Translation-en) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-amd64.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target DEP-11 (multiverse/dep11/Components-all.yml) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-amd64) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+W: Target CNF (multiverse/cnf/Commands-all) is configured multiple times in /etc/apt/sources.list.d/ubuntu-mirrors.list:4 and /etc/apt/sources.list.d/ubuntu-mirrors.list:8
+2026-03-02 11:35:51 - Repository configured successfully.
+2026-03-02 11:35:51 - To install Node.js, run: apt install nodejs -y
+2026-03-02 11:35:51 - You can use N|solid Runtime as a node.js alternative
+2026-03-02 11:35:51 - To install N|solid Runtime, run: apt install nsolid -y 
+
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following NEW packages will be installed:
+  nodejs
+0 upgraded, 1 newly installed, 0 to remove and 4 not upgraded.
+Need to get 0 B/32.0 MB of archives.
+After this operation, 197 MB of additional disk space will be used.
+Selecting previously unselected package nodejs.
+(Reading database ... 127713 files and directories currently installed.)
+Preparing to unpack .../nodejs_20.20.0-1nodesource1_amd64.deb ...
+Unpacking nodejs (20.20.0-1nodesource1) ...
+Setting up nodejs (20.20.0-1nodesource1) ...
+Processing triggers for man-db (2.12.0-4build2) ...
+Scanning processes...                                                           
+Scanning candidates...                                                          
+Scanning linux images...                                                        
+
+Pending kernel upgrade!
+Running kernel version:
+  6.8.0-88-generic
+Diagnostics:
+  The currently running kernel version is not the expected kernel version
+6.8.0-101-generic.
+
+Restarting the system to load the new kernel will not be handled automatically,
+so you should consider rebooting.
+
+Restarting services...
+
+Service restarts being deferred:
+ /etc/needrestart/restart.d/dbus.service
+ systemctl restart getty@tty1.service
+ systemctl restart serial-getty@ttyS0.service
+ systemctl restart systemd-logind.service
+ systemctl restart unattended-upgrades.service
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+nginx is already the newest version (1.24.0-2ubuntu7.6).
+git is already the newest version (1:2.43.0-1ubuntu7.3).
+0 upgraded, 0 newly installed, 0 to remove and 4 not upgraded.
+
+added 133 packages in 6s
+
+13 packages are looking for funding
+  run `npm fund` for details
+v20.20.0
+10.8.2
+nginx version: nginx/1.24.0 (Ubuntu)
+root@srv1087935:~# # アプリ用ディレクトリ作成
+mkdir -p /var/www
+cd /var/www
+
+# GitHubからクローン
+git clone https://github.com/SINJAPANLLC/keimatch.git
+cd keimatch
+
+# 依存パッケージインストール
+npm install
+
+# 環境変数ファイル作成
+nano .env
+Cloning into 'keimatch'...
+remote: Enumerating objects: 198, done.
+remote: Counting objects: 100% (198/198), done.
+remote: Compressing objects: 100% (174/174), done.
+remote: Total 198 (delta 18), reused 198 (delta 18), pack-reused 0 (from 0)
+Receiving objects: 100% (198/198), 1.37 MiB | 2.06 MiB/s, done.
+Resolving deltas: 100% (18/18), done.
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+added 592 packages, and audited 593 packages in 30s
+
+95 packages are looking for funding
+  run `npm fund` for details
+
+5 vulnerabilities (1 low, 1 moderate, 3 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+root@srv1087935:/var/www/keimatch# # ビルド
+npm run build
+
+# PM2で起動
+pm2 start dist/index.cjs --name keimatch
+pm2 save
+pm2 startup
+
+> rest-express@1.0.0 build
+> tsx script/build.ts
+
+building client...
+vite v7.3.0 building client environment for production...
+transforming (5) src/App.tsx
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+✓ 14 modules transformed.
+✗ Build failed in 2.26s
+[vite:asset] Could not load /var/www/keimatch/attached_assets/IMG_0215_1772415171642.PNG (imported by client/src/App.tsx): ENOENT: no such file or directory, open '/var/www/keimatch/attached_assets/IMG_0215_1772415171642.PNG'
+    at async open (node:internal/fs/promises:634:25)
+    at async Object.readFile (node:internal/fs/promises:1236:14)
+    at async fileToBuiltUrl (/var/www/keimatch/node_modules/vite/dist/node/chunks/config.js:8777:18)
+    at async Object.handler (/var/www/keimatch/node_modules/vite/dist/node/chunks/config.js:8671:17)
+    at async PluginDriver.hookFirstAndGetPlugin (/var/www/keimatch/node_modules/rollup/dist/es/shared/node-entry.js:22376:28)
+    at async <anonymous> (/var/www/keimatch/node_modules/rollup/dist/es/shared/node-entry.js:21376:33)
+    at async Queue.work (/var/www/keimatch/node_modules/rollup/dist/es/shared/node-entry.js:22604:32) {
+  errno: -2,
+  code: 'PLUGIN_ERROR',
+  syscall: 'open',
+  path: '/var/www/keimatch/attached_assets/IMG_0215_1772415171642.PNG',
+  pluginCode: 'ENOENT',
+  plugin: 'vite:asset',
+  hook: 'load',
+  watchFiles: [
+    '/var/www/keimatch/client/index.html',
+    '/var/www/keimatch/client/src/main.tsx',
+    '/var/www/keimatch/package.json',
+    '/var/www/keimatch/node_modules/react/jsx-runtime.js',
+    '/var/www/keimatch/node_modules/react-dom/client.js',
+    '/var/www/keimatch/client/src/App.tsx',
+    '/var/www/keimatch/client/src/index.css',
+    '/var/www/keimatch/tailwind.config.ts',
+    '/var/www/keimatch/client/src/hooks/use-auth.ts',
+    '/var/www/keimatch/client/src/hooks/use-toast.ts',
+    '/var/www/keimatch/client/src/lib/analytics.ts',
+    '/var/www/keimatch/client/src/lib/queryClient.ts',
+    '/var/www/keimatch/client/src/lib/utils.ts',
+    '/var/www/keimatch/client/src/components/dashboard-layout.tsx',
+    '/var/www/keimatch/client/src/components/footer.tsx',
+    '/var/www/keimatch/client/src/components/header.tsx',
+    '/var/www/keimatch/client/src/components/seo/breadcrumb.tsx',
+    '/var/www/keimatch/client/src/components/seo/cta-block.tsx',
+    '/var/www/keimatch/client/src/components/seo/faq-block.tsx',
+    '/var/www/keimatch/client/src/components/seo/related-articles.tsx',
+    '/var/www/keimatch/client/src/components/seo/seo-head.tsx',
+    '/var/www/keimatch/client/src/components/seo/structured-data.tsx',
+    '/var/www/keimatch/client/src/components/seo/table-of-contents.tsx',
+    '/var/www/keimatch/client/src/components/ui/accordion.tsx',
+    '/var/www/keimatch/client/src/components/ui/alert-dialog.tsx',
+    '/var/www/keimatch/client/src/components/ui/alert.tsx',
+    '/var/www/keimatch/client/src/components/ui/aspect-ratio.tsx',
+    '/var/www/keimatch/client/src/components/ui/avatar.tsx',
+    '/var/www/keimatch/client/src/components/ui/badge.tsx',
+    '/var/www/keimatch/client/src/components/ui/breadcrumb.tsx',
+    '/var/www/keimatch/client/src/components/ui/button.tsx',
+    '/var/www/keimatch/client/src/components/ui/calendar.tsx',
+    '/var/www/keimatch/client/src/components/ui/card.tsx',
+    '/var/www/keimatch/client/src/components/ui/carousel.tsx',
+    '/var/www/keimatch/client/src/components/ui/chart.tsx',
+    '/var/www/keimatch/client/src/components/ui/checkbox.tsx',
+    '/var/www/keimatch/client/src/components/ui/collapsible.tsx',
+    '/var/www/keimatch/client/src/components/ui/command.tsx',
+    '/var/www/keimatch/client/src/components/ui/context-menu.tsx',
+    '/var/www/keimatch/client/src/components/ui/dialog.tsx',
+    '/var/www/keimatch/client/src/components/ui/drawer.tsx',
+    '/var/www/keimatch/client/src/components/ui/dropdown-menu.tsx',
+    '/var/www/keimatch/client/src/components/ui/form.tsx',
+    '/var/www/keimatch/client/src/components/ui/hover-card.tsx',
+    '/var/www/keimatch/client/src/components/ui/input-otp.tsx',
+    '/var/www/keimatch/client/src/components/ui/input.tsx',
+    '/var/www/keimatch/client/src/components/ui/label.tsx',
+    '/var/www/keimatch/client/src/components/ui/menubar.tsx',
+    '/var/www/keimatch/client/src/components/ui/navigation-menu.tsx',
+    '/var/www/keimatch/client/src/components/ui/pagination.tsx',
+    '/var/www/keimatch/client/src/components/ui/popover.tsx',
+    '/var/www/keimatch/client/src/components/ui/progress.tsx',
+    '/var/www/keimatch/client/src/components/ui/radio-group.tsx',
+    '/var/www/keimatch/client/src/components/ui/resizable.tsx',
+    '/var/www/keimatch/client/src/components/ui/scroll-area.tsx',
+    '/var/www/keimatch/client/src/components/ui/select.tsx',
+    '/var/www/keimatch/client/src/components/ui/separator.tsx',
+    '/var/www/keimatch/client/src/components/ui/sheet.tsx',
+    '/var/www/keimatch/client/src/components/ui/sidebar.tsx',
+    '/var/www/keimatch/client/src/components/ui/skeleton.tsx',
+    '/var/www/keimatch/client/src/components/ui/slider.tsx',
+    '/var/www/keimatch/client/src/components/ui/switch.tsx',
+    '/var/www/keimatch/client/src/components/ui/table.tsx',
+    '/var/www/keimatch/client/src/components/ui/tabs.tsx',
+    '/var/www/keimatch/client/src/components/ui/textarea.tsx',
+    '/var/www/keimatch/client/src/components/ui/toast.tsx',
+    '/var/www/keimatch/client/src/components/ui/toaster.tsx',
+    '/var/www/keimatch/client/src/components/ui/toggle-group.tsx',
+    '/var/www/keimatch/client/src/components/ui/toggle.tsx',
+    '/var/www/keimatch/client/src/components/ui/tooltip.tsx',
+    '/var/www/keimatch/client/src/hooks/use-mobile.tsx',
+    '/var/www/keimatch/client/src/pages/admin-agents.tsx',
+    '/var/www/keimatch/client/src/pages/admin-ai-training.tsx',
+    '/var/www/keimatch/client/src/pages/admin-announcements.tsx',
+    '/var/www/keimatch/client/src/pages/admin-applications.tsx',
+    '/var/www/keimatch/client/src/pages/admin-audit-logs.tsx',
+    '/var/www/keimatch/client/src/pages/admin-contact-inquiries.tsx',
+    '/var/www/keimatch/client/src/pages/admin-dashboard.tsx',
+    '/var/www/keimatch/client/src/pages/admin-design.tsx',
+    '/var/www/keimatch/client/src/pages/admin-email-marketing.tsx',
+    '/var/www/keimatch/client/src/pages/admin-invoices.tsx',
+    '/var/www/keimatch/client/src/pages/admin-listings.tsx',
+    '/var/www/keimatch/client/src/pages/admin-lp-gen.tsx',
+    '/var/www/keimatch/client/src/pages/admin-media-gen.tsx',
+    '/var/www/keimatch/client/src/pages/admin-notifications.tsx',
+    '/var/www/keimatch/client/src/pages/admin-revenue.tsx',
+    '/var/www/keimatch/client/src/pages/admin-seo.tsx',
+    '/var/www/keimatch/client/src/pages/admin-settings.tsx',
+    '/var/www/keimatch/client/src/pages/admin-sns.tsx',
+    '/var/www/keimatch/client/src/pages/admin-users.tsx',
+    '/var/www/keimatch/client/src/pages/admin-youtube.tsx',
+    '/var/www/keimatch/client/src/pages/admin.tsx',
+    '/var/www/keimatch/client/src/pages/alternative-trabox.tsx',
+    '/var/www/keimatch/client/src/pages/cancelled-cargo.tsx',
+    '/var/www/keimatch/client/src/pages/cargo-detail.tsx',
+    '/var/www/keimatch/client/src/pages/cargo-form.tsx',
+    '/var/www/keimatch/client/src/pages/cargo-list.tsx',
+    '/var/www/keimatch/client/src/pages/column-category.tsx',
+    '/var/www/keimatch/client/src/pages/column-detail.tsx',
+    '/var/www/keimatch/client/src/pages/columns.tsx',
+    ... 32 more items
+  ]
+}
+[PM2][ERROR] Script not found: /var/www/keimatch/dist/index.cjs
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+[PM2] Init System found: systemd
+Platform systemd
+Template
+[Unit]
+Description=PM2 process manager
+Documentation=https://pm2.keymetrics.io/
+After=network.target
+
+[Service]
+Type=forking
+User=root
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Environment=PATH=/root/.nvm/versions/node/v20.20.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+Environment=PM2_HOME=/root/.pm2
+PIDFile=/root/.pm2/pm2.pid
+Restart=on-failure
+
+ExecStart=/usr/lib/node_modules/pm2/bin/pm2 resurrect
+ExecReload=/usr/lib/node_modules/pm2/bin/pm2 reload all
+ExecStop=/usr/lib/node_modules/pm2/bin/pm2 kill
+
+[Install]
+WantedBy=multi-user.target
+
+Target path
+/etc/systemd/system/pm2-root.service
+Command list
+[ 'systemctl enable pm2-root' ]
+[PM2] Writing init configuration in /etc/systemd/system/pm2-root.service
+[PM2] Making script booting at startup...
+[PM2] [-] Executing: systemctl enable pm2-root...
+[PM2] [v] Command successfully executed.
++---------------------------------------+
+[PM2] Freeze a process list on reboot via:
+$ pm2 save
+
+[PM2] Remove init script via:
+$ pm2 unstartup systemd
+root@srv1087935:/var/www/keimatch# nano /etc/nginx/sites-available/keimatch
+root@srv1087935:/var/www/keimatch# # 有効化してNginx再起動
+ln -s /etc/nginx/sites-available/keimatch /etc/nginx/sites-enabled/
+nginx -t
+systemctl reload nginx
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+root@srv1087935:/var/www/keimatch# # Certbotインストール
+apt-get install -y certbot python3-certbot-nginx
+
+# SSL証明書取得＆自動設定
+certbot --nginx -d keimatch-sinjapan.com -d www.keimatch-sinjapan.com
+
+# メールアドレスを聞かれたら: info@keimatch-sinjapan.com
+# 利用規約に同意: Y
+# HTTPからHTTPSへのリダイレクト: 2（リダイレクトする）
+
+# 自動更新の確認
+certbot renew --dry-run
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+certbot is already the newest version (2.9.0-1).
+python3-certbot-nginx is already the newest version (2.9.0-1).
+0 upgraded, 0 newly installed, 0 to remove and 4 not upgraded.
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Requesting a certificate for keimatch-sinjapan.com and www.keimatch-sinjapan.com
+
+Successfully received certificate.
+Certificate is saved at: /etc/letsencrypt/live/keimatch-sinjapan.com/fullchain.pem
+Key is saved at:         /etc/letsencrypt/live/keimatch-sinjapan.com/privkey.pem
+This certificate expires on 2026-05-31.
+These files will be updated when the certificate renews.
+Certbot has set up a scheduled task to automatically renew this certificate in the background.
+
+Deploying certificate
+Successfully deployed certificate for keimatch-sinjapan.com to /etc/nginx/sites-enabled/keimatch
+Successfully deployed certificate for www.keimatch-sinjapan.com to /etc/nginx/sites-enabled/keimatch
+Congratulations! You have successfully enabled HTTPS on https://keimatch-sinjapan.com and https://www.keimatch-sinjapan.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+If you like Certbot, please consider supporting our work by:
+ * Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+ * Donating to EFF:                    https://eff.org/donate-le
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/ad-aiagent.site.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for ad-aiagent.site and www.ad-aiagent.site
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/keimatch-sinjapan.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for keimatch-sinjapan.com and www.keimatch-sinjapan.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/menz-esthe-town.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for menz-esthe-town.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/only-u.fun.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for only-u.fun and www.only-u.fun
+
+Certbot failed to authenticate some domains (authenticator: nginx). The Certificate Authority reported these problems:
+  Domain: only-u.fun
+  Type:   unauthorized
+  Detail: 2001:550:2:38::28:2: Invalid response from http://only-u.fun/.well-known/acme-challenge/mea6loAGnr9lKK3scJN6M9P3J1k3JVPBXWDC_7fNMwc: 403
+
+Hint: The Certificate Authority failed to verify the temporary nginx configuration changes made by Certbot. Ensure the listed domains point to this nginx server and that it is accessible from the internet.
+
+Failed to renew certificate only-u.fun with error: Some challenges have failed.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/sinjapan-logimatch.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for sinjapan-logimatch.com and www.sinjapan-logimatch.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/sinjapan-manager.com-0001.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Failed to renew certificate sinjapan-manager.com-0001 with error: The manual plugin is not working; there may be problems with your existing configuration.
+The error was: PluginError('An authentication script must be provided with --manual-auth-hook when using the manual plugin non-interactively.')
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/sinjapan-manager.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for sinjapan-manager.com and www.sinjapan-manager.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/sinjapan-onlineschool.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for sinjapan-onlineschool.com and www.sinjapan-onlineschool.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/sinjapan-poker.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Failed to renew certificate sinjapan-poker.com with error: The manual plugin is not working; there may be problems with your existing configuration.
+The error was: PluginError('An authentication script must be provided with --manual-auth-hook when using the manual plugin non-interactively.')
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/sinjapan-worknow.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for sinjapan-worknow.com and www.sinjapan-worknow.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/tramatch-sinjapan.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for tramatch-sinjapan.com and www.tramatch-sinjapan.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Processing /etc/letsencrypt/renewal/www.menz-esthe-town.com.conf
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Simulating renewal of an existing certificate for www.menz-esthe-town.com
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+The following simulated renewals succeeded:
+  /etc/letsencrypt/live/ad-aiagent.site/fullchain.pem (success)
+  /etc/letsencrypt/live/keimatch-sinjapan.com/fullchain.pem (success)
+  /etc/letsencrypt/live/menz-esthe-town.com/fullchain.pem (success)
+  /etc/letsencrypt/live/sinjapan-logimatch.com/fullchain.pem (success)
+  /etc/letsencrypt/live/sinjapan-manager.com/fullchain.pem (success)
+  /etc/letsencrypt/live/sinjapan-onlineschool.com/fullchain.pem (success)
+  /etc/letsencrypt/live/sinjapan-worknow.com/fullchain.pem (success)
+  /etc/letsencrypt/live/tramatch-sinjapan.com/fullchain.pem (success)
+  /etc/letsencrypt/live/www.menz-esthe-town.com/fullchain.pem (success)
+
+The following simulated renewals failed:
+  /etc/letsencrypt/live/only-u.fun/fullchain.pem (failure)
+  /etc/letsencrypt/live/sinjapan-manager.com-0001/fullchain.pem (failure)
+  /etc/letsencrypt/live/sinjapan-poker.com/fullchain.pem (failure)
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+3 renew failure(s), 0 parse failure(s)
+Ask for help or search for solutions at https://community.letsencrypt.org. See the logfile /var/log/letsencrypt/letsencrypt.log or re-run Certbot with -v for more details.
+root@srv1087935:/var/www/keimatch# # アプリが動いているか確認
+pm2 status
+curl -I https://keimatch-sinjapan.com
+┌────┬────────────────────┬──────────┬──────┬───────────┬──────────┬──────────┐
+│ id │ name               │ mode     │ ↺    │ status    │ cpu      │ memory   │
+├────┼────────────────────┼──────────┼──────┼───────────┼──────────┼──────────┤
+│ 6  │ aiagent            │ fork     │ 0    │ online    │ 0%       │ 70.3mb   │
+│ 3  │ menz-esthe-town    │ fork     │ 0    │ online    │ 0%       │ 142.0mb  │
+│ 4  │ onlyu              │ fork     │ 0    │ online    │ 0%       │ 101.2mb  │
+│ 1  │ sinjapan-manager   │ fork     │ 0    │ online    │ 0%       │ 59.5mb   │
+│ 2  │ sinjapan-onlinesc… │ fork     │ 0    │ online    │ 0%       │ 101.7mb  │
+│ 13 │ tramatch           │ fork     │ 3    │ online    │ 0%       │ 240.4mb  │
+└────┴────────────────────┴──────────┴──────┴───────────┴──────────┴──────────┘
+HTTP/2 502 
+server: nginx/1.24.0 (Ubuntu)
+date: Mon, 02 Mar 2026 11:43:36 GMT
+content-type: text/html
+content-length: 166
+
+root@srv1087935:/var/www/keimatch# 

@@ -1,0 +1,46 @@
+Last login: Mon Mar  2 20:34:37 on ttys000
+kazuyaotani@Mac ~ % scp ~/Downloads/IMG_0215_2_1772452267292.PNG root@212.85.24.206:/var/www/keimatch/client/src/assets/logo.png
+scp: stat local "/Users/kazuyaotani/Downloads/IMG_0215_2_1772452267292.PNG": No such file or directory
+kazuyaotani@Mac ~ % find ~ -name "IMG_0215*" -type f 2>/dev/null
+^C
+kazuyaotani@Mac ~ % cd ~/keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu
+mkdir -p client/src/assets
+cp attached_assets/IMG_0215_1772415171642.PNG client/src/assets/logo.png
+git add -A
+git commit -m "Add logo and update asset paths"
+git push origin main
+cd: no such file or directory: /Users/kazuyaotani/keimatutiKEIMATCHorGuo-Nei-Zui-Da-Ji-noAIQiu-He-Qiu-Che-sabisu
+cp: attached_assets/IMG_0215_1772415171642.PNG: No such file or directory
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+kazuyaotani@Mac ~ % ls ~/Desktop/kei* ~/Documents/kei* 2>/dev/null; find ~ -maxdepth 3 -name "keimatch" -type d 2>/dev/null
+zsh: no matches found: /Users/kazuyaotani/Documents/kei*
+kazuyaotani@Mac ~ % cd ~/Desktop
+git clone https://github.com/SINJAPANLLC/keimatch.git
+cd keimatch
+mkdir -p client/src/assets
+cp ~/Desktop/IMG_0215\ 2.PNG client/src/assets/logo.png
+git add -A
+git commit -m "Add logo and update asset paths"
+git push origin main
+Cloning into 'keimatch'...
+remote: Enumerating objects: 198, done.
+remote: Counting objects: 100% (198/198), done.
+remote: Compressing objects: 100% (174/174), done.
+remote: Total 198 (delta 18), reused 198 (delta 18), pack-reused 0 (from 0)
+Receiving objects: 100% (198/198), 1.37 MiB | 3.15 MiB/s, done.
+Resolving deltas: 100% (18/18), done.
+[main dbdb20f] Add logo and update asset paths
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 client/src/assets/logo.png
+Enumerating objects: 10, done.
+Counting objects: 100% (10/10), done.
+Delta compression using up to 10 threads
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (6/6), 90.70 KiB | 90.70 MiB/s, done.
+Total 6 (delta 3), reused 1 (delta 0), pack-reused 0
+remote: Resolving deltas: 100% (3/3), completed with 3 local objects.
+To https://github.com/SINJAPANLLC/keimatch.git
+   9b82d0f..dbdb20f  main -> main
+kazuyaotani@Mac keimatch % 
