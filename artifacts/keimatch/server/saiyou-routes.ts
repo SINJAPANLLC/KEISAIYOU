@@ -925,22 +925,56 @@ ${jobXml}
 
   app.post("/api/admin/sales/crawl", requireAdmin, async (req, res) => {
     try {
-      const { prefecture, keyword, limit = 20 } = req.body;
-      if (!prefecture || !keyword) return res.status(400).json({ message: "都道府県とキーワードを入力してください" });
-      const { searchDuckDuckGoForUrls, crawlLeadsFromUrl } = await import("./lead-crawler");
-      const kw = keyword.replace(/　/g, " ").trim();
-      const baseQuery = kw.includes("軽貨物") ? `${prefecture} ${kw}` : `${prefecture} ${kw} 軽貨物`;
-      const urls = await searchDuckDuckGoForUrls(baseQuery);
+      const { prefecture, keyword, limit = 20, useAI = true } = req.body;
+      if (!prefecture) return res.status(400).json({ message: "都道府県を入力してください" });
+      const { searchDuckDuckGoForUrls, crawlLeadsFromUrl, crawlLeadsWithAI: runFullCrawl } = await import("./lead-crawler");
       let found = 0;
-      for (let i = 0; i < urls.length; i++) {
-        if (found >= limit) break;
-        try {
-          const n = await crawlLeadsFromUrl(urls[i]);
-          found += n;
-          await new Promise((r) => setTimeout(r, 400));
-        } catch { /* continue */ }
+      let searched = 0;
+
+      if (useAI && !keyword) {
+        // AI full crawl for specified prefecture only
+        const { crawlLeadsWithAI: fullCrawl } = await import("./lead-crawler");
+        const result = await fullCrawl(limit);
+        return res.json({ searched: result.searched, found: result.found });
       }
-      res.json({ searched: urls.length, found });
+
+      // AI URL generation for specific prefecture
+      if (useAI && prefecture) {
+        const { generateCompanyUrlsWithOpenAI: genUrls } = await import("./lead-crawler") as any;
+        if (typeof genUrls === "function") {
+          const aiUrls: string[] = await genUrls(prefecture);
+          searched = aiUrls.length;
+          for (const url of aiUrls) {
+            if (found >= limit) break;
+            try {
+              const n = await crawlLeadsFromUrl(url);
+              found += n;
+              await new Promise((r) => setTimeout(r, 400));
+            } catch { /* continue */ }
+          }
+          if (found > 0 || aiUrls.length > 0) {
+            return res.json({ searched, found });
+          }
+        }
+      }
+
+      // Fallback: DuckDuckGo search
+      if (keyword) {
+        const kw = keyword.replace(/　/g, " ").trim();
+        const baseQuery = kw.includes("軽貨物") ? `${prefecture} ${kw}` : `${prefecture} ${kw} 軽貨物`;
+        const urls = await searchDuckDuckGoForUrls(baseQuery);
+        searched = urls.length;
+        for (let i = 0; i < urls.length; i++) {
+          if (found >= limit) break;
+          try {
+            const n = await crawlLeadsFromUrl(urls[i]);
+            found += n;
+            await new Promise((r) => setTimeout(r, 400));
+          } catch { /* continue */ }
+        }
+      }
+
+      res.json({ searched, found });
     } catch (err: any) {
       console.error("[sales/crawl]", err);
       res.status(500).json({ message: "クロールに失敗しました" });

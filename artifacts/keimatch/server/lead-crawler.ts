@@ -144,10 +144,13 @@ const EXCLUDED_EMAIL_DOMAINS = [
 ];
 
 const EXCLUDED_LOCAL_PARTS = [
-  "noreply", "no-reply", "mailer-daemon", "postmaster", "bounce",
+  "noreply", "no-reply", "no_reply", "mailer-daemon", "postmaster", "bounce",
   "taro", "hanako", "jiro", "yamada", "tanaka",
   "sample", "test", "dummy", "admin_test", "user123",
   "webmaster_test", "contact_test",
+  "privacy", "privacy-info", "privacy_info", "gdpr", "dpo",
+  "abuse", "spam", "security", "support", "helpdesk",
+  "unsubscribe", "optout", "opt-out",
 ];
 
 function isValidCompanyEmail(email: string): boolean {
@@ -1243,6 +1246,65 @@ export async function searchDuckDuckGoForUrls(query: string): Promise<string[]> 
   return urls.slice(0, 20);
 }
 
+export async function generateCompanyUrlsWithOpenAI(prefecture: string): Promise<string[]> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return [];
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{
+          role: "user",
+          content: `${prefecture}にある軽貨物配送・運送会社の公式ウェブサイトURLを15個教えてください。条件：
+- 実在する中小企業のみ（ヤマト・佐川・日本郵便などの大手は除く）
+- .co.jp / .jp / .ne.jp ドメイン優先
+- 各社の公式トップページURL（https://で始まる完全URL）
+- 会社概要またはお問い合わせページにメールアドレスが掲載されているような中小企業を優先
+{"urls": ["https://...", ...]} のJSON形式のみで返してください。`,
+        }],
+        response_format: { type: "json_object" },
+        max_tokens: 800,
+      }),
+    });
+
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.log(`[Lead Crawler] OpenAI API error: ${res.status}`);
+      return [];
+    }
+
+    const data: any = await res.json();
+    const content = data.choices?.[0]?.message?.content || "{}";
+    let parsed: any = {};
+    try { parsed = JSON.parse(content); } catch { return []; }
+
+    const urls: string[] = (parsed.urls || []).filter((url: any) => {
+      if (typeof url !== "string") return false;
+      try {
+        const domain = new URL(url).hostname;
+        return !isExcludedDomain(domain);
+      } catch { return false; }
+    });
+
+    console.log(`[Lead Crawler] OpenAI generated ${urls.length} URLs for ${prefecture}`);
+    return urls.slice(0, 15);
+  } catch (err) {
+    console.error("[Lead Crawler] OpenAI URL generation failed:", err);
+    return [];
+  }
+}
+
 export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: number; found: number }> {
   let totalFound = 0;
   let totalSearched = 0;
@@ -1294,12 +1356,36 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
     }
   }
 
-  // Phase 2: Search engine queries
+  // Phase 2: OpenAI-powered company URL generation (primary search method)
+  if (totalFound < limit) {
+    const shuffledPrefs = [...PREFECTURES].sort(() => Math.random() - 0.5);
+    const todaysPrefectures = shuffledPrefs.slice(0, 12);
+
+    for (const prefecture of todaysPrefectures) {
+      if (totalFound >= limit) break;
+      try {
+        const urls = await generateCompanyUrlsWithOpenAI(prefecture);
+        for (const url of urls) {
+          if (totalFound >= limit) break;
+          totalSearched++;
+          const found = await crawlLeadsFromUrl(url);
+          totalFound += found;
+          if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${url}`);
+          await new Promise(r => setTimeout(r, 500));
+        }
+        await new Promise(r => setTimeout(r, 1000));
+      } catch (err) {
+        console.error(`[Lead Crawler] OpenAI phase failed for ${prefecture}:`, err);
+      }
+    }
+  }
+
+  // Phase 3: Search engine queries (fallback when OpenAI didn't reach limit)
   if (totalFound < limit) {
     const shuffled = [...SEARCH_QUERIES].sort(() => Math.random() - 0.5);
-    const todaysQueries = shuffled.slice(0, 25);
+    const todaysQueries = shuffled.slice(0, 10);
     const shuffledPrefs = [...PREFECTURES].sort(() => Math.random() - 0.5);
-    const todaysPrefectures = shuffledPrefs.slice(0, 30);
+    const todaysPrefectures = shuffledPrefs.slice(0, 5);
 
     for (const query of todaysQueries) {
       if (totalFound >= limit) break;
