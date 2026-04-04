@@ -714,8 +714,8 @@ ${jobXml}
       await db.insert(notifications).values({
         userId: job.userId,
         type: "job_approved",
-        title: "求人の審査が完了しました",
-        message: `「${job.title}」の審査が完了し、掲載が開始されました。応募をお待ちください。`,
+        title: "求人が掲載されました",
+        message: `「${job.title}」の掲載が開始されました。応募をお待ちください。`,
         relatedId: job.id,
       });
       // Send email if configured
@@ -725,8 +725,8 @@ ${jobXml}
         if (company?.email) {
           await sendEmail({
             to: company.email,
-            subject: `【KEI SAIYOU】求人「${job.title}」の審査が完了しました`,
-            text: `${company.companyName} 様\n\n求人「${job.title}」の審査が完了し、掲載が開始されました。\n\n応募が届き次第、マイページの「応募者一覧」でご確認いただけます。\n\n──\nKEI SAIYOU 運営事務局`,
+            subject: `【KEI SAIYOU】求人「${job.title}」が掲載されました`,
+            text: `${company.companyName} 様\n\n求人「${job.title}」の掲載が開始されました。\n\n応募が届き次第、マイページの「応募者一覧」でご確認いただけます。\n\n──\nKEI SAIYOU 運営事務局`,
           });
         }
       } catch (emailErr) {
