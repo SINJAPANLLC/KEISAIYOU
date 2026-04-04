@@ -442,7 +442,7 @@ export default function Applications() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="重複応募">重複応募（同一人物）</SelectItem>
-                                  <SelectItem value="連絡不通">連絡不通（電話・メール不通）</SelectItem>
+
                                   <SelectItem value="スパム・悪意のある応募">スパム・悪意のある応募</SelectItem>
                                   <SelectItem value="虚偽の情報">虚偽の情報</SelectItem>
                                   <SelectItem value="その他">その他</SelectItem>
