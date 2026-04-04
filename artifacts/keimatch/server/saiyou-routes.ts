@@ -273,16 +273,16 @@ export function registerSaiyouRoutes(app: Express) {
     }
   });
 
-  // Update monthly limit
+  // Update monthly limit (会社単位)
   app.patch("/api/user/monthly-limit", requireAuth, async (req, res) => {
     try {
       const { monthlyLimit } = req.body;
       if (!monthlyLimit || isNaN(Number(monthlyLimit))) {
         return res.status(400).json({ message: "無効な値です" });
       }
-      await db.update(jobListings)
-        .set({ monthlyLimit: Number(monthlyLimit), updatedAt: new Date() })
-        .where(eq(jobListings.userId, req.session!.userId!));
+      await db.update(users)
+        .set({ monthlyLimit: Number(monthlyLimit) })
+        .where(eq(users.id, req.session!.userId!));
       res.json({ success: true });
     } catch {
       res.status(500).json({ message: "更新に失敗しました" });
@@ -430,12 +430,14 @@ export function registerSaiyouRoutes(app: Express) {
     }
   });
 
-  // Billing history for current user
+  // Billing history for current user (会社単位の月次上限)
   app.get("/api/my/billing", requireAuth, async (req, res) => {
     try {
+      const [company] = await db.select({ monthlyLimit: users.monthlyLimit }).from(users).where(eq(users.id, req.session!.userId!));
+      const companyMonthlyLimit = company?.monthlyLimit ?? 30000;
       const myJobs = await db.select().from(jobListings).where(eq(jobListings.userId, req.session!.userId!));
       const jobMap = Object.fromEntries(myJobs.map((j) => [j.id, j]));
-      if (!myJobs.length) return res.json({ history: [], monthlyTotal: 0, monthlyLimit: 30000 });
+      if (!myJobs.length) return res.json({ history: [], monthlyTotal: 0, monthlyLimit: companyMonthlyLimit });
       const jobIds = myJobs.map((j) => j.id);
       const apps = await db.select().from(applications)
         .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${jobIds.join("','")}']::varchar[]`)})`)
@@ -445,8 +447,7 @@ export function registerSaiyouRoutes(app: Express) {
         const d = new Date(a.createdAt);
         return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
       });
-      const monthlyTotal = thisMonth.filter((a) => a.paymentStatus === "paid").length * 3300;
-      const maxLimit = Math.max(...myJobs.map((j) => j.monthlyLimit), 30000);
+      const monthlyTotal = thisMonth.filter((a) => a.paymentStatus === "paid" || a.paymentStatus === "success").length * 3300;
       const history = apps.map((a) => ({
         id: a.id,
         applicantName: a.name,
@@ -456,7 +457,7 @@ export function registerSaiyouRoutes(app: Express) {
         squarePaymentId: a.squarePaymentId,
         chargedAt: a.createdAt,
       }));
-      res.json({ history, monthlyTotal, monthlyLimit: maxLimit });
+      res.json({ history, monthlyTotal, monthlyLimit: companyMonthlyLimit });
     } catch (err) {
       console.error("[my/billing]", err);
       res.status(500).json({ message: "取得に失敗しました" });
@@ -494,11 +495,24 @@ export function registerSaiyouRoutes(app: Express) {
       if (!job) return res.status(404).json({ message: "求人が見つかりません" });
       if (job.status !== "active") return res.status(400).json({ message: "この求人は現在受付中ではありません" });
 
-      if (job.monthlySpent >= job.monthlyLimit) {
-        return res.status(400).json({ message: "この求人は今月の上限に達しています" });
-      }
-
       const [company] = await db.select().from(users).where(eq(users.id, job.userId));
+
+      // 会社単位の月次上限チェック
+      const companyMonthlyLimit = company?.monthlyLimit ?? 30000;
+      if (companyMonthlyLimit < 9999999) {
+        const companyJobs = await db.select({ id: jobListings.id }).from(jobListings).where(eq(jobListings.userId, job.userId));
+        const companyJobIds = companyJobs.map((j) => j.id);
+        if (companyJobIds.length > 0) {
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const paidThisMonth = await db.select({ count: sql<number>`count(*)` }).from(applications)
+            .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${companyJobIds.join("','")}']::varchar[]`)}) AND (${applications.paymentStatus} = 'paid' OR ${applications.paymentStatus} = 'success') AND ${applications.createdAt} >= ${monthStart}`);
+          const companyMonthlyTotal = (Number(paidThisMonth[0]?.count) || 0) * 3300;
+          if (companyMonthlyTotal >= companyMonthlyLimit) {
+            return res.status(400).json({ message: "今月の上限金額に達しています。設定から上限を変更してください。" });
+          }
+        }
+      }
 
       // Insert application
       const [app_] = await db.insert(applications).values({
@@ -545,14 +559,30 @@ export function registerSaiyouRoutes(app: Express) {
         viewable,
       }).where(eq(applications.id, app_.id));
 
-      // Update job monthly spend
+      // Update job monthly spend (追跡用) + 会社単位の上限到達でアクティブ求人を全停止
       if (viewable) {
         await db.update(jobListings).set({
           monthlySpent: job.monthlySpent + 3300,
           lastApplicationAt: new Date(),
           updatedAt: new Date(),
-          ...(job.monthlySpent + 3300 >= job.monthlyLimit ? { status: "paused" } : {}),
         }).where(eq(jobListings.id, jobId));
+
+        // 会社の今月合計が上限に達したら全求人をpauseに
+        if (companyMonthlyLimit < 9999999) {
+          const companyJobs2 = await db.select({ id: jobListings.id }).from(jobListings).where(eq(jobListings.userId, job.userId));
+          const companyJobIds2 = companyJobs2.map((j) => j.id);
+          if (companyJobIds2.length > 0) {
+            const now2 = new Date();
+            const monthStart2 = new Date(now2.getFullYear(), now2.getMonth(), 1);
+            const paidCount = await db.select({ count: sql<number>`count(*)` }).from(applications)
+              .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${companyJobIds2.join("','")}']::varchar[]`)}) AND (${applications.paymentStatus} = 'paid' OR ${applications.paymentStatus} = 'success') AND ${applications.createdAt} >= ${monthStart2}`);
+            const newTotal = (Number(paidCount[0]?.count) || 0) * 3300;
+            if (newTotal >= companyMonthlyLimit) {
+              await db.update(jobListings).set({ status: "paused", updatedAt: new Date() })
+                .where(sql`${jobListings.userId} = ${job.userId} AND ${jobListings.status} = 'active'`);
+            }
+          }
+        }
       }
 
       // Notify company via system notification

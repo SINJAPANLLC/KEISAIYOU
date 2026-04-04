@@ -51,6 +51,7 @@ export const users = pgTable("users", {
   iso39001: text("iso39001"),
   cargoInsurance: text("cargo_insurance"),
   plan: text("plan").notNull().default("premium"),
+  monthlyLimit: integer("monthly_limit").notNull().default(30000),
   lineUserId: text("line_user_id"),
   notifySystem: boolean("notify_system").notNull().default(true),
   notifyEmail: boolean("notify_email").notNull().default(true),
