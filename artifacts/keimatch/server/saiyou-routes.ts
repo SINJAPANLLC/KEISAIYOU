@@ -1048,9 +1048,17 @@ ${jobXml}
     }
   });
 
+  app.get("/api/square/config", (req, res) => {
+    res.json({
+      applicationId: process.env.SQUARE_APPLICATION_ID || "",
+      locationId: process.env.SQUARE_LOCATION_ID || "",
+      environment: process.env.SQUARE_ENV === "production" ? "production" : "sandbox",
+    });
+  });
+
   app.get("/api/square/status", requireAuth, async (req, res) => {
     try {
-      const [user] = await db.select({ squareCustomerId: users.squareCustomerId, squareCardId: users.squareCardId }).from(users).where(eq(users.id, req.session!.userId!));
+      const [user] = await db.select({ squareCustomerId: users.squareCustomerId, squareCardId: users.squareCardId, squareCardLast4: users.squareCardId }).from(users).where(eq(users.id, req.session!.userId!));
       res.json({
         hasCard: !!(user?.squareCustomerId && user?.squareCardId),
         customerId: user?.squareCustomerId,

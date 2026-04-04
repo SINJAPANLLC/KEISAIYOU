@@ -1,18 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
 import {
-  CreditCard, CheckCircle2, AlertCircle, Calendar, RefreshCw, Settings, Banknote, ChevronDown,
+  CreditCard, CheckCircle2, AlertCircle, Calendar, RefreshCw, Settings, Banknote, Loader2, ShieldCheck,
 } from "lucide-react";
 import DashboardLayout from "@/components/dashboard-layout";
 
@@ -24,10 +22,216 @@ const MONTHLY_LIMITS = [
   { label: "上限なし", value: 9999999 },
 ];
 
+declare global {
+  interface Window {
+    Square?: any;
+  }
+}
+
+function useSquareScript(src: string | null) {
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    if (!src) return;
+    if (window.Square) { setLoaded(true); return; }
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => setLoaded(true));
+      existing.addEventListener("error", () => setError(true));
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = () => setLoaded(true);
+    script.onerror = () => setError(true);
+    document.head.appendChild(script);
+  }, [src]);
+
+  return { loaded, error };
+}
+
+interface CardDialogProps {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  isChanging?: boolean;
+}
+
+function CardRegistrationDialog({ open, onOpenChange, isChanging }: CardDialogProps) {
+  const { toast } = useToast();
+  const cardRef = useRef<any>(null);
+  const paymentsRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mounting, setMounting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [mountError, setMountError] = useState<string | null>(null);
+
+  const { data: squareConfig } = useQuery<{ applicationId: string; locationId: string; environment: string }>({
+    queryKey: ["/api/square/config"],
+    queryFn: () => apiRequest("GET", "/api/square/config").then((r) => r.json()),
+  });
+
+  const scriptSrc = squareConfig
+    ? squareConfig.environment === "production"
+      ? "https://web.squarecdn.com/v1/square.js"
+      : "https://sandbox.web.squarecdn.com/v1/square.js"
+    : null;
+
+  const { loaded: scriptLoaded, error: scriptError } = useSquareScript(scriptSrc);
+
+  const mountCard = useCallback(async () => {
+    if (!squareConfig?.applicationId || !squareConfig?.locationId) return;
+    if (!window.Square) return;
+    if (!containerRef.current) return;
+    if (cardRef.current) return;
+
+    setMounting(true);
+    setMountError(null);
+    try {
+      const payments = window.Square.payments(squareConfig.applicationId, squareConfig.locationId);
+      paymentsRef.current = payments;
+      const card = await payments.card({
+        style: {
+          input: { fontSize: "14px", color: "#1a1a1a", fontFamily: "system-ui, sans-serif" },
+          "input::placeholder": { color: "#9ca3af" },
+          ".input-container": { borderRadius: "8px", borderColor: "#e5e7eb" },
+          ".input-container.is-focus": { borderColor: "hsl(20,85%,56%)" },
+          ".input-container.is-error": { borderColor: "#ef4444" },
+        },
+      });
+      await card.attach(containerRef.current);
+      cardRef.current = card;
+    } catch (e: any) {
+      setMountError(e.message || "カードフォームの読み込みに失敗しました");
+    } finally {
+      setMounting(false);
+    }
+  }, [squareConfig]);
+
+  useEffect(() => {
+    if (open && scriptLoaded && squareConfig) {
+      setTimeout(mountCard, 100);
+    }
+    if (!open) {
+      if (cardRef.current) {
+        try { cardRef.current.destroy(); } catch {}
+        cardRef.current = null;
+      }
+      paymentsRef.current = null;
+      setMountError(null);
+      setSubmitting(false);
+    }
+  }, [open, scriptLoaded, squareConfig, mountCard]);
+
+  const handleSubmit = async () => {
+    if (!cardRef.current) return;
+    setSubmitting(true);
+    try {
+      const result = await cardRef.current.tokenize();
+      if (result.status !== "OK") {
+        const msg = result.errors?.[0]?.message || "カード情報を確認してください";
+        toast({ title: "入力エラー", description: msg, variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      const sourceId = result.token;
+      const res = await apiRequest("POST", "/api/square/save-card", { sourceId });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "保存に失敗しました");
+
+      queryClient.invalidateQueries({ queryKey: ["/api/square/status"] });
+      toast({ title: "カードを登録しました", description: "応募時に自動的に課金されます" });
+      onOpenChange(false);
+    } catch (e: any) {
+      toast({ title: "エラー", description: e.message || "カード登録に失敗しました", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const isLoading = !scriptLoaded && !scriptError;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-primary" />
+            {isChanging ? "カードを変更" : "カードを登録"}
+          </DialogTitle>
+          <DialogDescription>
+            カード情報はSquareの安全なサーバーで管理されます。応募が来た際に自動課金（¥3,300/件）されます。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 pt-1">
+          <div>
+            <Label className="text-xs text-muted-foreground mb-2 block">カード情報</Label>
+            {scriptError ? (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive text-center">
+                カードフォームの読み込みに失敗しました。ページを再読み込みしてください。
+              </div>
+            ) : (
+              <div className="relative min-h-[60px]">
+                {(isLoading || mounting) && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg border border-border bg-muted/30">
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {mountError && (
+                  <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                    {mountError}
+                  </div>
+                )}
+                <div
+                  ref={containerRef}
+                  id="square-card-container"
+                  className={`rounded-lg border border-border p-1 transition-opacity ${isLoading || mounting ? "opacity-0" : "opacity-100"}`}
+                  style={{ minHeight: "56px" }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3 py-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              カード番号はKEI SAIYOUには保存されません。Square社のPCI DSS準拠の環境で管理されます。
+            </p>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
+              キャンセル
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleSubmit}
+              disabled={submitting || isLoading || mounting || !!mountError || !!scriptError}
+            >
+              {submitting ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />処理中…</>
+              ) : (
+                <><CreditCard className="w-4 h-4 mr-2" />{isChanging ? "カードを更新" : "カードを登録"}</>
+              )}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Payment() {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [limitDialogOpen, setLimitDialogOpen] = useState(false);
+  const [cardDialogOpen, setCardDialogOpen] = useState(false);
   const [newLimit, setNewLimit] = useState("30000");
 
   const { data: billing, isLoading } = useQuery<any>({
@@ -35,7 +239,7 @@ export default function Payment() {
     queryFn: () => apiRequest("GET", "/api/my/billing").then((r) => r.json()),
   });
 
-  const { data: squareStatus } = useQuery<any>({
+  const { data: squareStatus, refetch: refetchStatus } = useQuery<any>({
     queryKey: ["/api/square/status"],
     queryFn: () => apiRequest("GET", "/api/square/status").then((r) => r.json()),
   });
@@ -147,7 +351,12 @@ export default function Payment() {
                     <p className="text-sm font-semibold text-emerald-700">登録済み</p>
                   </div>
                   <p className="text-xs text-muted-foreground">カード情報は安全に保管されています</p>
-                  <Button variant="outline" size="sm" className="mt-3 text-xs">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 text-xs"
+                    onClick={() => setCardDialogOpen(true)}
+                  >
                     カードを変更
                   </Button>
                 </div>
@@ -158,7 +367,12 @@ export default function Payment() {
                     <p className="text-sm font-semibold text-amber-700">未登録</p>
                   </div>
                   <p className="text-xs text-muted-foreground mb-3">カードを登録すると応募時に自動課金されます</p>
-                  <Button size="sm" className="text-xs">
+                  <Button
+                    size="sm"
+                    className="text-xs"
+                    onClick={() => setCardDialogOpen(true)}
+                  >
+                    <CreditCard className="w-3.5 h-3.5 mr-1.5" />
                     カードを登録
                   </Button>
                 </div>
@@ -269,6 +483,13 @@ export default function Payment() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Card registration dialog */}
+      <CardRegistrationDialog
+        open={cardDialogOpen}
+        onOpenChange={setCardDialogOpen}
+        isChanging={squareStatus?.hasCard}
+      />
     </DashboardLayout>
   );
 }
