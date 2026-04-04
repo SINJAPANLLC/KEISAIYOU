@@ -97,7 +97,7 @@ export function registerSaiyouRoutes(app: Express) {
         holidays: holidays || null,
         benefits: benefits || null,
         monthlyLimit: parseInt(monthlyLimit) || 30000,
-        status: "active",
+        status: "pending",
       }).returning();
 
       // Notify admin
@@ -795,6 +795,7 @@ ${jobXml}
         totalRevenue, monthlyRevenue, totalApps: allApps.length, monthlyApps: thisMonthApps.length,
         activeCompanies, totalCompanies: allUsers.length,
         pendingCompanies: allUsers.filter((u) => !u.approved).length,
+        pendingJobs: allJobs.filter((j) => j.status === "pending").length,
         unpaidCompanies, activeJobs: allJobs.filter((j) => j.status === "active").length,
         areaMap, recentApps, recentCompanies,
       });
