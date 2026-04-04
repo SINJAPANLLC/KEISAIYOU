@@ -126,6 +126,11 @@ app.use((req, res, next) => {
     return res.status(status).json({ message });
   });
 
+  // Catch unmatched /api/ routes — return JSON, never HTML
+  app.use("/api", (_req: Request, res: Response) => {
+    res.status(404).json({ message: "APIエンドポイントが見つかりません" });
+  });
+
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {

@@ -28,6 +28,13 @@ export async function apiRequest(
   });
 
   await throwIfResNotOk(res);
+
+  // Guard: if server returned HTML instead of JSON, throw a clear error
+  const contentType = res.headers.get("content-type") || "";
+  if (contentType.includes("text/html")) {
+    throw new Error("サーバーに接続できませんでした。ページを再読み込みしてください。");
+  }
+
   return res;
 }
 
