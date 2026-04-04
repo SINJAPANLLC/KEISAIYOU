@@ -90,7 +90,7 @@ function NotificationDropdown() {
           {unreadCount > 0 && (
             <span
               className="absolute top-1 right-1 min-w-[8px] h-2 rounded-full"
-              style={{ backgroundColor: "#40E0D0" }}
+              style={{ backgroundColor: "hsl(20, 85%, 56%)" }}
               data-testid="badge-notification-dot"
             />
           )}
