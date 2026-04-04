@@ -78,8 +78,8 @@ export default function Dashboard() {
           <Card className="border border-border">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground mb-1">今月の課金額</p>
-              <p className="text-3xl font-black text-foreground" data-testid="stat-monthly-charge">¥{monthlyTotal.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">（税込）</p>
+              <p className="text-3xl font-black text-foreground" data-testid="stat-monthly-charge">¥{Math.round(monthlyTotal / 1.1).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">（税別）</p>
             </CardContent>
           </Card>
           <Card className="border border-border">
