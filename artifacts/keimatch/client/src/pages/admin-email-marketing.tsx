@@ -45,7 +45,7 @@ const TEMPLATES = [
     subject: "軽貨物ドライバーの採用コスト、下げませんか？",
     body: `{{companyName}} ご担当者様
 
-はじめまして。軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」の大谷と申します。
+はじめまして。軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」と申します。
 
 突然のご連絡、大変失礼いたします。
 
@@ -59,9 +59,9 @@ const TEMPLATES = [
 
 KEI SAIYOUは「応募が来たときだけ課金」の完全成功報酬型サービスです。
 
-▶ 初期費用・月額固定費ゼロ
+▶ 初期費用０・月額固定費０
 ▶ 応募1件あたり ¥3,000（税別）のみ
-▶ 最短即日で求人掲載スタート
+▶ 1分で求人掲載スタート
 
 まずは無料でご登録いただき、求人を掲載してみてください。
 https://keisaiyou-sinjapan.com/register
@@ -69,7 +69,6 @@ https://keisaiyou-sinjapan.com/register
 ご不明な点がございましたら、お気軽にご返信ください。
 
 ━
-大谷 和哉
 KEI SAIYOU（合同会社SIN JAPAN）
 info@keisaiyou-sinjapan.com`,
   },
