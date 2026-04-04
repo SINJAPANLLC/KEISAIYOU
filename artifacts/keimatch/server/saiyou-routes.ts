@@ -598,7 +598,7 @@ export function registerSaiyouRoutes(app: Express) {
 
       // Send emails (background)
       setImmediate(async () => {
-        const appBaseUrl = process.env.APP_BASE_URL || "https://kei-saiyou.jp";
+        const appBaseUrl = process.env.APP_BASE_URL || "https://keisaiyou-sinjapan.com";
         if (viewable && company?.email) {
           await sendEmail(
             company.email,
@@ -648,7 +648,7 @@ export function registerSaiyouRoutes(app: Express) {
         const co = companyMap[job.userId];
         const pub = job.publishedAt ? new Date(job.publishedAt).toISOString() : new Date(job.createdAt).toISOString();
         const area = job.area || "";
-        const prefecture = area.replace(/[市区町村郡].+$/, "");
+        const prefecture = area.match(/^(.+?[都道府県])/)?.[1] || area;
         const esc = (s: string) => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
         return `  <job>

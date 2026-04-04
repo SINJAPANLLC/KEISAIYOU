@@ -33,7 +33,7 @@ async function indeedFeedHandler(req: IncomingMessage, res: ServerResponse): Pro
       const co = companyMap[job.userId];
       const pub = job.publishedAt ? new Date(job.publishedAt).toISOString() : new Date(job.createdAt).toISOString();
       const area = job.area || "";
-      const prefecture = area.replace(/[市区町村郡].+$/, "");
+      const prefecture = area.match(/^(.+?[都道府県])/)?.[1] || area;
       return `  <job>\n    <title><![CDATA[${esc(job.title)}]]></title>\n    <date>${pub}</date>\n    <referencenumber>${job.id}</referencenumber>\n    <url>${baseUrl}/apply/${job.id}</url>\n    <company><![CDATA[${esc(co?.companyName || "KEI SAIYOU")}]]></company>\n    <city><![CDATA[${esc(area)}]]></city>\n    <state><![CDATA[${esc(prefecture)}]]></state>\n    <country>JP</country>\n    <postalcode>${esc(co?.postalCode || "")}</postalcode>\n    <description><![CDATA[${esc(job.description)}${job.requirements ? "\n\n【応募条件】\n" + esc(job.requirements) : ""}]]></description>\n    <salary><![CDATA[${esc(job.salary)}]]></salary>\n    <jobtype><![CDATA[${esc(job.employmentType)}]]></jobtype>\n  </job>`;
     }).join("\n");
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<source>\n  <publisher>KEI SAIYOU</publisher>\n  <publisherurl>${baseUrl}</publisherurl>\n  <lastBuildDate>${new Date().toISOString()}</lastBuildDate>\n${jobXml}\n</source>`;
