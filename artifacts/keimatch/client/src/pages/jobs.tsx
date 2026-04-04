@@ -4,7 +4,6 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,11 +47,6 @@ const MONTHLY_LIMITS = [
   { label: "上限なし",               value: "9999999" },
 ];
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  active:  { label: "掲載中", color: "border-emerald-400 text-emerald-700 bg-emerald-50" },
-  paused:  { label: "停止中", color: "border-muted-foreground/30 text-muted-foreground" },
-  closed:  { label: "クローズ", color: "border-muted-foreground/30 text-muted-foreground" },
-};
 
 const EMPTY_FORM = {
   title: "",
@@ -212,50 +206,76 @@ export default function Jobs() {
         ) : (
           <div className="space-y-3">
             {jobs.map((job) => {
-              const s = STATUS_MAP[job.status] ?? { label: job.status, color: "border-muted-foreground/30 text-muted-foreground" };
               const appCount = appCountByJob[job.id] || 0;
+              const isPaused = job.status === "paused";
               return (
-                <Card key={job.id} className="border border-border" data-testid={`card-job-${job.id}`}>
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <p className="text-base font-bold text-foreground truncate">{job.title}</p>
-                          <Badge variant="outline" className={`text-[10px] shrink-0 ${s.color}`}>{s.label}</Badge>
+                <Card
+                  key={job.id}
+                  className={`border overflow-hidden ${isPaused ? "border-border opacity-60" : "border-border"}`}
+                  data-testid={`card-job-${job.id}`}
+                >
+                  <div className={`flex h-full ${isPaused ? "border-l-4 border-l-muted-foreground/30" : "border-l-4 border-l-primary"}`}>
+                    <CardContent className="p-5 flex-1">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-bold text-foreground mb-3 leading-snug">{job.title}</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-2 gap-x-4">
+                            <div>
+                              <p className="text-[10px] text-muted-foreground mb-0.5">雇用形態</p>
+                              <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                                <Briefcase className="w-3 h-3 text-primary shrink-0" />{job.employmentType}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground mb-0.5">勤務エリア</p>
+                              <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                                <MapPin className="w-3 h-3 text-primary shrink-0" />{job.area}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground mb-0.5">給与・報酬</p>
+                              <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                                <Banknote className="w-3 h-3 text-primary shrink-0" />{job.salary}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-muted-foreground mb-0.5">応募数</p>
+                              <p className="text-sm font-bold text-primary flex items-center gap-1">
+                                <Users className="w-3 h-3 shrink-0" />{appCount}件
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />掲載開始: {formatDate(job.createdAt)}
+                            {isPaused && <span className="ml-2 text-muted-foreground font-medium">（停止中）</span>}
+                          </p>
                         </div>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{job.employmentType}</span>
-                          <span className="flex items-center gap-1"><Banknote className="w-3 h-3" />{job.salary}</span>
-                          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.area}</span>
-                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />応募 {appCount}件</span>
-                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(job.createdAt)}</span>
+                        <div className="flex flex-col gap-1.5 shrink-0">
+                          <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => openEdit(job)} data-testid={`button-edit-job-${job.id}`}>
+                            <Edit2 className="w-3 h-3 mr-1" />編集
+                          </Button>
+                          {job.status === "active" && (
+                            <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => pauseMutation.mutate({ id: job.id, status: "paused" })}>
+                              <Pause className="w-3 h-3 mr-1" />停止
+                            </Button>
+                          )}
+                          {job.status === "paused" && (
+                            <Button size="sm" variant="outline" className="h-8 px-3 text-xs text-emerald-700 border-emerald-400 hover:bg-emerald-50" onClick={() => pauseMutation.mutate({ id: job.id, status: "active" })}>
+                              <Play className="w-3 h-3 mr-1" />再開
+                            </Button>
+                          )}
+                          <Button
+                            size="sm" variant="outline"
+                            className="h-8 px-3 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+                            onClick={() => { if (confirm(`「${job.title}」を削除しますか？`)) deleteMutation.mutate(job.id); }}
+                            data-testid={`button-delete-job-${job.id}`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => openEdit(job)} data-testid={`button-edit-job-${job.id}`}>
-                          <Edit2 className="w-3 h-3 mr-1" />編集
-                        </Button>
-                        {job.status === "active" && (
-                          <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => pauseMutation.mutate({ id: job.id, status: "paused" })}>
-                            <Pause className="w-3 h-3 mr-1" />停止
-                          </Button>
-                        )}
-                        {job.status === "paused" && (
-                          <Button size="sm" variant="outline" className="h-8 px-3 text-xs text-emerald-700 border-emerald-400 hover:bg-emerald-50" onClick={() => pauseMutation.mutate({ id: job.id, status: "active" })}>
-                            <Play className="w-3 h-3 mr-1" />再開
-                          </Button>
-                        )}
-                        <Button
-                          size="sm" variant="outline"
-                          className="h-8 px-3 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
-                          onClick={() => { if (confirm(`「${job.title}」を削除しますか？`)) deleteMutation.mutate(job.id); }}
-                          data-testid={`button-delete-job-${job.id}`}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
+                    </CardContent>
+                  </div>
                 </Card>
               );
             })}
