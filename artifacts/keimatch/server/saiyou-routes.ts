@@ -79,18 +79,22 @@ export function registerSaiyouRoutes(app: Express) {
 
   app.post("/api/jobs", requireAuth, async (req, res) => {
     try {
-      const { title, employmentType, salary, area, description, requirements, monthlyLimit } = req.body;
+      const { title, jobCategory, employmentType, salary, area, description, requirements, workHours, holidays, benefits, monthlyLimit } = req.body;
       if (!title || !employmentType || !salary || !area || !description) {
         return res.status(400).json({ message: "必須項目を入力してください" });
       }
       const [job] = await db.insert(jobListings).values({
         userId: req.session!.userId!,
         title,
+        jobCategory: jobCategory || null,
         employmentType,
         salary,
         area,
         description,
         requirements: requirements || "",
+        workHours: workHours || null,
+        holidays: holidays || null,
+        benefits: benefits || null,
         monthlyLimit: parseInt(monthlyLimit) || 30000,
         status: "active",
       }).returning();
@@ -128,7 +132,7 @@ export function registerSaiyouRoutes(app: Express) {
 
   app.put("/api/jobs/:id", requireAuth, async (req, res) => {
     try {
-      const { title, employmentType, salary, area, description, requirements, monthlyLimit, status } = req.body;
+      const { title, jobCategory, employmentType, salary, area, description, requirements, workHours, holidays, benefits, monthlyLimit, status } = req.body;
       const [existing] = await db.select().from(jobListings).where(eq(jobListings.id, req.params.id));
       if (!existing) return res.status(404).json({ message: "求人が見つかりません" });
       if (existing.userId !== req.session!.userId && req.session?.role !== "admin") {
@@ -136,11 +140,15 @@ export function registerSaiyouRoutes(app: Express) {
       }
       const updateData: any = { updatedAt: new Date() };
       if (title) updateData.title = title;
+      if (jobCategory !== undefined) updateData.jobCategory = jobCategory || null;
       if (employmentType) updateData.employmentType = employmentType;
       if (salary) updateData.salary = salary;
       if (area) updateData.area = area;
       if (description) updateData.description = description;
       if (requirements !== undefined) updateData.requirements = requirements;
+      if (workHours !== undefined) updateData.workHours = workHours || null;
+      if (holidays !== undefined) updateData.holidays = holidays || null;
+      if (benefits !== undefined) updateData.benefits = benefits || null;
       if (monthlyLimit) updateData.monthlyLimit = parseInt(monthlyLimit);
       if (status && req.session?.role === "admin") updateData.status = status;
       if (status === "paused" || status === "closed") updateData.status = status;
