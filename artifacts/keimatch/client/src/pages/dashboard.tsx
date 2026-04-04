@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, CreditCard, ArrowRight, AlertCircle } from "lucide-react";
+import { Plus, Users, CreditCard, ArrowRight } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
 
@@ -42,8 +42,6 @@ export default function Dashboard() {
   const activeJobs = jobs.filter((j: any) => j.status === "active").length;
 
   const monthlyTotal = billing?.monthlyTotal ?? 0;
-  const monthlyLimit = billing?.monthlyLimit ?? 30000;
-  const usagePct = monthlyLimit > 0 ? Math.min(100, Math.round((monthlyTotal / monthlyLimit) * 100)) : 0;
 
   const recentApps = applications.slice(0, 5);
 
@@ -91,29 +89,16 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground mt-1">件</p>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Monthly limit usage bar */}
-        {monthlyLimit > 0 && (
-          <div className="mb-6 p-4 rounded-lg border border-border bg-muted/30">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-foreground">今月の利用状況</p>
-              <p className="text-sm text-muted-foreground">{usagePct}%使用</p>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2.5">
-              <div
-                className={`h-2.5 rounded-full transition-all duration-500 ${usagePct > 80 ? "bg-destructive" : "bg-primary"}`}
-                style={{ width: `${usagePct}%` }}
-              />
-            </div>
-            {usagePct > 80 && (
-              <p className="text-xs text-destructive mt-2 flex items-center gap-1">
-                <AlertCircle className="w-3 h-3" />
-                上限に近づいています。上限到達で掲載が自動停止されます。
+          <Card className="border border-border bg-primary/5">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                <CreditCard className="w-3 h-3 text-primary" />料金について
               </p>
-            )}
-          </div>
-        )}
+              <p className="text-2xl font-black text-primary">¥3,000</p>
+              <p className="text-xs text-muted-foreground mt-1">/ 1応募（税別）</p>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left column */}
@@ -187,17 +172,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Billing info */}
-            <div className="rounded-xl border border-border bg-muted/30 p-4">
-              <p className="text-sm font-semibold text-foreground mb-1 flex items-center gap-1.5">
-                <CreditCard className="w-4 h-4 text-primary" />料金について
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                掲載は無料です。<br />
-                応募が届いた時点で <strong>¥3,000（税別）/ 1応募</strong> が発生します。<br />
-                月の上限に達すると掲載が自動停止されます。
-              </p>
-            </div>
           </div>
         </div>
       </div>
