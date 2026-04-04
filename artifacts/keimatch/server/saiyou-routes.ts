@@ -8,6 +8,7 @@ import {
   notifications,
   emailLeads,
   emailCampaigns,
+  payments,
 } from "@shared/schema";
 import { sendEmail } from "./notification-service";
 import { chargeSquareCard } from "./square";
@@ -202,14 +203,88 @@ export function registerSaiyouRoutes(app: Express) {
           message: applications.message,
           paymentStatus: applications.paymentStatus,
           viewable: applications.viewable,
+          reviewStatus: applications.reviewStatus,
           createdAt: applications.createdAt,
         })
         .from(applications)
         .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${jobIds.join("','")}']::varchar[]`)})`)
         .orderBy(desc(applications.createdAt));
-      res.json(apps);
+      // Enrich with job title
+      const jobMap = Object.fromEntries(myJobs.map((j) => [j.id, j.title]));
+      const enriched = apps.map((a) => ({ ...a, jobTitle: jobMap[a.jobId] || "" }));
+      res.json(enriched);
     } catch (err) {
       console.error("[my/applications]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Update monthly limit
+  app.patch("/api/user/monthly-limit", requireAuth, async (req, res) => {
+    try {
+      const { monthlyLimit } = req.body;
+      if (!monthlyLimit || isNaN(Number(monthlyLimit))) {
+        return res.status(400).json({ message: "無効な値です" });
+      }
+      await db.update(jobListings)
+        .set({ monthlyLimit: Number(monthlyLimit), updatedAt: new Date() })
+        .where(eq(jobListings.userId, req.session!.userId!));
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  // Update application review status (企業が応募者ステータスを変更)
+  app.patch("/api/applications/:id/review-status", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      if (!["new", "reviewed", "rejected"].includes(status)) {
+        return res.status(400).json({ message: "無効なステータスです" });
+      }
+      // Verify the application belongs to this user's job
+      const [app_] = await db.select().from(applications).where(eq(applications.id, req.params.id));
+      if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
+      if (!job || (job.userId !== req.session!.userId && req.session?.role !== "admin")) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const [updated] = await db.update(applications).set({ reviewStatus: status }).where(eq(applications.id, req.params.id)).returning();
+      res.json(updated);
+    } catch {
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  // Billing history for current user
+  app.get("/api/my/billing", requireAuth, async (req, res) => {
+    try {
+      const myJobs = await db.select().from(jobListings).where(eq(jobListings.userId, req.session!.userId!));
+      const jobMap = Object.fromEntries(myJobs.map((j) => [j.id, j]));
+      if (!myJobs.length) return res.json({ history: [], monthlyTotal: 0, monthlyLimit: 30000 });
+      const jobIds = myJobs.map((j) => j.id);
+      const apps = await db.select().from(applications)
+        .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${jobIds.join("','")}']::varchar[]`)})`)
+        .orderBy(desc(applications.createdAt));
+      const now = new Date();
+      const thisMonth = apps.filter((a) => {
+        const d = new Date(a.createdAt);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      });
+      const monthlyTotal = thisMonth.filter((a) => a.paymentStatus === "paid").length * 3000;
+      const maxLimit = Math.max(...myJobs.map((j) => j.monthlyLimit), 30000);
+      const history = apps.map((a) => ({
+        id: a.id,
+        applicantName: a.name,
+        jobTitle: jobMap[a.jobId]?.title || "",
+        amount: 3000,
+        status: a.paymentStatus,
+        squarePaymentId: a.squarePaymentId,
+        chargedAt: a.createdAt,
+      }));
+      res.json({ history, monthlyTotal, monthlyLimit: maxLimit });
+    } catch (err) {
+      console.error("[my/billing]", err);
       res.status(500).json({ message: "取得に失敗しました" });
     }
   });
@@ -470,15 +545,6 @@ ${jobXml}
     }
   });
 
-  app.get("/api/admin/applications", requireAdmin, async (_req, res) => {
-    try {
-      const apps = await db.select().from(applications).orderBy(desc(applications.createdAt));
-      res.json(apps);
-    } catch {
-      res.status(500).json({ message: "取得に失敗しました" });
-    }
-  });
-
   // ─── Admin: Sales leads ─────────────────────────────────────────────────
   app.get("/api/admin/sales/leads", requireAdmin, async (_req, res) => {
     try {
@@ -549,6 +615,165 @@ ${jobXml}
     } catch (err: any) {
       console.error("[sales/send]", err);
       res.status(500).json({ message: "送信に失敗しました" });
+    }
+  });
+
+  // ─── Admin: Dashboard stats ─────────────────────────────────────────────
+  app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
+    try {
+      const allUsers = await db.select().from(users).where(sql`${users.role} != 'admin'`);
+      const allJobs = await db.select().from(jobListings);
+      const allApps = await db.select().from(applications);
+      const now = new Date();
+      const thisMonthApps = allApps.filter((a) => {
+        const d = new Date(a.createdAt);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      });
+      const paidApps = allApps.filter((a) => a.paymentStatus === "paid");
+      const thisMonthPaid = thisMonthApps.filter((a) => a.paymentStatus === "paid");
+      const totalRevenue = paidApps.length * 3000;
+      const monthlyRevenue = thisMonthPaid.length * 3000;
+      const unpaidCompanies = [...new Set(allApps.filter((a) => a.paymentStatus === "failed").map((a) => {
+        const job = allJobs.find((j) => j.id === a.jobId);
+        return job?.userId;
+      }).filter(Boolean))].length;
+      const activeCompanies = [...new Set(allJobs.filter((j) => j.status === "active").map((j) => j.userId))].length;
+      // Area breakdown
+      const areaMap: Record<string, number> = {};
+      for (const j of allJobs.filter((j) => j.status === "active")) {
+        const pref = j.area?.split(/[都道府県市区]/)[0] || "その他";
+        areaMap[pref] = (areaMap[pref] || 0) + 1;
+      }
+      // Recent applications enriched
+      const recentApps = allApps.slice(0, 10).map((a) => {
+        const job = allJobs.find((j) => j.id === a.jobId);
+        const company = allUsers.find((u) => u.id === job?.userId);
+        return { ...a, jobTitle: job?.title || "", companyName: company?.companyName || "" };
+      });
+      // Recent companies
+      const recentCompanies = allUsers.slice(-8).reverse().map((u) => ({
+        id: u.id, companyName: u.companyName, email: u.email, prefecture: u.prefecture,
+        approved: u.approved, createdAt: u.createdAt,
+        monthlyApps: thisMonthApps.filter((a) => {
+          const job = allJobs.find((j) => j.id === a.jobId);
+          return job?.userId === u.id;
+        }).length,
+      }));
+      res.json({
+        totalRevenue, monthlyRevenue, totalApps: allApps.length, monthlyApps: thisMonthApps.length,
+        activeCompanies, totalCompanies: allUsers.length,
+        pendingCompanies: allUsers.filter((u) => !u.approved).length,
+        unpaidCompanies, activeJobs: allJobs.filter((j) => j.status === "active").length,
+        areaMap, recentApps, recentCompanies,
+      });
+    } catch (err) {
+      console.error("[admin/stats]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Admin: Revenue stats
+  app.get("/api/admin/revenue-stats", requireAdmin, async (_req, res) => {
+    try {
+      const allJobs = await db.select().from(jobListings);
+      const allApps = await db.select().from(applications);
+      const allUsers = await db.select({ id: users.id, companyName: users.companyName }).from(users);
+      // Monthly breakdown (last 6 months)
+      const monthly: Record<string, { revenue: number; apps: number }> = {};
+      for (const a of allApps.filter((a) => a.paymentStatus === "paid")) {
+        const d = new Date(a.createdAt);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        if (!monthly[key]) monthly[key] = { revenue: 0, apps: 0 };
+        monthly[key].revenue += 3000;
+        monthly[key].apps += 1;
+      }
+      // Company breakdown
+      const companyMap: Record<string, { companyName: string; paidApps: number; failedApps: number }> = {};
+      for (const a of allApps) {
+        const job = allJobs.find((j) => j.id === a.jobId);
+        if (!job) continue;
+        const user = allUsers.find((u) => u.id === job.userId);
+        const uid = job.userId;
+        if (!companyMap[uid]) companyMap[uid] = { companyName: user?.companyName || "不明", paidApps: 0, failedApps: 0 };
+        if (a.paymentStatus === "paid") companyMap[uid].paidApps += 1;
+        if (a.paymentStatus === "failed") companyMap[uid].failedApps += 1;
+      }
+      const companies = Object.entries(companyMap).map(([id, v]) => ({
+        userId: id, companyName: v.companyName,
+        revenue: v.paidApps * 3000, paidApps: v.paidApps, failedApps: v.failedApps,
+      })).sort((a, b) => b.revenue - a.revenue);
+      res.json({ monthly, companies });
+    } catch (err) {
+      console.error("[admin/revenue-stats]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Admin: Force stop company
+  app.post("/api/admin/users/:id/force-stop", requireAdmin, async (req, res) => {
+    try {
+      await db.update(jobListings).set({ status: "paused", updatedAt: new Date() }).where(eq(jobListings.userId, req.params.id));
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "強制停止に失敗しました" });
+    }
+  });
+
+  // Admin: Get applications enriched with job + company info
+  app.get("/api/admin/applications", requireAdmin, async (_req, res) => {
+    try {
+      const allJobs = await db.select().from(jobListings);
+      const allUsers = await db.select({ id: users.id, companyName: users.companyName }).from(users);
+      const apps = await db.select().from(applications).orderBy(desc(applications.createdAt));
+      const enriched = apps.map((a) => {
+        const job = allJobs.find((j) => j.id === a.jobId);
+        const user = allUsers.find((u) => u.id === job?.userId);
+        return { ...a, jobTitle: job?.title || "", companyName: user?.companyName || "" };
+      });
+      res.json(enriched);
+    } catch {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Admin: Retry payment for failed application
+  app.post("/api/admin/applications/:id/retry-payment", requireAdmin, async (req, res) => {
+    try {
+      const [application] = await db.select().from(applications).where(eq(applications.id, req.params.id)).limit(1);
+      if (!application) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, application.jobId)).limit(1);
+      if (!job) return res.status(404).json({ message: "求人が見つかりません" });
+      const [company] = await db.select().from(users).where(eq(users.id, job.userId)).limit(1);
+      if (!company?.squareCustomerId || !company?.squareCardId) {
+        return res.status(400).json({ message: "カード情報が登録されていません" });
+      }
+      const result = await chargeSquareCard({
+        customerId: company.squareCustomerId,
+        cardId: company.squareCardId,
+        amountYen: 3000,
+        note: `KEI SAIYOU 応募通知（再試行） - ${job.title}`,
+      });
+      const success = result.status === "COMPLETED";
+      if (success) {
+        await db.update(applications).set({ paymentStatus: "paid", updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+      }
+      res.json({ success });
+    } catch {
+      res.status(500).json({ message: "再試行に失敗しました" });
+    }
+  });
+
+  // Admin: Update lead with prefecture
+  app.patch("/api/admin/sales/leads/:id", requireAdmin, async (req, res) => {
+    try {
+      const { status, prefecture } = req.body;
+      const update: any = {};
+      if (status) update.status = status;
+      if (prefecture !== undefined) update.prefecture = prefecture;
+      const [updated] = await db.update(emailLeads).set(update).where(eq(emailLeads.id, req.params.id)).returning();
+      res.json(updated);
+    } catch {
+      res.status(500).json({ message: "更新に失敗しました" });
     }
   });
 

@@ -11,19 +11,28 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Briefcase, Plus, Edit2, Trash2, Pause, MapPin, Banknote, Users, AlertCircle,
+  Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, AlertCircle, Calendar,
 } from "lucide-react";
 
 type Job = {
   id: string;
   title: string;
+  jobCategory?: string;
   employmentType: string;
   salary: string;
   area: string;
   description: string;
   requirements: string;
+  workHours?: string;
+  holidays?: string;
+  benefits?: string;
+  requiresLicense?: boolean;
+  requiresBlackNumber?: boolean;
+  requiresVehicle?: boolean;
+  requiresExperience?: boolean;
   status: string;
   monthlyLimit: number;
   monthlySpent: number;
@@ -31,6 +40,7 @@ type Job = {
   publishedAt?: string;
 };
 
+const JOB_CATEGORIES = ["軽貨物ドライバー", "宅配ドライバー", "幹線輸送ドライバー", "EC配送", "フードデリバリー", "企業配送", "その他"];
 const EMPLOYMENT_TYPES = ["業務委託", "正社員", "契約社員", "パート・アルバイト", "その他"];
 const MONTHLY_LIMITS = [
   { label: "3万円（最大10応募/月）", value: "30000" },
@@ -49,11 +59,19 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 
 const EMPTY_FORM = {
   title: "",
+  jobCategory: "",
   employmentType: "",
   salary: "",
   area: "",
   description: "",
   requirements: "",
+  workHours: "",
+  holidays: "",
+  benefits: "",
+  requiresLicense: false,
+  requiresBlackNumber: false,
+  requiresVehicle: false,
+  requiresExperience: false,
   monthlyLimit: "30000",
 };
 
@@ -61,19 +79,19 @@ export default function Jobs() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Job | null>(null);
-  const [appsJobId, setAppsJobId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({ queryKey: ["/api/jobs"] });
 
-  const { data: appList = [] } = useQuery<any[]>({
-    queryKey: ["/api/jobs", appsJobId, "applications"],
-    queryFn: () =>
-      appsJobId
-        ? apiRequest("GET", `/api/jobs/${appsJobId}/applications`).then((r) => r.json())
-        : [],
-    enabled: !!appsJobId,
+  const { data: allApps = [] } = useQuery<any[]>({
+    queryKey: ["/api/my/applications"],
+    queryFn: () => apiRequest("GET", "/api/my/applications").then((r) => r.json()),
   });
+
+  const appCountByJob = allApps.reduce((acc: Record<string, number>, a: any) => {
+    acc[a.jobId] = (acc[a.jobId] || 0) + 1;
+    return acc;
+  }, {});
 
   const createMutation = useMutation({
     mutationFn: (data: typeof EMPTY_FORM) =>
@@ -99,8 +117,12 @@ export default function Jobs() {
   });
 
   const pauseMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("PUT", `/api/jobs/${id}`, { status: "paused" }).then((r) => r.json()),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/jobs"] }); toast({ title: "求人を停止しました" }); },
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      apiRequest("PUT", `/api/jobs/${id}`, { status }).then((r) => r.json()),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      toast({ title: vars.status === "paused" ? "求人を停止しました" : "求人を再開しました" });
+    },
   });
 
   const deleteMutation = useMutation({
@@ -108,16 +130,26 @@ export default function Jobs() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/jobs"] }); toast({ title: "求人を削除しました" }); },
   });
 
+  const up = (key: string, val: any) => setForm((f) => ({ ...f, [key]: val }));
+
   const openCreate = () => { setEditing(null); setForm(EMPTY_FORM); setOpen(true); };
   const openEdit = (job: Job) => {
     setEditing(job);
     setForm({
       title: job.title,
+      jobCategory: job.jobCategory || "",
       employmentType: job.employmentType,
       salary: job.salary,
       area: job.area,
       description: job.description,
       requirements: job.requirements || "",
+      workHours: job.workHours || "",
+      holidays: job.holidays || "",
+      benefits: job.benefits || "",
+      requiresLicense: job.requiresLicense ?? false,
+      requiresBlackNumber: job.requiresBlackNumber ?? false,
+      requiresVehicle: job.requiresVehicle ?? false,
+      requiresExperience: job.requiresExperience ?? false,
       monthlyLimit: String(job.monthlyLimit),
     });
     setOpen(true);
@@ -129,166 +161,147 @@ export default function Jobs() {
       toast({ variant: "destructive", title: "必須項目を入力してください" });
       return;
     }
+    const data = {
+      ...form,
+      monthlyLimit: Number(form.monthlyLimit),
+      requiresLicense: Boolean(form.requiresLicense),
+      requiresBlackNumber: Boolean(form.requiresBlackNumber),
+      requiresVehicle: Boolean(form.requiresVehicle),
+      requiresExperience: Boolean(form.requiresExperience),
+    };
     if (editing) {
-      updateMutation.mutate({ id: editing.id, data: form });
+      updateMutation.mutate({ id: editing.id, data });
     } else {
-      createMutation.mutate(form);
+      createMutation.mutate(data as any);
     }
   };
 
-  const up = (k: keyof typeof EMPTY_FORM, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  const formatDate = (s: string) => new Date(s).toLocaleDateString("ja-JP");
 
   return (
     <DashboardLayout>
-      <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
-        {/* Hero banner */}
+      <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto">
         <div className="rounded-xl p-6 mb-6 hero-gradient relative overflow-hidden">
           <div className="hero-grid absolute inset-0 opacity-30" />
-          <div className="relative z-10 flex items-center justify-between">
+          <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
             <div>
-              <p className="text-white/80 text-xs mb-0.5">JOBS</p>
+              <p className="text-white/80 text-xs mb-0.5">JOB LISTINGS</p>
               <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">求人管理</h1>
               <p className="text-white/70 text-sm mt-1">掲載申請・応募者確認・上限設定</p>
             </div>
             <Button
               onClick={openCreate}
-              className="bg-white text-primary hover:bg-white/90 shrink-0"
+              className="bg-white text-primary hover:bg-white/90 font-semibold"
               data-testid="button-create-job"
             >
-              <Plus className="w-4 h-4 mr-1" />新規作成
+              <Plus className="w-4 h-4 mr-1.5" />求人を作成
             </Button>
           </div>
         </div>
 
-        {/* Billing note */}
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 mb-6 text-xs text-amber-800">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <p>応募通知：¥3,000 / 件（税込）。月の上限金額に達すると掲載が自動停止されます。</p>
-        </div>
-
-        {/* Job list */}
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i}><CardContent className="p-4"><Skeleton className="h-16 w-full" /></CardContent></Card>
+              <Card key={i}><CardContent className="p-5"><Skeleton className="h-20 w-full" /></CardContent></Card>
             ))}
           </div>
         ) : jobs.length === 0 ? (
-          <Card>
-            <CardContent className="p-16 flex flex-col items-center text-center">
-              <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-3" />
-              <p className="font-semibold text-foreground mb-1" data-testid="text-empty-state">
-                求人がまだありません
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">「新規作成」から求人を登録してください</p>
-              <Button onClick={openCreate}>
-                <Plus className="w-4 h-4 mr-1" />最初の求人を作成
+          <Card className="border border-dashed border-border">
+            <CardContent className="p-16 flex flex-col items-center text-center gap-4">
+              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
+                <Briefcase className="w-7 h-7 text-muted-foreground/40" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-1">まだ求人がありません</p>
+                <p className="text-xs text-muted-foreground">「求人を作成」から最初の求人票を作成してください</p>
+              </div>
+              <Button onClick={openCreate} data-testid="button-create-first-job">
+                <Plus className="w-4 h-4 mr-1.5" />最初の求人を作成
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3" data-testid="list-jobs">
+          <div className="space-y-3">
             {jobs.map((job) => {
-              const s = STATUS_MAP[job.status] || { label: job.status, color: "" };
+              const s = STATUS_MAP[job.status] ?? { label: job.status, color: "border-muted-foreground/30 text-muted-foreground" };
+              const appCount = appCountByJob[job.id] || 0;
+              const usagePct = job.monthlyLimit < 9999999
+                ? Math.min(100, Math.round((job.monthlySpent / job.monthlyLimit) * 100))
+                : 0;
               return (
-                <Card key={job.id} className="border border-border hover:shadow-sm transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                        <Briefcase className="w-5 h-5 text-primary" />
-                      </div>
+                <Card key={job.id} className="border border-border" data-testid={`card-job-${job.id}`}>
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <p className="font-semibold text-foreground">{job.title}</p>
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <p className="text-base font-bold text-foreground truncate">{job.title}</p>
                           <Badge variant="outline" className={`text-[10px] shrink-0 ${s.color}`}>{s.label}</Badge>
                         </div>
-                        <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{job.employmentType}</span>
                           <span className="flex items-center gap-1"><Banknote className="w-3 h-3" />{job.salary}</span>
                           <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{job.area}</span>
+                          <span className="flex items-center gap-1"><Users className="w-3 h-3" />応募 {appCount}件</span>
+                          <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(job.createdAt)}</span>
                         </div>
-                        {job.status === "active" && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                        {job.monthlyLimit < 9999999 && (
+                          <div className="mt-3">
+                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                              <span>今月の利用額: ¥{job.monthlySpent.toLocaleString()}</span>
+                              <span>上限: ¥{job.monthlyLimit.toLocaleString()}</span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-1.5">
                               <div
-                                className="h-full bg-primary rounded-full transition-all"
-                                style={{ width: `${Math.min(100, (job.monthlySpent / job.monthlyLimit) * 100)}%` }}
+                                className={`h-1.5 rounded-full ${usagePct > 80 ? "bg-destructive" : "bg-primary"}`}
+                                style={{ width: `${usagePct}%` }}
                               />
                             </div>
-                            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                              ¥{job.monthlySpent.toLocaleString()} / ¥{job.monthlyLimit >= 9999999 ? "∞" : job.monthlyLimit.toLocaleString()}
-                            </span>
                           </div>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => setAppsJobId(appsJobId === job.id ? null : job.id)}
-                          title="応募者を見る"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 text-xs"
+                          onClick={() => openEdit(job)}
+                          data-testid={`button-edit-job-${job.id}`}
                         >
-                          <Users className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(job)} title="編集">
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-3 h-3 mr-1" />編集
                         </Button>
                         {job.status === "active" && (
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-amber-600"
-                            onClick={() => pauseMutation.mutate(job.id)}
-                            title="停止"
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-xs"
+                            onClick={() => pauseMutation.mutate({ id: job.id, status: "paused" })}
                           >
-                            <Pause className="w-4 h-4" />
+                            <Pause className="w-3 h-3 mr-1" />停止
+                          </Button>
+                        )}
+                        {job.status === "paused" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-xs text-emerald-700 border-emerald-400 hover:bg-emerald-50"
+                            onClick={() => pauseMutation.mutate({ id: job.id, status: "active" })}
+                          >
+                            <Play className="w-3 h-3 mr-1" />再開
                           </Button>
                         )}
                         <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-destructive"
-                          onClick={() => { if (confirm("この求人を削除しますか？")) deleteMutation.mutate(job.id); }}
-                          title="削除"
+                          size="sm"
+                          variant="outline"
+                          className="h-8 px-3 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
+                          onClick={() => {
+                            if (confirm(`「${job.title}」を削除しますか？`)) deleteMutation.mutate(job.id);
+                          }}
+                          data-testid={`button-delete-job-${job.id}`}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
-
-                    {/* Applicants drawer */}
-                    {appsJobId === job.id && (
-                      <div className="mt-4 border-t pt-4">
-                        <p className="text-xs font-semibold text-muted-foreground mb-3">応募者一覧</p>
-                        {appList.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">まだ応募がありません</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {appList.map((a: any) => (
-                              <div
-                                key={a.id}
-                                className={`rounded-lg p-3 text-xs ${a.viewable ? "bg-muted/40" : "bg-red-50 border border-red-200"}`}
-                              >
-                                {a.viewable ? (
-                                  <div>
-                                    <p className="font-semibold">{a.name}</p>
-                                    <p className="text-muted-foreground">{a.phone} / {a.email}</p>
-                                    {a.licenseType && <p className="mt-1">免許：{a.licenseType}　黒ナンバー：{a.hasBlackNumber ? "あり" : "なし"}</p>}
-                                    {a.availableAreas && <p>稼働エリア：{a.availableAreas}</p>}
-                                    {a.message && <p className="mt-1 text-muted-foreground">{a.message}</p>}
-                                  </div>
-                                ) : (
-                                  <p className="text-red-700 font-medium">
-                                    決済失敗 — 応募者情報は非表示です。設定画面からカード情報をご確認ください。
-                                  </p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               );
@@ -304,7 +317,9 @@ export default function Jobs() {
             <DialogTitle>{editing ? "求人を編集" : "求人を新規作成"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
-            <div className="space-y-2">
+
+            {/* タイトル */}
+            <div className="space-y-1.5">
               <Label>求人タイトル <span className="text-destructive">*</span></Label>
               <Input
                 value={form.title}
@@ -314,7 +329,22 @@ export default function Jobs() {
                 data-testid="input-job-title"
               />
             </div>
-            <div className="space-y-2">
+
+            {/* 職種 */}
+            <div className="space-y-1.5">
+              <Label>職種</Label>
+              <Select value={form.jobCategory} onValueChange={(v) => up("jobCategory", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="職種を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {JOB_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* 雇用形態 */}
+            <div className="space-y-1.5">
               <Label>雇用形態 <span className="text-destructive">*</span></Label>
               <Select value={form.employmentType} onValueChange={(v) => up("employmentType", v)} required>
                 <SelectTrigger data-testid="select-employment-type">
@@ -325,8 +355,10 @@ export default function Jobs() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label>給与 <span className="text-destructive">*</span></Label>
+
+            {/* 給与 */}
+            <div className="space-y-1.5">
+              <Label>給与・報酬 <span className="text-destructive">*</span></Label>
               <Input
                 value={form.salary}
                 onChange={(e) => up("salary", e.target.value)}
@@ -335,7 +367,9 @@ export default function Jobs() {
                 data-testid="input-job-salary"
               />
             </div>
-            <div className="space-y-2">
+
+            {/* 勤務エリア */}
+            <div className="space-y-1.5">
               <Label>勤務エリア <span className="text-destructive">*</span></Label>
               <Input
                 value={form.area}
@@ -345,28 +379,87 @@ export default function Jobs() {
                 data-testid="input-job-area"
               />
             </div>
-            <div className="space-y-2">
+
+            {/* 仕事内容 */}
+            <div className="space-y-1.5">
               <Label>仕事内容 <span className="text-destructive">*</span></Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => up("description", e.target.value)}
                 placeholder="仕事内容を詳しく入力してください..."
-                rows={5}
+                rows={4}
                 required
                 data-testid="textarea-job-description"
               />
             </div>
-            <div className="space-y-2">
-              <Label>応募条件</Label>
+
+            {/* 勤務時間 */}
+            <div className="space-y-1.5">
+              <Label>勤務時間</Label>
+              <Input
+                value={form.workHours}
+                onChange={(e) => up("workHours", e.target.value)}
+                placeholder="例: 8:00〜18:00（実働8時間）"
+              />
+            </div>
+
+            {/* 休日 */}
+            <div className="space-y-1.5">
+              <Label>休日</Label>
+              <Input
+                value={form.holidays}
+                onChange={(e) => up("holidays", e.target.value)}
+                placeholder="例: 週休2日（土日）、年間120日"
+              />
+            </div>
+
+            {/* 待遇・福利厚生 */}
+            <div className="space-y-1.5">
+              <Label>待遇・福利厚生</Label>
+              <Textarea
+                value={form.benefits}
+                onChange={(e) => up("benefits", e.target.value)}
+                placeholder="例: 社会保険完備、交通費支給、車両貸与可"
+                rows={2}
+              />
+            </div>
+
+            {/* 応募条件 */}
+            <div className="space-y-1.5">
+              <Label>応募条件（テキスト）</Label>
               <Textarea
                 value={form.requirements}
                 onChange={(e) => up("requirements", e.target.value)}
-                placeholder="例: 普通自動車免許（AT限定可）・黒ナンバー取得者優遇"
-                rows={3}
+                placeholder="例: やる気のある方歓迎！経験不問"
+                rows={2}
                 data-testid="textarea-job-requirements"
               />
             </div>
+
+            {/* 応募条件チェックボックス */}
             <div className="space-y-2">
+              <Label>応募条件</Label>
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                {[
+                  { key: "requiresLicense", label: "免許必須" },
+                  { key: "requiresBlackNumber", label: "黒ナンバー必須" },
+                  { key: "requiresVehicle", label: "車両持込必須" },
+                  { key: "requiresExperience", label: "経験必須" },
+                ].map(({ key, label }) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <Checkbox
+                      id={key}
+                      checked={Boolean(form[key as keyof typeof form])}
+                      onCheckedChange={(v) => up(key, Boolean(v))}
+                    />
+                    <label htmlFor={key} className="text-sm text-foreground cursor-pointer">{label}</label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 月の上限金額 */}
+            <div className="space-y-1.5">
               <Label>月の上限金額</Label>
               <Select value={form.monthlyLimit} onValueChange={(v) => up("monthlyLimit", v)}>
                 <SelectTrigger data-testid="select-monthly-limit"><SelectValue /></SelectTrigger>
@@ -376,6 +469,7 @@ export default function Jobs() {
               </Select>
               <p className="text-xs text-muted-foreground">上限到達で掲載が自動停止されます（1応募 = ¥3,000）</p>
             </div>
+
             <div className="flex gap-2 pt-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>
                 キャンセル
@@ -387,10 +481,8 @@ export default function Jobs() {
                 data-testid="button-submit-job"
               >
                 {createMutation.isPending || updateMutation.isPending
-                  ? "保存中..."
-                  : editing
-                  ? "更新する"
-                  : "掲載申請する"}
+                  ? "送信中..."
+                  : editing ? "更新する" : "掲載申請する"}
               </Button>
             </div>
           </form>

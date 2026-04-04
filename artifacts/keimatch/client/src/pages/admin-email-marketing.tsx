@@ -43,7 +43,7 @@ export default function AdminEmailMarketing() {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [emailForm, setEmailForm] = useState({ subject: "", body: "" });
-  const [singleForm, setSingleForm] = useState({ companyName: "", email: "", phone: "" });
+  const [singleForm, setSingleForm] = useState({ companyName: "", email: "", phone: "", prefecture: "" });
   const [sending, setSending] = useState(false);
 
   const { data: leads = [], isLoading } = useQuery<Lead[]>({
@@ -143,6 +143,7 @@ export default function AdminEmailMarketing() {
                 <Input value={singleForm.companyName} onChange={(e) => setSingleForm((p) => ({ ...p, companyName: e.target.value }))} placeholder="会社名 *" className="flex-1" />
                 <Input value={singleForm.email} onChange={(e) => setSingleForm((p) => ({ ...p, email: e.target.value }))} placeholder="メールアドレス" type="email" className="flex-1" />
                 <Input value={singleForm.phone} onChange={(e) => setSingleForm((p) => ({ ...p, phone: e.target.value }))} placeholder="電話番号" className="flex-1" />
+                <Input value={singleForm.prefecture} onChange={(e) => setSingleForm((p) => ({ ...p, prefecture: e.target.value }))} placeholder="都道府県" className="w-28" />
                 <Button size="sm" onClick={() => addOneMutation.mutate(singleForm)} disabled={!singleForm.companyName || addOneMutation.isPending}><Plus className="w-4 h-4 mr-1" />追加</Button>
               </div>
             </CardContent></Card>

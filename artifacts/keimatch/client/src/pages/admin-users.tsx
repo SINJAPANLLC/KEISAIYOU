@@ -202,6 +202,19 @@ export default function AdminUsers() {
     },
   });
 
+  const forceStop = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/admin/users/${id}/force-stop`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/jobs"] });
+      toast({ title: "強制停止しました（全求人を停止）" });
+    },
+    onError: () => toast({ title: "強制停止に失敗しました", variant: "destructive" }),
+  });
+
   const [editSuccess, setEditSuccess] = useState(false);
   const editUser = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Record<string, string | null> }) => {
@@ -584,6 +597,11 @@ export default function AdminUsers() {
                 deleteUser.mutate(id);
               }
             }}
+            onForceStop={(id) => {
+              if (confirm(`${selectedUser?.companyName} の全求人を強制停止しますか？`)) {
+                forceStop.mutate(id);
+              }
+            }}
             onChangePlan={(id, plan) => changePlan.mutate({ id, plan })}
             onEditUser={(id, data) => { setEditSuccess(false); editUser.mutate({ id, data }); }}
             onChangeRole={(id, role) => {
@@ -635,6 +653,7 @@ function UserDetailPanel({
   onClose,
   onApprove,
   onDelete,
+  onForceStop,
   onChangePlan,
   onEditUser,
   onChangeRole,
@@ -651,6 +670,7 @@ function UserDetailPanel({
   onClose: () => void;
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
+  onForceStop: (id: string) => void;
   onChangePlan: (id: string, plan: string) => void;
   onEditUser: (id: string, data: Record<string, string | null>) => void;
   onChangeRole: (id: string, role: string) => void;
@@ -981,6 +1001,15 @@ function UserDetailPanel({
                 )}
               </div>
 
+              <Button
+                variant="outline"
+                className="w-full text-amber-700 border-amber-400 hover:bg-amber-50"
+                onClick={() => onForceStop(user.id)}
+                data-testid={`button-force-stop-${user.id}`}
+              >
+                <ShieldOff className="w-4 h-4 mr-1.5" />
+                全求人を強制停止
+              </Button>
               <Button
                 variant="outline"
                 className="w-full text-destructive"

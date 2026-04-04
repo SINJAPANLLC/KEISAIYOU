@@ -48,13 +48,30 @@ Rebranded from KEI MATCH (cargo matching) → **KEI SAIYOU** (light cargo driver
 
 ### Build Progress
 - ✅ ① ブランド変更: KEI MATCH → KEI SAIYOU (colors, header, footer, home, login, register, terms)
-- ⬜ ② 不要機能の削除: マッチング機能・案件管理・KEI MATCH固有API
-- ⬜ ③ 求人管理: 企業が求人を登録・編集・停止
-- ⬜ ④ XMLフィード: GET /feed/indeed.xml
-- ⬜ ⑤ 応募受付: POST /api/apply + LINE/メール通知 + Square課金
-- ⬜ ⑥ 企業ダッシュボード: 応募者一覧・求人管理・請求履歴
-- ⬜ ⑦ アドミン画面: 全企業管理・KPIダッシュボード
-- ⬜ ⑧ Square決済: 自動課金・Webhook
+- ✅ ② DBスキーマ拡張: job_listings (jobCategory, workHours, holidays, benefits, requiresLicense/BlackNumber/Vehicle/Experience), applications (reviewStatus), emailLeads (prefecture)
+- ✅ ③ バックエンドAPI: /api/apply, /api/jobs, /api/my/billing, /api/admin/stats, /api/admin/revenue-stats, /api/admin/applications, /api/admin/users/:id/force-stop, PATCH /api/admin/sales/leads/:id, retry-payment
+- ✅ ④ XMLフィード: GET /feed/indeed.xml (Indeed自動連携)
+- ✅ ⑤ 応募受付: POST /api/apply + LINE/メール通知 + Square課金 (¥3,000/応募)
+- ✅ ⑥ 企業ページ: dashboard, jobs (新フィールド追加), applications, payment (課金履歴・上限設定), user-settings (都道府県・パスワード変更・退会申請)
+- ✅ ⑦ 管理ページ: admin-dashboard, admin-revenue, admin-indeed-feed, admin-users (force-stop), admin-listings, admin-applications (求職者応募管理), admin-email-marketing (prefecture), admin-notifications, admin-settings
+- ✅ ⑧ Square決済: 自動課金・Webhook・再試行（カード登録なしの場合はモックモード）
+
+### Admin Credentials
+- Email: `info@sinjapan.jp`
+- Password: `Kazuya8008`
+
+### Key APIs (saiyou-routes.ts)
+- POST /api/apply/:jobId — 応募受付 (¥3,000 Square課金)
+- GET /api/jobs — 企業の求人一覧
+- GET /api/my/applications — 企業への全応募
+- GET/PATCH /api/user/monthly-limit — 上限金額管理
+- GET /api/my/billing — 課金履歴
+- GET /api/admin/stats — KPIダッシュボード
+- GET /api/admin/revenue-stats — 収益詳細
+- POST /api/admin/users/:id/force-stop — 強制停止
+- GET /api/admin/applications — 全応募管理
+- POST /api/admin/applications/:id/retry-payment — 決済再試行
+- GET /feed/indeed.xml — Indeed XMLフィード
 
 ### Brand Design
 - Primary color: `hsl(22, 88%, 48%)` — warm orange

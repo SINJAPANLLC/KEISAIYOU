@@ -1,463 +1,230 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import DashboardLayout from "@/components/dashboard-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Users, UserCheck, UserPlus, Package, CheckCircle, Truck, Crown,
-  BarChart3, TrendingUp, ArrowUpDown, Banknote, CircleDollarSign,
-  MapPin
+  BarChart3, TrendingUp, Download, DollarSign, Minus, Percent,
+  ArrowUpDown, ChevronDown, ChevronUp,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import DashboardLayout from "@/components/dashboard-layout";
 
-type CompletedCargoDetail = {
-  id: string;
-  cargoNumber: number | null;
-  title: string;
-  departureArea: string;
-  arrivalArea: string;
-  cargoType: string;
-  price: string | null;
-  priceValue: number;
-  companyName: string;
-  desiredDate: string;
-  createdAt: string;
-};
-
-type RecentPayment = {
-  id: string;
-  amount: number;
-  status: string;
-  description: string | null;
-  createdAt: string;
-};
-
-type MonthlyEntry = {
-  cargo: number;
-  trucks: number;
-  users: number;
-  revenue: number;
-  tradeVolume: number;
-};
-
-type RevenueStats = {
-  totalUsers: number;
-  approvedUsers: number;
-  totalCargo: number;
-  completedCargoCount: number;
-  totalTrucks: number;
-  freePlanUsers: number;
-  betaPremiumUsers: number;
-  premiumUsers: number;
-  addedUsers: number;
-  expectedMonthlyRevenue: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
-  totalTradeVolume: number;
-  completedCargoDetails: CompletedCargoDetail[];
-  monthlyData: Record<string, MonthlyEntry>;
-  recentPayments: RecentPayment[];
-};
-
-function formatYen(amount: number): string {
-  return `¥${amount.toLocaleString()}`;
-}
-
-function StatCard({
-  label, value, icon: Icon, color, bg, suffix, loading
-}: {
-  label: string; value: string | number; icon: typeof Users; color: string; bg: string; suffix?: string; loading?: boolean;
-}) {
+function SimpleBarChart({ data }: { data: { month: string; revenue: number }[] }) {
+  const max = Math.max(...data.map((d) => d.revenue), 1);
   return (
-    <Card data-testid={`card-stat-${label}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-md ${bg} flex items-center justify-center shrink-0`}>
-            <Icon className={`w-5 h-5 ${color}`} />
-          </div>
-          <div className="min-w-0">
-            {loading ? (
-              <Skeleton className="h-7 w-16" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground truncate" data-testid={`text-stat-${label}`}>
-                {value}{suffix}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
+    <div className="flex items-end gap-2 h-32">
+      {data.map((d) => (
+        <div key={d.month} className="flex-1 flex flex-col items-center gap-1">
+          <div className="text-[9px] text-muted-foreground">¥{(d.revenue / 1000).toFixed(0)}k</div>
+          <div
+            className="w-full bg-primary/80 rounded-t transition-all"
+            style={{ height: `${Math.max(4, (d.revenue / max) * 100)}px` }}
+          />
+          <div className="text-[9px] text-muted-foreground whitespace-nowrap">{d.month.slice(5)}</div>
         </div>
-      </CardContent>
-    </Card>
+      ))}
+    </div>
   );
 }
 
 export default function AdminRevenue() {
-  const { data: stats, isLoading } = useQuery<RevenueStats>({
-    queryKey: ["/api/admin/revenue-stats"],
+  const [sortField, setSortField] = useState<"revenue" | "paidApps">("revenue");
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+
+  const { data: stats } = useQuery<any>({
+    queryKey: ["/api/admin/stats"],
   });
 
+  const { data: revenueStats, isLoading } = useQuery<any>({
+    queryKey: ["/api/admin/revenue-stats"],
+    queryFn: () => apiRequest("GET", "/api/admin/revenue-stats").then((r) => r.json()),
+  });
+
+  const totalRevenue = stats?.totalRevenue ?? 0;
+  const monthlyRevenue = stats?.monthlyRevenue ?? 0;
+  // Assume ad cost is 30% of revenue (CPC estimate)
+  const adCost = Math.round(totalRevenue * 0.3);
+  const profit = totalRevenue - adCost;
+  const profitRate = totalRevenue > 0 ? Math.round((profit / totalRevenue) * 100) : 0;
+
+  // Build last 6 months chart data
   const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+  const chartData = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const entry = revenueStats?.monthly?.[key];
+    return {
+      month: key,
+      revenue: entry?.revenue ?? 0,
+      apps: entry?.apps ?? 0,
+    };
+  });
 
-  const monthlyEntries = [];
-  if (stats?.monthlyData) {
-    for (let m = currentMonth; m >= 0; m--) {
-      const key = `${currentYear}-${String(m + 1).padStart(2, "0")}`;
-      const data = stats.monthlyData[key];
-      if (data) {
-        monthlyEntries.push({ month: `${m + 1}月`, ...data });
-      }
+  const companies: any[] = (revenueStats?.companies ?? []).slice().sort((a: any, b: any) => {
+    const mul = sortDir === "desc" ? -1 : 1;
+    return (a[sortField] - b[sortField]) * mul;
+  });
+
+  const toggleSort = (field: "revenue" | "paidApps") => {
+    if (sortField === field) {
+      setSortDir((d) => d === "desc" ? "asc" : "desc");
+    } else {
+      setSortField(field);
+      setSortDir("desc");
     }
-  }
+  };
 
-  const completedList = stats?.completedCargoDetails ?? [];
-  const completedSorted = [...completedList].sort((a, b) =>
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  const exportCsv = () => {
+    const rows = [
+      ["企業名", "売上（円）", "成功応募数", "失敗応募数"],
+      ...companies.map((c: any) => [c.companyName, c.revenue, c.paidApps, c.failedApps]),
+    ];
+    const csv = rows.map((r) => r.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `revenue_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+  };
 
   return (
     <DashboardLayout>
-      <div className="px-4 sm:px-6 py-4 space-y-5">
-        <div className="rounded-xl p-6 hero-gradient relative overflow-hidden">
+      <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
+        <div className="rounded-xl p-6 mb-6 hero-gradient relative overflow-hidden">
           <div className="hero-grid absolute inset-0 opacity-30" />
-          <div className="relative z-10">
-            <p className="text-white/80 text-xs mb-0.5">REVENUE</p>
-            <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">収益管理</h1>
-            <p className="text-white/70 text-sm mt-1">応募数・収益の概要（¥3,000 / 応募）</p>
+          <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p className="text-white/80 text-xs mb-0.5">REVENUE</p>
+              <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">収益管理</h1>
+              <p className="text-white/70 text-sm mt-1">売上・広告費・利益の管理</p>
+            </div>
+            <Button
+              variant="outline"
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+              onClick={exportCsv}
+            >
+              <Download className="w-4 h-4 mr-1.5" />CSVエクスポート
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard label="総ユーザー" value={stats?.totalUsers ?? 0} icon={Users} color="text-blue-600 dark:text-blue-400" bg="bg-blue-50 dark:bg-blue-950/30" loading={isLoading} />
-          <StatCard label="承認済み" value={stats?.approvedUsers ?? 0} icon={UserCheck} color="text-emerald-600 dark:text-emerald-400" bg="bg-emerald-50 dark:bg-emerald-950/30" loading={isLoading} />
-          <StatCard label="荷物掲載" value={stats?.totalCargo ?? 0} icon={Package} color="text-violet-600 dark:text-violet-400" bg="bg-violet-50 dark:bg-violet-950/30" suffix="件" loading={isLoading} />
-          <StatCard label="成約数" value={stats?.completedCargoCount ?? 0} icon={CheckCircle} color="text-amber-600 dark:text-amber-400" bg="bg-amber-50 dark:bg-amber-950/30" suffix="件" loading={isLoading} />
-          <StatCard label="空き車両掲載" value={stats?.totalTrucks ?? 0} icon={Truck} color="text-teal-600 dark:text-teal-400" bg="bg-teal-50 dark:bg-teal-950/30" suffix="件" loading={isLoading} />
+        {/* KPI cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          {[
+            { label: "累計売上", value: `¥${totalRevenue.toLocaleString()}`, sub: `今月 ¥${monthlyRevenue.toLocaleString()}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
+            { label: "広告費（CPC概算）", value: `¥${adCost.toLocaleString()}`, sub: "売上の約30%", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
+            { label: "利益", value: `¥${profit.toLocaleString()}`, sub: "売上－広告費", icon: Minus, color: "text-violet-600", bg: "bg-violet-50" },
+            { label: "利益率", value: `${profitRate}%`, sub: "利益÷売上", icon: Percent, color: "text-amber-600", bg: "bg-amber-50" },
+          ].map((s) => (
+            <Card key={s.label} className="border border-border">
+              <CardContent className="p-5">
+                <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-3`}>
+                  <s.icon className={`w-4 h-4 ${s.color}`} />
+                </div>
+                <p className="text-2xl font-black text-foreground">{s.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+                <p className="text-[10px] text-muted-foreground/70">{s.sub}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <Card data-testid="card-revenue-summary">
-            <CardContent className="p-5">
-              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                <CircleDollarSign className="w-4 h-4 text-primary" />
-                プラットフォーム収益
-              </h2>
-              {isLoading ? (
-                <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-6 w-3/4" /></div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">総収益（決済実績）</p>
-                    <p className="text-3xl font-bold text-foreground" data-testid="text-total-revenue">{formatYen(stats?.totalRevenue ?? 0)}</p>
-                  </div>
-                  <div className="border-t border-border pt-3">
-                    <p className="text-xs text-muted-foreground mb-1">今月の決済収益</p>
-                    <p className="text-xl font-bold text-foreground" data-testid="text-monthly-revenue">{formatYen(stats?.monthlyRevenue ?? 0)}</p>
-                  </div>
-                  <div className="border-t border-border pt-3">
-                    <p className="text-xs text-muted-foreground mb-1">予想月額収益（税込）</p>
-                    <p className="text-xl font-bold text-foreground" data-testid="text-expected-revenue">{formatYen(stats?.expectedMonthlyRevenue ?? 0)}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      プレミアム {stats?.premiumUsers ?? 0}社 × ¥5,500 + 追加ユーザー {stats?.addedUsers ?? 0}名 × ¥2,750
-                    </p>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-trade-volume">
-            <CardContent className="p-5">
-              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
-                商流（成約金額）
-              </h2>
-              {isLoading ? (
-                <div className="space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-6 w-3/4" /></div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">成約総額</p>
-                    <p className="text-3xl font-bold text-foreground" data-testid="text-total-trade-volume">{formatYen(stats?.totalTradeVolume ?? 0)}</p>
-                  </div>
-                  <div className="border-t border-border pt-3">
-                    <p className="text-xs text-muted-foreground mb-1">成約件数</p>
-                    <p className="text-xl font-bold text-foreground">{stats?.completedCargoCount ?? 0}<span className="text-sm text-muted-foreground ml-1">件</span></p>
-                  </div>
-                  {stats && stats.completedCargoCount > 0 && stats.totalTradeVolume > 0 && (
-                    <div className="border-t border-border pt-3">
-                      <p className="text-xs text-muted-foreground mb-1">平均成約単価</p>
-                      <p className="text-lg font-bold text-foreground">
-                        {formatYen(Math.round(stats.totalTradeVolume / stats.completedCargoCount))}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-plan-breakdown">
-            <CardContent className="p-5">
-              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                <Crown className="w-4 h-4 text-primary" />
-                プラン内訳
-              </h2>
-              {isLoading ? (
-                <div className="space-y-3"><Skeleton className="h-6 w-full" /><Skeleton className="h-6 w-full" /><Skeleton className="h-6 w-full" /></div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs">フリー</Badge>
-                    </div>
-                    <span className="text-lg font-bold text-foreground">{stats?.freePlanUsers ?? 0}<span className="text-xs text-muted-foreground ml-1">人</span></span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default" className="text-xs">β版プレミアム</Badge>
-                    </div>
-                    <span className="text-lg font-bold text-foreground">{stats?.betaPremiumUsers ?? 0}<span className="text-xs text-muted-foreground ml-1">人</span></span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default" className="text-xs">プレミアム</Badge>
-                    </div>
-                    <span className="text-lg font-bold text-foreground">{stats?.premiumUsers ?? 0}<span className="text-xs text-muted-foreground ml-1">人</span></span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
-                        <UserPlus className="w-3 h-3 mr-1" />追加ユーザー
-                      </Badge>
-                    </div>
-                    <span className="text-lg font-bold text-foreground">{stats?.addedUsers ?? 0}<span className="text-xs text-muted-foreground ml-1">名</span></span>
-                  </div>
-                  {stats && stats.totalUsers > 0 && (
-                    <div className="border-t border-border pt-3">
-                      <div className="flex items-center justify-between gap-2 text-sm mb-1.5">
-                        <span className="text-muted-foreground">有料プラン率</span>
-                        <span className="font-bold text-foreground">
-                          {Math.round(((stats.betaPremiumUsers + stats.premiumUsers) / stats.totalUsers) * 100)}%
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-muted rounded-full">
-                        <div
-                          className="h-2 bg-primary rounded-full transition-all"
-                          style={{ width: `${((stats.betaPremiumUsers + stats.premiumUsers) / stats.totalUsers) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <Card data-testid="card-utilization">
-            <CardContent className="p-5">
-              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-primary" />
-                利用率
-              </h2>
-              {isLoading ? (
-                <div className="space-y-3"><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-3/4" /></div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between gap-2 text-sm mb-1.5">
-                      <span className="text-muted-foreground">ユーザー承認率</span>
-                      <span className="font-bold text-foreground">
-                        {stats && stats.totalUsers > 0
-                          ? `${Math.round((stats.approvedUsers / stats.totalUsers) * 100)}%`
-                          : "0%"}
-                      </span>
-                    </div>
-                    <div className="w-full h-2.5 bg-muted rounded-full">
-                      <div
-                        className="h-2.5 bg-emerald-500 rounded-full transition-all"
-                        style={{ width: stats && stats.totalUsers > 0 ? `${(stats.approvedUsers / stats.totalUsers) * 100}%` : "0%" }}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between gap-2 text-sm mb-1.5">
-                      <span className="text-muted-foreground">荷物成約率</span>
-                      <span className="font-bold text-foreground">
-                        {stats && stats.totalCargo > 0
-                          ? `${Math.round((stats.completedCargoCount / stats.totalCargo) * 100)}%`
-                          : "0%"}
-                      </span>
-                    </div>
-                    <div className="w-full h-2.5 bg-muted rounded-full">
-                      <div
-                        className="h-2.5 bg-blue-500 rounded-full transition-all"
-                        style={{ width: stats && stats.totalCargo > 0 ? `${(stats.completedCargoCount / stats.totalCargo) * 100}%` : "0%" }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card data-testid="card-recent-payments">
-            <CardContent className="p-5">
-              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                <Banknote className="w-4 h-4 text-primary" />
-                最近の決済
-              </h2>
-              {isLoading ? (
-                <div className="space-y-2"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-full" /></div>
-              ) : stats && stats.recentPayments.length > 0 ? (
-                <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                  {stats.recentPayments.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between gap-2 p-2 rounded-md bg-muted/30" data-testid={`payment-row-${p.id}`}>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-foreground truncate">{p.description || "決済"}</p>
-                        <p className="text-[11px] text-muted-foreground">{new Date(p.createdAt).toLocaleDateString("ja-JP")}</p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge
-                          variant={p.status === "completed" ? "default" : p.status === "pending" ? "secondary" : "destructive"}
-                          className="text-[10px]"
-                        >
-                          {p.status === "completed" ? "完了" : p.status === "pending" ? "処理中" : "失敗"}
-                        </Badge>
-                        <span className="text-sm font-bold text-foreground whitespace-nowrap">{formatYen(p.amount)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <Banknote className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground">決済履歴がありません</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card data-testid="card-monthly-usage">
-          <CardContent className="p-5">
-            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+        {/* Monthly bar chart */}
+        <Card className="border border-border mb-6">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-primary" />
-              月別利用状況
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm" data-testid="table-monthly-usage">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">月</th>
-                    <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷物掲載</th>
-                    <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">空き車両掲載</th>
-                    <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">新規登録</th>
-                    <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">商流額</th>
-                    <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">収益</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {isLoading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <tr key={i}>
-                        <td className="px-3 py-2.5" colSpan={6}><Skeleton className="h-5 w-full" /></td>
-                      </tr>
-                    ))
-                  ) : monthlyEntries.length > 0 ? (
-                    monthlyEntries.map((entry, idx) => (
-                      <tr key={entry.month} className={idx % 2 === 1 ? "bg-muted/20" : ""}>
-                        <td className="px-3 py-2.5 font-bold text-foreground whitespace-nowrap">{entry.month}</td>
-                        <td className="px-3 py-2.5 text-right text-foreground font-bold">{entry.cargo}</td>
-                        <td className="px-3 py-2.5 text-right text-foreground font-bold">{entry.trucks}</td>
-                        <td className="px-3 py-2.5 text-right text-foreground font-bold">{entry.users}</td>
-                        <td className="px-3 py-2.5 text-right text-foreground font-bold whitespace-nowrap">{formatYen(entry.tradeVolume)}</td>
-                        <td className="px-3 py-2.5 text-right text-foreground font-bold whitespace-nowrap">{formatYen(entry.revenue)}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td className="px-3 py-6 text-center text-muted-foreground text-xs" colSpan={6}>データがありません</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+              月別売上グラフ（直近6ヶ月）
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <Skeleton className="h-32 w-full" />
+            ) : (
+              <SimpleBarChart data={chartData} />
+            )}
+            <div className="grid grid-cols-6 gap-1 mt-2">
+              {chartData.map((d) => (
+                <div key={d.month} className="text-center text-[9px] text-muted-foreground">
+                  {d.apps}件
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        <Card data-testid="card-completed-cargo">
-          <CardContent className="p-5">
-            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-              <ArrowUpDown className="w-4 h-4 text-primary" />
-              成約案件一覧（商流）
-            </h2>
+        {/* Company breakdown */}
+        <Card className="border border-border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">企業別売上一覧</CardTitle>
+              <Button variant="ghost" size="sm" onClick={exportCsv} className="text-xs text-muted-foreground">
+                <Download className="w-3.5 h-3.5 mr-1" />CSV
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
             {isLoading ? (
-              <div className="space-y-2"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
-            ) : completedSorted.length > 0 ? (
+              <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+            ) : companies.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">データがありません</p>
+            ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm" data-testid="table-completed-cargo">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-muted/40">
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">No.</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷物名</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">区間</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">荷種</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
-                      <th className="text-right px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">運賃</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">成約日</th>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-muted-foreground">企業名</th>
+                      <th
+                        className="text-right py-2 px-3 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
+                        onClick={() => toggleSort("revenue")}
+                      >
+                        <span className="flex items-center gap-1 justify-end">
+                          売上
+                          {sortField === "revenue" ? (sortDir === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                        </span>
+                      </th>
+                      <th
+                        className="text-right py-2 px-3 text-xs font-semibold text-muted-foreground cursor-pointer hover:text-foreground"
+                        onClick={() => toggleSort("paidApps")}
+                      >
+                        <span className="flex items-center gap-1 justify-end">
+                          成功応募
+                          {sortField === "paidApps" ? (sortDir === "desc" ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3" />}
+                        </span>
+                      </th>
+                      <th className="text-right py-2 px-3 text-xs font-semibold text-muted-foreground">失敗</th>
+                      <th className="text-right py-2 px-3 text-xs font-semibold text-muted-foreground">広告費概算</th>
+                      <th className="text-right py-2 px-3 text-xs font-semibold text-muted-foreground">利益</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
-                    {completedSorted.map((cargo, idx) => (
-                      <tr key={cargo.id} className={`${idx % 2 === 1 ? "bg-muted/20" : ""}`} data-testid={`row-completed-cargo-${cargo.id}`}>
-                        <td className="px-3 py-2.5 text-foreground font-bold text-[12px]">
-                          {cargo.cargoNumber ? `#${cargo.cargoNumber}` : "-"}
-                        </td>
-                        <td className="px-3 py-2.5 text-foreground font-bold text-[12px] truncate max-w-[140px]">{cargo.title}</td>
-                        <td className="px-3 py-2.5 text-[12px]">
-                          <div className="flex items-center gap-1 text-foreground font-bold">
-                            <MapPin className="w-3 h-3 text-muted-foreground shrink-0" />
-                            <span className="truncate max-w-[60px]">{cargo.departureArea}</span>
-                            <span className="text-muted-foreground mx-0.5">→</span>
-                            <span className="truncate max-w-[60px]">{cargo.arrivalArea}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-foreground text-[12px]">{cargo.cargoType}</td>
-                        <td className="px-3 py-2.5 text-foreground font-bold text-[12px] truncate max-w-[100px]">{cargo.companyName}</td>
-                        <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                          {cargo.priceValue > 0 ? (
-                            <span className="font-bold text-foreground text-[12px]">{formatYen(cargo.priceValue)}</span>
-                          ) : (
-                            <span className="text-[12px] text-muted-foreground">未設定</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-2.5 text-muted-foreground text-[12px] whitespace-nowrap">
-                          {new Date(cargo.createdAt).toLocaleDateString("ja-JP")}
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody>
+                    {companies.map((c: any) => {
+                      const ad = Math.round(c.revenue * 0.3);
+                      const prof = c.revenue - ad;
+                      return (
+                        <tr key={c.userId} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                          <td className="py-2.5 px-3 font-medium truncate max-w-[160px]">{c.companyName}</td>
+                          <td className="py-2.5 px-3 text-right font-semibold">¥{c.revenue.toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-right">
+                            <Badge className="text-[10px] bg-emerald-100 text-emerald-800 border-emerald-300 border">{c.paidApps}件</Badge>
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            {c.failedApps > 0 ? (
+                              <Badge className="text-[10px] bg-destructive/10 text-destructive border-destructive/30 border">{c.failedApps}件</Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 px-3 text-right text-xs text-muted-foreground">¥{ad.toLocaleString()}</td>
+                          <td className="py-2.5 px-3 text-right text-xs font-medium text-emerald-700">¥{prof.toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-border bg-muted/30">
-                      <td colSpan={5} className="px-3 py-2.5 text-sm font-bold text-foreground text-right">合計</td>
-                      <td className="px-3 py-2.5 text-right">
-                        <span className="font-bold text-foreground text-sm">{formatYen(stats?.totalTradeVolume ?? 0)}</span>
-                      </td>
-                      <td className="px-3 py-2.5 text-right">
-                        <span className="text-xs text-muted-foreground">{completedSorted.length}件</span>
-                      </td>
-                    </tr>
-                  </tfoot>
                 </table>
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <CheckCircle className="w-10 h-10 text-muted-foreground/20 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">成約案件がありません</p>
-                <p className="text-xs text-muted-foreground mt-1">荷物が成約されると、ここに商流データが表示されます</p>
               </div>
             )}
           </CardContent>
