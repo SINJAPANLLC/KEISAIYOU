@@ -93,7 +93,6 @@ https://keisaiyou-sinjapan.com/register
 引き続きご検討のほど、よろしくお願いいたします。
 
 ━
-大谷 和哉
 KEI SAIYOU（合同会社SIN JAPAN）
 info@keisaiyou-sinjapan.com`,
   },
