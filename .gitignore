@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# チャット添付ファイル（シークレット含む可能性があるため除外）
+attached_assets/
+artifacts/keimatch/attached_assets/
