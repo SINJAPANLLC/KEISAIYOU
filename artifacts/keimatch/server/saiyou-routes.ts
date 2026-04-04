@@ -896,8 +896,9 @@ ${jobXml}
         const d = new Date(a.createdAt);
         return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
       });
-      const paidApps = allApps.filter((a) => a.paymentStatus === "paid");
-      const thisMonthPaid = thisMonthApps.filter((a) => a.paymentStatus === "paid");
+      const isPaid = (a: any) => a.paymentStatus === "paid" || a.paymentStatus === "success";
+      const paidApps = allApps.filter(isPaid);
+      const thisMonthPaid = thisMonthApps.filter(isPaid);
       const totalRevenue = paidApps.length * 3300;
       const monthlyRevenue = thisMonthPaid.length * 3300;
       const unpaidCompanies = [...new Set(allApps.filter((a) => a.paymentStatus === "failed").map((a) => {
@@ -948,7 +949,7 @@ ${jobXml}
       const allUsers = await db.select({ id: users.id, companyName: users.companyName }).from(users);
       // Monthly breakdown (last 6 months)
       const monthly: Record<string, { revenue: number; apps: number }> = {};
-      for (const a of allApps.filter((a) => a.paymentStatus === "paid")) {
+      for (const a of allApps.filter((a) => a.paymentStatus === "paid" || a.paymentStatus === "success")) {
         const d = new Date(a.createdAt);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         if (!monthly[key]) monthly[key] = { revenue: 0, apps: 0 };
@@ -963,7 +964,7 @@ ${jobXml}
         const user = allUsers.find((u) => u.id === job.userId);
         const uid = job.userId;
         if (!companyMap[uid]) companyMap[uid] = { companyName: user?.companyName || "不明", paidApps: 0, failedApps: 0 };
-        if (a.paymentStatus === "paid") companyMap[uid].paidApps += 1;
+        if (a.paymentStatus === "paid" || a.paymentStatus === "success") companyMap[uid].paidApps += 1;
         if (a.paymentStatus === "failed") companyMap[uid].failedApps += 1;
       }
       const companies = Object.entries(companyMap).map(([id, v]) => ({

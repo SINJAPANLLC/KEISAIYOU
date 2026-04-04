@@ -434,21 +434,11 @@ export async function registerRoutes(
   app.get("/api/onboarding-progress", requireAuth, async (req, res) => {
     try {
       const userId = req.session.userId!;
-      const [user, cargoCount, truckCount, partners] = await Promise.all([
-        storage.getUser(userId),
-        storage.getCargoCountByUserId(userId),
-        storage.getTruckCountByUserId(userId),
-        storage.getPartnersByUserId(userId),
-      ]);
+      const user = await storage.getUser(userId);
       if (!user) return res.status(404).json({ message: "ユーザーが見つかりません" });
-
-      const profileComplete = !!(user.companyName && user.phone && user.address && user.representative);
-
+      const profileComplete = !!(user.companyName && user.phone && user.prefecture);
       res.json({
         profileComplete,
-        cargoCount,
-        truckCount,
-        partnerCount: partners.length,
         notificationSettingDone: !!(user.notifyEmail || user.notifyLine),
       });
     } catch (error) {
@@ -1499,22 +1489,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
-    try {
-      const [cargoCount, truckCount, allUsers] = await Promise.all([
-        storage.getTotalCargoCount(),
-        storage.getTotalTruckCount(),
-        storage.getAllUsers(),
-      ]);
-      res.json({
-        cargoCount,
-        truckCount,
-        userCount: allUsers.length,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "統計情報の取得に失敗しました" });
-    }
-  });
+  // admin/stats is handled by saiyou-routes.ts
 
   app.get("/api/admin/users", requireAdmin, async (_req, res) => {
     try {
@@ -3389,125 +3364,8 @@ JSON形式で以下を返してください（日本語で）:
   });
 
   // Admin: Revenue stats
-  app.get("/api/admin/revenue-stats", requireAdmin, async (req, res) => {
-    try {
-      const allUsers = await storage.getAllUsers();
-      const cargo = await storage.getCargoListings();
-      const trucks = await storage.getTruckListings();
-      const allPayments = await storage.getAllPayments();
+  // admin/revenue-stats is handled by saiyou-routes.ts
 
-      const nonAdminUsers = allUsers.filter(u => u.role !== "admin");
-      const totalUsers = nonAdminUsers.length;
-      const approvedUsers = nonAdminUsers.filter(u => u.approved).length;
-      const totalCargo = cargo.length;
-      const completedCargo = cargo.filter(c => c.status === "completed");
-      const completedCargoCount = completedCargo.length;
-      const totalTrucks = trucks.length;
-
-      const freePlanUsers = nonAdminUsers.filter(u => u.plan === "free").length;
-      const betaPremiumUsers = nonAdminUsers.filter(u => u.plan === "premium").length;
-      const premiumUsers = nonAdminUsers.filter(u => u.plan === "premium_full").length;
-      const addedUsers = nonAdminUsers.filter(u => u.addedByUserId && u.approved).length;
-
-      const premiumParentUsers = nonAdminUsers.filter(u => u.plan === "premium_full" && !u.addedByUserId && u.approved);
-      const expectedMonthlyRevenue = premiumParentUsers.reduce((sum, parent) => {
-        const childCount = nonAdminUsers.filter(u => u.addedByUserId === parent.id && u.approved).length;
-        return sum + 5500 + (childCount * 2750);
-      }, 0);
-
-      const completedPayments = allPayments.filter(p => p.status === "completed");
-      const totalRevenue = completedPayments.reduce((sum, p) => sum + p.amount, 0);
-
-      const now = new Date();
-      const thisMonthPayments = completedPayments.filter(p => {
-        const d = new Date(p.createdAt);
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-      });
-      const monthlyRevenue = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
-
-      const parsePrice = (priceStr: string | null | undefined): number => {
-        if (!priceStr) return 0;
-        const cleaned = priceStr.replace(/[^0-9]/g, "");
-        return parseInt(cleaned, 10) || 0;
-      };
-
-      const completedCargoDetails = completedCargo.map(c => ({
-        id: c.id,
-        cargoNumber: c.cargoNumber,
-        title: c.title,
-        departureArea: c.departureArea,
-        arrivalArea: c.arrivalArea,
-        cargoType: c.cargoType,
-        price: c.price,
-        priceValue: parsePrice(c.price),
-        companyName: c.companyName,
-        desiredDate: c.desiredDate,
-        createdAt: c.createdAt,
-      }));
-
-      const totalTradeVolume = completedCargoDetails.reduce((sum, c) => sum + c.priceValue, 0);
-
-      const monthlyData: Record<string, { cargo: number; trucks: number; users: number; revenue: number; tradeVolume: number }> = {};
-      for (let m = 0; m < 12; m++) {
-        const key = `${now.getFullYear()}-${String(m + 1).padStart(2, "0")}`;
-        monthlyData[key] = { cargo: 0, trucks: 0, users: 0, revenue: 0, tradeVolume: 0 };
-      }
-      cargo.forEach(c => {
-        const d = new Date(c.createdAt);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        if (monthlyData[key]) monthlyData[key].cargo++;
-        if (c.status === "completed" && monthlyData[key]) {
-          monthlyData[key].tradeVolume += parsePrice(c.price);
-        }
-      });
-      trucks.forEach(t => {
-        const d = new Date(t.createdAt);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        if (monthlyData[key]) monthlyData[key].trucks++;
-      });
-      nonAdminUsers.forEach(u => {
-        if (u.registrationDate) {
-          const d = new Date(u.registrationDate);
-          if (!isNaN(d.getTime())) {
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-            if (monthlyData[key]) monthlyData[key].users++;
-          }
-        }
-      });
-      completedPayments.forEach(p => {
-        const d = new Date(p.createdAt);
-        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-        if (monthlyData[key]) monthlyData[key].revenue += p.amount;
-      });
-
-      res.json({
-        totalUsers,
-        approvedUsers,
-        totalCargo,
-        completedCargoCount,
-        totalTrucks,
-        freePlanUsers,
-        betaPremiumUsers,
-        premiumUsers,
-        addedUsers,
-        expectedMonthlyRevenue,
-        totalRevenue,
-        monthlyRevenue,
-        totalTradeVolume,
-        completedCargoDetails,
-        monthlyData,
-        recentPayments: allPayments.slice(0, 10).map(p => ({
-          id: p.id,
-          amount: p.amount,
-          status: p.status,
-          description: p.description,
-          createdAt: p.createdAt,
-        })),
-      });
-    } catch (error) {
-      res.status(500).json({ message: "収益データの取得に失敗しました" });
-    }
-  });
 
   // Public: Column articles (SEO)
   app.get("/api/columns", async (_req, res) => {
