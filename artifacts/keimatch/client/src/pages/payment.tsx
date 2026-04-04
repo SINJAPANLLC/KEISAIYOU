@@ -93,10 +93,10 @@ function CardRegistrationDialog({ open, onOpenChange, isChanging }: CardDialogPr
       paymentsRef.current = payments;
       const card = await payments.card({
         style: {
-          input: { fontSize: "14px", color: "#1a1a1a", fontFamily: "system-ui, sans-serif" },
+          input: { fontSize: "14px", color: "#1a1a1a" },
           "input::placeholder": { color: "#9ca3af" },
           ".input-container": { borderRadius: "8px", borderColor: "#e5e7eb" },
-          ".input-container.is-focus": { borderColor: "hsl(20,85%,56%)" },
+          ".input-container.is-focus": { borderColor: "#d05a2a" },
           ".input-container.is-error": { borderColor: "#ef4444" },
         },
       });
