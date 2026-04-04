@@ -112,7 +112,7 @@ const EXCLUDED_EMAIL_DOMAINS = [
   "dummy.jp", "dummy.com", "hoge.jp",
   "gmail.com", "yahoo.co.jp", "hotmail.com",
   "outlook.com", "icloud.com", "googlemail.com", "yahoo.com",
-  "keimatch-sinjapan.com", "sinjapan.jp",
+  "keisaiyou-sinjapan.com", "sinjapan.jp",
   // ホームページ制作サービスのサンプルメール
   "yamadahp.jp", "jimdo.com", "jimdo.jp", "wix.com", "weebly.com",
   "webnode.jp", "strikingly.com", "site123.com", "square.site",
@@ -1360,7 +1360,7 @@ export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: num
 ■ 30秒で無料登録
 ━━━━━━━━━━━━━━━━━━━━
 ▼ サービス詳細・無料登録はこちら
-https://keimatch-sinjapan.com/register
+https://keisaiyou-sinjapan.com/register
 
 現在、サービス開始キャンペーンとして
 全機能を無料でご利用いただけます。
@@ -1378,7 +1378,7 @@ https://keimatch-sinjapan.com/register
 合同会社SIN JAPAN
 〒243-0303 神奈川県愛甲郡愛川町中津7287
 TEL: 046-212-2325
-URL: https://keimatch-sinjapan.com
+URL: https://keisaiyou-sinjapan.com
 ━━━━━━━━━━━━━━━━━━━━
 
 ※本メールは貴社ホームページに掲載されている
@@ -1479,7 +1479,7 @@ export async function sendFollowUpEmails(): Promise<{ sent: number }> {
 ケイマッチでは現在、全機能を無料でご利用いただけます。
 
 ▼ 30秒で無料登録
-https://keimatch-sinjapan.com/register
+https://keisaiyou-sinjapan.com/register
 
 ご不明な点がございましたら、
 本メールへのご返信にてお気軽にお問い合わせください。
@@ -1489,7 +1489,7 @@ https://keimatch-sinjapan.com/register
 合同会社SIN JAPAN
 〒243-0303 神奈川県愛甲郡愛川町中津7287
 TEL: 046-212-2325
-URL: https://keimatch-sinjapan.com
+URL: https://keisaiyou-sinjapan.com
 ━━━━━━━━━━━━━━━━━━━━
 
 ※配信停止をご希望の場合は本メールへご返信ください。`;

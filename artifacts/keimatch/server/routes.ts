@@ -108,7 +108,7 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
 
 function generateInvoiceEmailHtml(invoice: any, adminInfo?: any): string {
   const statusLabel = invoice.status === "paid" ? "入金済み" : invoice.status === "overdue" ? "支払い期限超過" : "未入金";
-  const appBaseUrl = process.env.APP_BASE_URL || "https://keimatch-sinjapan.com";
+  const appBaseUrl = process.env.APP_BASE_URL || "https://keisaiyou-sinjapan.com";
   const paymentUrl = `${appBaseUrl}/payment`;
 
   const bankName = adminInfo?.bankName || "";
@@ -148,7 +148,7 @@ function generateInvoiceEmailHtml(invoice: any, adminInfo?: any): string {
       <p style="margin:0 0 2px;">〒${formattedPostalCode}</p>
       <p style="margin:0 0 2px;">${adminAddress}</p>
       <p style="margin:0 0 2px;">Tel: ${adminPhone}</p>
-      <p style="margin:0;">info@sinjapan.jp</p>
+      <p style="margin:0;">info@keisaiyou-sinjapan.com</p>
     </td></tr>
   </table>
   <div style="background:#f8f9fa;padding:15px;border-radius:6px;margin-bottom:20px;">
@@ -358,7 +358,7 @@ export async function registerRoutes(
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await storage.createPasswordResetToken(user.id, tokenHash, expiresAt);
 
-      const appBaseUrl = process.env.APP_BASE_URL || "https://keimatch-sinjapan.com";
+      const appBaseUrl = process.env.APP_BASE_URL || "https://keisaiyou-sinjapan.com";
       const resetUrl = `${appBaseUrl}/reset-password?token=${token}`;
 
       const resolved = await resolveEmailTemplate(
@@ -1257,7 +1257,7 @@ export async function registerRoutes(
               ${dispatchRequest.transportCompanyNotes ? `<h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">配送会社備考</h2><p style="white-space:pre-wrap">${dispatchRequest.transportCompanyNotes}</p>` : ""}
 
               <div style="margin-top:24px;padding:12px;background:#f0fffe;border-radius:6px;font-size:12px;color:#666">
-                <p style="margin:0">このメールはKEI MATCH（keimatch-sinjapan.com）から自動送信されています。</p>
+                <p style="margin:0">このメールはKEI SAIYOU（keisaiyou-sinjapan.com）から自動送信されています。</p>
               </div>
             </div>
           </div>`;
@@ -1326,7 +1326,7 @@ export async function registerRoutes(
               ${dispatchRequest.transportCompanyNotes ? `<h2 style="font-size:16px;border-bottom:2px solid #40E0D0;padding-bottom:6px;margin:20px 0 12px">配送会社備考</h2><p style="white-space:pre-wrap">${dispatchRequest.transportCompanyNotes}</p>` : ""}
 
               <div style="margin-top:24px;padding:12px;background:#f0fffe;border-radius:6px;font-size:12px;color:#666">
-                <p style="margin:0">このメールはKEI MATCH（keimatch-sinjapan.com）から自動送信されています。</p>
+                <p style="margin:0">このメールはKEI SAIYOU（keisaiyou-sinjapan.com）から自動送信されています。</p>
               </div>
             </div>
           </div>`;
@@ -1918,7 +1918,7 @@ export async function registerRoutes(
         return res.status(401).json({ message: "ユーザーが見つかりません" });
       }
 
-      const appBaseUrl = process.env.APP_BASE_URL || "https://keimatch-sinjapan.com";
+      const appBaseUrl = process.env.APP_BASE_URL || "https://keisaiyou-sinjapan.com";
       const resolved = await resolveEmailTemplate(
         "partner_invite",
         { companyName: user.companyName, registerUrl: `${appBaseUrl}/register`, appBaseUrl },
@@ -4141,7 +4141,7 @@ JSON形式で以下を返してください（日本語で）:
       }
 
       const prefectureRomaji = getPrefectureRomaji(parsed.data.prefecture);
-      const loginEmail = parsed.data.email || `agent-${prefectureRomaji}@keimatch-sinjapan.com`;
+      const loginEmail = parsed.data.email || `agent-${prefectureRomaji}@keisaiyou-sinjapan.com`;
       const defaultPassword = `agent${Date.now().toString(36)}`;
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       const username = `agent_${prefectureRomaji}_${Date.now()}`;
@@ -4253,7 +4253,7 @@ JSON形式で以下を返してください（日本語で）:
       if (agent.userId) return res.status(400).json({ message: "この代理店にはすでにアカウントがあります" });
 
       const prefectureRomaji = getPrefectureRomaji(agent.prefecture);
-      const loginEmail = agent.email || `agent-${prefectureRomaji}@keimatch-sinjapan.com`;
+      const loginEmail = agent.email || `agent-${prefectureRomaji}@keisaiyou-sinjapan.com`;
       const defaultPassword = `agent${Date.now().toString(36)}`;
       const hashedPassword = await bcrypt.hash(defaultPassword, 10);
       const username = `agent_${prefectureRomaji}_${Date.now()}`;
@@ -4325,7 +4325,7 @@ JSON形式で以下を返してください（日本語で）:
 
       for (const agent of agentsWithoutAccount) {
         const prefectureRomaji = getPrefectureRomaji(agent.prefecture);
-        const loginEmail = agent.email || `agent-${prefectureRomaji}@keimatch-sinjapan.com`;
+        const loginEmail = agent.email || `agent-${prefectureRomaji}@keisaiyou-sinjapan.com`;
         const defaultPassword = `agent${Date.now().toString(36)}${Math.random().toString(36).slice(2, 4)}`;
         const hashedPassword = await bcrypt.hash(defaultPassword, 10);
         const username = `agent_${prefectureRomaji}_${Date.now()}`;
@@ -4555,7 +4555,7 @@ JSON形式で以下を返してください（日本語で）:
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
 
       const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
-      const adminInfo = admins.find(a => a.email === "info@sinjapan.jp") || admins.find(a => a.address && a.bankName) || admins[0] || null;
+      const adminInfo = admins.find(a => a.email === "info@keisaiyou-sinjapan.com") || admins.find(a => a.address && a.bankName) || admins[0] || null;
       const invoiceHtml = generateInvoiceEmailHtml(invoice, adminInfo);
       const invoiceResolved = await resolveEmailTemplate(
         "invoice_send",
@@ -4587,7 +4587,7 @@ JSON形式で以下を返してください（日本語で）:
       if (!invoiceIds || invoiceIds.length === 0) return res.status(400).json({ message: "請求書を選択してください" });
 
       const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
-      const adminInfo = admins.find(a => a.email === "info@sinjapan.jp") || admins.find(a => a.address && a.bankName) || admins[0] || null;
+      const adminInfo = admins.find(a => a.email === "info@keisaiyou-sinjapan.com") || admins.find(a => a.address && a.bankName) || admins[0] || null;
       let sentCount = 0;
       let failCount = 0;
       for (const id of invoiceIds) {

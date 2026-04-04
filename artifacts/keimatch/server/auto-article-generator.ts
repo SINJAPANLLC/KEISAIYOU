@@ -178,7 +178,7 @@ export async function runDailyArticleGeneration() {
 
 export async function pingGoogleSitemap() {
   try {
-    const baseUrl = process.env.SITE_URL || "https://keimatch-sinjapan.com";
+    const baseUrl = process.env.SITE_URL || "https://keisaiyou-sinjapan.com";
     const sitemapUrl = encodeURIComponent(`${baseUrl}/sitemap.xml`);
     const pingUrl = `https://www.google.com/ping?sitemap=${sitemapUrl}`;
     const response = await fetch(pingUrl);

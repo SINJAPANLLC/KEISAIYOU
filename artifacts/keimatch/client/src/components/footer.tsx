@@ -25,7 +25,7 @@ export default function Footer() {
               <p className="font-semibold text-white text-base">合同会社SIN JAPAN</p>
               <p>〒243-0303 神奈川県愛甲郡愛川町中津7287</p>
               <p>TEL 046-212-2325　FAX 046-212-2326</p>
-              <p>Mail info@sinjapan.jp</p>
+              <p>Mail info@keisaiyou-sinjapan.com</p>
             </div>
           </div>
 

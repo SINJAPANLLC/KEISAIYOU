@@ -112,7 +112,7 @@ export default function Contact() {
                 {[
                   { icon: MapPin, label: "所在地", value: "〒243-0303\n神奈川県愛甲郡愛川町中津7287" },
                   { icon: Phone, label: "電話", value: "046-212-2325" },
-                  { icon: Mail, label: "メール", value: "info@sinjapan.jp" },
+                  { icon: Mail, label: "メール", value: "info@keisaiyou-sinjapan.com" },
                   { icon: Clock, label: "営業時間", value: "24時間受付" },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3">

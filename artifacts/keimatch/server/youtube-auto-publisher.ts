@@ -51,7 +51,7 @@ const VIDEO_TOPICS = [
   "軽貨物配送業界の労働環境改善に向けた取り組み",
 ];
 
-const SITE_URL = "https://keimatch-sinjapan.com";
+const SITE_URL = "https://keisaiyou-sinjapan.com";
 
 function ensureTempDir() {
   if (!fs.existsSync(TEMP_DIR)) {

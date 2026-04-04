@@ -6,7 +6,7 @@ export default function CompanyInfo() {
     { label: "所在地", value: "〒243-0303 神奈川県愛甲郡愛川町中津7287" },
     { label: "電話番号", value: "046-212-2325" },
     { label: "FAX", value: "046-212-2326" },
-    { label: "メール", value: "info@sinjapan.jp" },
+    { label: "メール", value: "info@keisaiyou-sinjapan.com" },
     { label: "事業内容", value: "軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」の運営" },
     { label: "許認可", value: "関自貨第560号 / 14-ユ-302475" },
   ];
@@ -74,7 +74,7 @@ export default function CompanyInfo() {
             {[
               { icon: MapPin, label: "所在地", value: "〒243-0303 神奈川県愛甲郡愛川町中津7287" },
               { icon: Phone, label: "電話・FAX", value: "Tel: 046-212-2325\nFax: 046-212-2326" },
-              { icon: Mail, label: "メール", value: "info@sinjapan.jp" },
+              { icon: Mail, label: "メール", value: "info@keisaiyou-sinjapan.com" },
             ].map(({ icon: Icon, label, value }) => (
               <div key={label} className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

@@ -142,7 +142,7 @@ export default function Privacy() {
               <p className="font-medium text-foreground">合同会社SIN JAPAN</p>
               <p>住所: 〒243-0303 神奈川県愛甲郡愛川町中津7287</p>
               <p>電話: 046-212-2325</p>
-              <p>メール: info@sinjapan.jp</p>
+              <p>メール: info@keisaiyou-sinjapan.com</p>
             </div>
           </section>
         </div>

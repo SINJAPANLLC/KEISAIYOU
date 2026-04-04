@@ -31,3 +31,10 @@ channel = "stable-25_05"
 
 [userenv.shared]
 SQUARE_ENV = "production"
+APP_BASE_URL = "https://keisaiyou-sinjapan.com"
+SITE_URL = "https://keisaiyou-sinjapan.com"
+SMTP_HOST = "smtp.hostinger.com"
+SMTP_PORT = "465"
+SMTP_USER = "info@keisaiyou-sinjapan.com"
+SMTP_FROM = "info@keisaiyou-sinjapan.com"
+SMTP_SECURE = "true"

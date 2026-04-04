@@ -100,7 +100,7 @@ function buildEmailHtml(subject: string, body: string, previewCompany = "サン�
 <div style="border:1px solid #e2e8f0;border-top:none;border-radius:0 0 8px 8px;padding:24px;">
 ${htmlLines.join("\n")}
 </div>
-<p style="margin-top:16px;font-size:11px;color:#94a3b8;text-align:center;">KEI SAIYOU — 合同会社SIN JAPAN | info@sinjapan.jp</p>
+<p style="margin-top:16px;font-size:11px;color:#94a3b8;text-align:center;">KEI SAIYOU — 合同会社SIN JAPAN | info@keisaiyou-sinjapan.com</p>
 </body></html>`;
 }
 

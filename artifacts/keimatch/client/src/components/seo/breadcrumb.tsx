@@ -15,12 +15,12 @@ export default function Breadcrumb({ items }: BreadcrumbProps) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "ホーム", item: "https://keimatch-sinjapan.com/" },
+      { "@type": "ListItem", position: 1, name: "ホーム", item: "https://keisaiyou-sinjapan.com/" },
       ...items.map((item, i) => ({
         "@type": "ListItem",
         position: i + 2,
         name: item.label,
-        ...(item.href ? { item: `https://keimatch-sinjapan.com${item.href}` } : {}),
+        ...(item.href ? { item: `https://keisaiyou-sinjapan.com${item.href}` } : {}),
       })),
     ],
   };

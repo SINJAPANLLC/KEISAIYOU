@@ -39,9 +39,9 @@ export default function AdminSettings() {
   const [siteKeywords, setSiteKeywords] = useState("軽貨物, ドライバー採用, 求人, 配送");
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [sessionTimeout, setSessionTimeout] = useState("24");
-  const [adminEmail, setAdminEmail] = useState("info@sinjapan.jp");
+  const [adminEmail, setAdminEmail] = useState("info@keisaiyou-sinjapan.com");
   const [registrationNotification, setRegistrationNotification] = useState(true);
-  const [contactEmail, setContactEmail] = useState("info@sinjapan.jp");
+  const [contactEmail, setContactEmail] = useState("info@keisaiyou-sinjapan.com");
   const [contactPhone, setContactPhone] = useState("046-212-2325");
   const [companyAddress, setCompanyAddress] = useState("");
 

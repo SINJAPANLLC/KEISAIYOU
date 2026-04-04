@@ -86,7 +86,7 @@ ${bodyHtml}
 本メールはKEI MATCHから自動送信されています。<br>
 心当たりのない場合はお手数ですが本メールを破棄してください。<br><br>
 合同会社SIN JAPAN<br>
-<a href="https://keimatch-sinjapan.com" style="color:#1a2f6e;text-decoration:none;">keimatch-sinjapan.com</a>
+<a href="https://keisaiyou-sinjapan.com" style="color:#1a2f6e;text-decoration:none;">keisaiyou-sinjapan.com</a>
 </td>
 </tr>
 </table>
@@ -111,7 +111,7 @@ export async function sendEmail(
     return { success: false, error: "メール設定が未構成です" };
   }
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@keimatch-sinjapan.com";
+  const from = process.env.SMTP_FROM || process.env.SMTP_USER || "noreply@keisaiyou-sinjapan.com";
   const isAlreadyHtml = /<\/?(?:div|table|tr|td|h[1-6]|p|br|a|span|img)\b/i.test(body);
 
   try {
