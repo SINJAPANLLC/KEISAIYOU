@@ -1,6 +1,5 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,9 +28,7 @@ export default function Register() {
   });
 
   useEffect(() => {
-    if (isAuthenticated) {
-      setLocation("/home");
-    }
+    if (isAuthenticated) setLocation("/home");
   }, [isAuthenticated, setLocation]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,10 +39,7 @@ export default function Register() {
       const formData = new FormData();
       formData.append("permit", file);
       const res = await fetch("/api/upload/permit", { method: "POST", body: formData });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message);
-      }
+      if (!res.ok) throw new Error((await res.json()).message);
       const data = await res.json();
       setPermitFile(data);
       toast({ title: "アップロード完了", description: "許可証がアップロードされました" });
@@ -59,11 +53,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) {
-      toast({
-        variant: "destructive",
-        title: "確認",
-        description: "利用規約・プライバシーポリシーに同意してください",
-      });
+      toast({ variant: "destructive", title: "確認", description: "利用規約・プライバシーポリシーに同意してください" });
       return;
     }
     try {
@@ -71,200 +61,116 @@ export default function Register() {
       toast({ title: "登録完了", description: "管理者の承認後にログインできます。しばらくお待ちください。" });
       setLocation("/login");
     } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "登録失敗",
-        description: error.message || "登録に失敗しました",
-      });
+      toast({ variant: "destructive", title: "登録失敗", description: error.message || "登録に失敗しました" });
     }
   };
 
-  const update = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
+  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-background px-4 py-12">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex justify-center">
+    <div className="min-h-screen flex">
+      <div className="hidden lg:flex lg:w-2/5 hero-gradient relative flex-col justify-between p-10">
+        <div className="hero-grid absolute inset-0 pointer-events-none" />
+        <div className="relative">
+          <img src="/logo-white.png" alt="KEI SAIYOU" className="h-10 w-auto" />
+        </div>
+        <div className="relative space-y-6">
+          <p className="text-3xl font-extrabold text-white leading-snug">
+            軽貨物ドライバー採用は<br />これだけでいい
+          </p>
+          <ul className="space-y-3 text-white/90 text-sm">
+            {["無料で求人を掲載できる", "応募が来たらメールですぐ通知", "¥3,000 / 応募のシンプル料金"].map((t) => (
+              <li key={t} className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">✓</span>
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative text-white/40 text-xs">© 合同会社SIN JAPAN</div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto flex items-start justify-center bg-white px-6 py-12">
+        <div className="w-full max-w-md">
+          <div className="lg:hidden flex justify-center mb-8">
             <img src="/logo-keisaiyou.png" alt="KEI SAIYOU" className="h-10 w-auto" />
           </div>
-          <CardTitle className="text-2xl">企業登録</CardTitle>
-          <p className="text-sm text-muted-foreground">KEI SAIYOUに企業アカウントを作成</p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <h1 className="text-2xl font-bold mb-1">企業登録</h1>
+          <p className="text-sm text-muted-foreground mb-8">KEI SAIYOUに企業アカウントを作成</p>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email">メールアドレス</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={(e) => update("email", e.target.value)}
-                placeholder="info@example.co.jp"
-                required
-                data-testid="input-register-email"
-              />
+              <Input id="email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="info@example.co.jp" required className="h-11" data-testid="input-register-email" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">パスワード</Label>
-              <Input
-                id="password"
-                type="password"
-                value={form.password}
-                onChange={(e) => update("password", e.target.value)}
-                placeholder="パスワード"
-                required
-                data-testid="input-register-password"
-              />
+              <Input id="password" type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="6文字以上" required className="h-11" data-testid="input-register-password" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="companyName">会社名</Label>
-              <Input
-                id="companyName"
-                type="text"
-                value={form.companyName}
-                onChange={(e) => update("companyName", e.target.value)}
-                placeholder="例: 〇〇運送 / 個人事業主名"
-                required
-                data-testid="input-register-company"
-              />
+              <Label htmlFor="companyName">会社名 / 屋号</Label>
+              <Input id="companyName" type="text" value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="例: 〇〇運送株式会社" required className="h-11" data-testid="input-register-company" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">所在地</Label>
-              <Input
-                id="address"
-                type="text"
-                value={form.address}
-                onChange={(e) => update("address", e.target.value)}
-                placeholder="例: 神奈川県横浜市中区1-2-3"
-                data-testid="input-register-address"
-              />
+              <Input id="address" type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="例: 神奈川県横浜市中区1-2-3" className="h-11" data-testid="input-register-address" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="contactName">担当者名</Label>
-              <Input
-                id="contactName"
-                type="text"
-                value={form.contactName}
-                onChange={(e) => update("contactName", e.target.value)}
-                placeholder="例: 山田 太郎"
-                data-testid="input-register-contact-name"
-              />
+              <Input id="contactName" type="text" value={form.contactName} onChange={(e) => update("contactName", e.target.value)} placeholder="例: 山田 太郎" className="h-11" data-testid="input-register-contact-name" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">電話番号</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => update("phone", e.target.value)}
-                  placeholder="03-0000-0000"
-                  required
-                  data-testid="input-register-phone"
-                />
+                <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="03-0000-0000" required className="h-11" data-testid="input-register-phone" />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fax">FAX番号</Label>
-                <Input
-                  id="fax"
-                  type="tel"
-                  value={form.fax}
-                  onChange={(e) => update("fax", e.target.value)}
-                  placeholder="03-0000-0001"
-                  data-testid="input-register-fax"
-                />
+                <Input id="fax" type="tel" value={form.fax} onChange={(e) => update("fax", e.target.value)} placeholder="03-0000-0001" className="h-11" data-testid="input-register-fax" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="truckCount">車両保有台数</Label>
-              <Input
-                id="truckCount"
-                type="text"
-                value={form.truckCount}
-                onChange={(e) => update("truckCount", e.target.value)}
-                placeholder="例: 10台"
-                data-testid="input-register-truck-count"
-              />
+              <Label htmlFor="truckCount">現在のドライバー数</Label>
+              <Input id="truckCount" type="text" value={form.truckCount} onChange={(e) => update("truckCount", e.target.value)} placeholder="例: 10名" className="h-11" data-testid="input-register-truck-count" />
             </div>
+
             <div className="space-y-2">
               <Label>貨物軽自動車運送事業届出書</Label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileUpload}
-                className="hidden"
-                data-testid="input-permit-file"
-              />
+              <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileUpload} className="hidden" data-testid="input-permit-file" />
               {permitFile ? (
-                <div className="flex items-center gap-2 p-3 border rounded-md bg-muted/30">
+                <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
                   <FileText className="w-5 h-5 text-primary shrink-0" />
                   <span className="text-sm truncate flex-1" data-testid="text-permit-filename">{permitFile.fileName}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => { setPermitFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }}
-                    data-testid="button-remove-permit"
-                  >
+                  <Button type="button" variant="ghost" size="icon" onClick={() => { setPermitFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} data-testid="button-remove-permit">
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  data-testid="button-upload-permit"
-                >
-                  {uploading ? "アップロード中..." : (
-                    <>
-                      <Upload className="w-4 h-4 mr-2" />
-                      許可証をアップロード
-                    </>
-                  )}
+                <Button type="button" variant="outline" className="w-full h-11" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-upload-permit">
+                  {uploading ? "アップロード中..." : (<><Upload className="w-4 h-4 mr-2" />許可証をアップロード</>)}
                 </Button>
               )}
               <p className="text-xs text-muted-foreground">PDF、JPG、PNG形式（最大10MB）</p>
             </div>
-            <div className="flex items-start gap-2 pt-2">
-              <Checkbox
-                id="agree"
-                checked={agreed}
-                onCheckedChange={(v) => setAgreed(v === true)}
-                data-testid="checkbox-agree"
-              />
+
+            <div className="flex items-start gap-3 pt-1">
+              <Checkbox id="agree" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} data-testid="checkbox-agree" />
               <Label htmlFor="agree" className="text-sm text-muted-foreground leading-snug cursor-pointer">
-                <span className="text-primary font-medium">利用規約</span>、<span className="text-primary font-medium">プライバシーポリシー</span>に同意する
+                <Link href="/terms" className="text-primary font-medium">利用規約</Link>、<Link href="/privacy" className="text-primary font-medium">プライバシーポリシー</Link>に同意する
               </Label>
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={register.isPending || !agreed}
-              data-testid="button-register-submit"
-            >
-              {register.isPending ? "登録中..." : (
-                <>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  同意して登録する
-                </>
-              )}
+
+            <Button type="submit" className="w-full h-11 text-base" disabled={register.isPending || !agreed} data-testid="button-register-submit">
+              {register.isPending ? "登録中..." : (<><UserPlus className="w-4 h-4 mr-2" />同意して登録する</>)}
             </Button>
           </form>
-          <div className="mt-6 text-center text-sm text-muted-foreground">
+
+          <p className="mt-8 text-center text-sm text-muted-foreground">
             既にアカウントをお持ちの方は{" "}
-            <Link href="/login" className="text-primary font-medium" data-testid="link-to-login">
-              ログイン
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+            <Link href="/login" className="text-primary font-semibold" data-testid="link-to-login">ログイン</Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

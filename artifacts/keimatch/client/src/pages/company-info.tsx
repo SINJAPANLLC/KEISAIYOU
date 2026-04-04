@@ -1,5 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Building2, MapPin, Phone, Mail, Globe, Calendar, Users, Target } from "lucide-react";
+import { Building2, MapPin, Phone, Mail, Target, Briefcase } from "lucide-react";
 
 export default function CompanyInfo() {
   const companyData = [
@@ -8,76 +7,86 @@ export default function CompanyInfo() {
     { label: "電話番号", value: "046-212-2325" },
     { label: "FAX", value: "046-212-2326" },
     { label: "メール", value: "info@sinjapan.jp" },
-    { label: "事業内容", value: "軽貨物案件マッチングプラットフォーム「KEI MATCH」の運営" },
+    { label: "事業内容", value: "軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」の運営" },
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-3" data-testid="text-page-title">会社情報</h1>
-        <p className="text-muted-foreground text-lg">合同会社SIN JAPANについて</p>
+    <div>
+      <div className="hero-gradient relative py-14">
+        <div className="hero-grid absolute inset-0 pointer-events-none" />
+        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/60 mb-3">COMPANY</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" data-testid="text-page-title">会社情報</h1>
+          <p className="text-white/80">合同会社SIN JAPANについて</p>
+        </div>
       </div>
 
-      <div className="space-y-8">
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-primary" />
-              会社概要
-            </h2>
-            <div className="divide-y">
-              {companyData.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex flex-col sm:flex-row py-4 first:pt-0 last:pb-0"
-                  data-testid={`row-company-${index}`}
-                >
-                  <span className="font-medium w-32 flex-shrink-0 mb-1 sm:mb-0">{item.label}</span>
-                  <span className="text-muted-foreground">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="max-w-4xl mx-auto px-4 py-12 space-y-8">
+        <div className="bg-white border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="px-6 py-4 border-b border-border flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">会社概要</h2>
+          </div>
+          <div className="divide-y divide-border">
+            {companyData.map((item, index) => (
+              <div
+                key={index}
+                className="flex flex-col sm:flex-row px-6 py-4"
+                data-testid={`row-company-${index}`}
+              >
+                <span className="font-medium text-sm w-36 flex-shrink-0 text-muted-foreground mb-1 sm:mb-0">{item.label}</span>
+                <span className="text-sm">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Target className="w-5 h-5 text-primary" />
-              ミッション
-            </h2>
-            <p className="text-muted-foreground leading-relaxed">
-              軽貨物配送業界における案件マッチングの課題を、テクノロジーの力で解決することを目指しています。
-              AIを活用した効率的なマッチングにより、荷主と軽貨物ドライバーの双方にとって最適な配送を実現し、
-              日本のラストマイル配送の発展に貢献します。
+        <div className="grid sm:grid-cols-2 gap-6">
+          <div className="bg-white border border-border rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Target className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-lg font-semibold">ミッション</h2>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              軽貨物配送業界における採用の課題をテクノロジーの力で解決することを目指しています。運送会社が優秀なドライバーと出会い、継続的に成長できるプラットフォームを提供します。
             </p>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card>
-          <CardContent className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Globe className="w-5 h-5 text-primary" />
-              サービス
-            </h2>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                { icon: Users, title: "AI案件マッチング", desc: "荷主と軽貨物ドライバーをAIが最適にマッチング" },
-                { icon: MapPin, title: "全国対応", desc: "日本全国の案件・空き車両情報を網羅" },
-                { icon: Calendar, title: "リアルタイム検索", desc: "最新の案件・空き車両情報をリアルタイムで検索" },
-                { icon: Phone, title: "事業者検索・管理", desc: "取引先の管理や事業者検索が可能" },
-              ].map((service, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-md bg-muted/50">
-                  <service.icon className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-sm">{service.title}</p>
-                    <p className="text-xs text-muted-foreground">{service.desc}</p>
-                  </div>
-                </div>
-              ))}
+          <div className="bg-white border border-border rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Briefcase className="w-5 h-5 text-primary" />
+              </div>
+              <h2 className="text-lg font-semibold">サービス概要</h2>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              KEI SAIYOUは、軽貨物ドライバーを採用したい運送会社向けの採用プラットフォームです。求人掲載・応募管理・採用通知をワンストップで提供し、採用コストを最小化します。
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-muted/40 rounded-2xl p-6">
+          <h2 className="text-lg font-semibold mb-4">お問い合わせ</h2>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { icon: MapPin, label: "所在地", value: "〒243-0303 神奈川県愛甲郡愛川町中津7287" },
+              { icon: Phone, label: "電話・FAX", value: "Tel: 046-212-2325\nFax: 046-212-2326" },
+              { icon: Mail, label: "メール", value: "info@sinjapan.jp" },
+            ].map(({ icon: Icon, label, value }) => (
+              <div key={label} className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Icon className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                  <p className="text-sm whitespace-pre-line mt-0.5">{value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

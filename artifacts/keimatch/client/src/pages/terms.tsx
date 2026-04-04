@@ -154,12 +154,16 @@ export default function Terms() {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-3" data-testid="text-page-title">利用規約</h1>
-        <p className="text-muted-foreground">最終更新日: 2026年1月1日</p>
+    <div>
+      <div className="hero-gradient relative py-14">
+        <div className="hero-grid absolute inset-0 pointer-events-none" />
+        <div className="relative max-w-3xl mx-auto px-4 text-center text-white">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/60 mb-3">TERMS OF SERVICE</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" data-testid="text-page-title">利用規約</h1>
+          <p className="text-white/70 text-sm">最終更新日: 2026年1月1日</p>
+        </div>
       </div>
-
+    <div className="max-w-3xl mx-auto px-4 py-12">
       <div className="space-y-8">
         {sections.map((section, index) => (
           <section key={index} data-testid={`section-terms-${index}`}>
@@ -198,6 +202,7 @@ export default function Terms() {
         <p>合同会社SIN JAPAN</p>
         <p>〒243-0303 神奈川県愛甲郡愛川町中津7287</p>
       </div>
+    </div>
     </div>
   );
 }

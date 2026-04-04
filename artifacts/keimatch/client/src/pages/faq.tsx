@@ -1,6 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface FaqItem {
   question: string;
@@ -17,47 +16,57 @@ const faqItems: FaqItem[] = [
   {
     category: "アカウント",
     question: "パスワードを忘れた場合はどうすればよいですか？",
-    answer: "お問い合わせページからパスワードリセットのご依頼をお送りください。確認後、新しいパスワードをご案内いたします。",
+    answer: "ログインページの「パスワードを忘れた場合」から、登録メールアドレスを入力してください。パスワードリセット用のリンクをメールでお送りします。",
   },
   {
     category: "アカウント",
     question: "登録情報を変更したい場合は？",
-    answer: "ログイン後、設定ページから会社情報やメールアドレスの変更が可能です。許可証の再アップロードも設定ページから行えます。",
+    answer: "ログイン後、設定ページから会社情報・メールアドレスの変更が可能です。許可証の再アップロードも設定ページから行えます。",
   },
   {
-    category: "案件・空き車両",
-    question: "案件の登録に費用はかかりますか？",
-    answer: "案件の登録自体は無料です。詳しい料金体系についてはお支払いページをご確認ください。",
+    category: "求人・掲載",
+    question: "求人の掲載費用はかかりますか？",
+    answer: "求人の掲載自体は無料です。費用が発生するのは応募があったときのみで、1応募につき¥3,000（税込）です。応募がなければ費用は一切かかりません。",
   },
   {
-    category: "案件・空き車両",
-    question: "登録した案件や空き車両情報を削除できますか？",
-    answer: "はい、「登録した案件」ページから登録した案件の削除が可能です。空き車両情報も空き車両検索ページから管理・削除できます。",
+    category: "求人・掲載",
+    question: "求人は何件まで掲載できますか？",
+    answer: "掲載件数に上限はありません。複数の求人を同時に掲載・管理することができます。",
   },
   {
-    category: "案件・空き車両",
-    question: "AI検索はどのように動作しますか？",
-    answer: "AIが登録されている案件・空き車両の情報を分析し、出発地・到着地・日時・車両タイプなどの条件に基づいて最適なマッチングを提案します。",
+    category: "求人・掲載",
+    question: "掲載した求人をいつでも削除・編集できますか？",
+    answer: "はい、ダッシュボードから求人の編集・削除・公開停止をいつでも行えます。",
   },
   {
-    category: "マッチング",
-    question: "マッチング後の流れはどうなりますか？",
-    answer: "条件に合う案件や車両が見つかったら、相手の連絡先を確認し、直接交渉を行います。条件が合意されたら成約となります。",
+    category: "応募・通知",
+    question: "応募があったらどうやって知ることができますか？",
+    answer: "登録したメールアドレスに即時通知メールをお送りします。応募者のプロフィールや連絡先も通知メールに記載されます。",
   },
   {
-    category: "マッチング",
-    question: "成約した案件の管理はどこでできますか？",
-    answer: "「成約した荷物」ページで成約済みの案件一覧を確認できます。また、「実運送体制管理簿」ページで配送体制の管理も可能です。",
+    category: "応募・通知",
+    question: "応募後の流れはどうなりますか？",
+    answer: "応募通知メールが届いたら、記載されている連絡先から直接応募者にご連絡ください。面談・採用のご判断はすべて貴社にてお決めいただけます。",
+  },
+  {
+    category: "お支払い",
+    question: "料金はいつ請求されますか？",
+    answer: "応募が確定した時点でSquareによる自動決済が行われます。1応募につき¥3,000（税込）です。",
+  },
+  {
+    category: "お支払い",
+    question: "支払い方法は何に対応していますか？",
+    answer: "クレジットカード決済（Square）に対応しています。Visa・Mastercard・JCBなど主要カードブランドをご利用いただけます。",
   },
   {
     category: "その他",
     question: "対応エリアはどこですか？",
-    answer: "日本全国に対応しております。都道府県を指定して案件・空き車両情報を登録・検索できます。",
+    answer: "日本全国に対応しております。都道府県・エリアを指定した求人掲載が可能です。",
   },
   {
     category: "その他",
     question: "セキュリティ対策はどうなっていますか？",
-    answer: "SSL暗号化通信を採用し、パスワードはハッシュ化して保存しています。また、許可証の確認により、信頼できる事業者のみがご利用いただけます。",
+    answer: "SSL暗号化通信を採用し、パスワードはハッシュ化して保存しています。また、届出書の確認により、信頼できる事業者のみにご利用いただけます。",
   },
 ];
 
@@ -65,25 +74,25 @@ function FaqAccordion({ item, index }: { item: FaqItem; index: number }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Card
-      className="cursor-pointer hover-elevate"
+    <div
+      className="border border-border rounded-xl overflow-hidden cursor-pointer transition-all hover:border-primary/40 hover:shadow-sm"
       onClick={() => setIsOpen(!isOpen)}
       data-testid={`card-faq-${index}`}
     >
-      <CardContent className="p-5">
+      <div className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1">
-            <p className="font-semibold">{item.question}</p>
+            <p className="font-semibold text-sm sm:text-base">{item.question}</p>
             {isOpen && (
-              <p className="mt-3 text-muted-foreground leading-relaxed">{item.answer}</p>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.answer}</p>
             )}
           </div>
           <ChevronDown
-            className={`w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+            className={`w-5 h-5 text-primary flex-shrink-0 mt-0.5 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
           />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -91,24 +100,46 @@ export default function Faq() {
   const categories = Array.from(new Set(faqItems.map((item) => item.category)));
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-3" data-testid="text-page-title">よくある質問</h1>
-        <p className="text-muted-foreground text-lg">KEI MATCHに関するよくあるご質問をまとめました</p>
+    <div>
+      <div className="hero-gradient relative py-14">
+        <div className="hero-grid absolute inset-0 pointer-events-none" />
+        <div className="relative max-w-3xl mx-auto px-4 text-center text-white">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/60 mb-3">FAQ</p>
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" data-testid="text-page-title">よくある質問</h1>
+          <p className="text-white/80">KEI SAIYOUに関するよくあるご質問をまとめました</p>
+        </div>
       </div>
 
-      {categories.map((category) => (
-        <div key={category} className="mb-8">
-          <h2 className="text-lg font-semibold mb-4 text-primary" data-testid={`text-category-${category}`}>{category}</h2>
-          <div className="space-y-3">
-            {faqItems
-              .filter((item) => item.category === category)
-              .map((item, index) => (
-                <FaqAccordion key={index} item={item} index={faqItems.indexOf(item)} />
-              ))}
+      <div className="max-w-3xl mx-auto px-4 py-12">
+        {categories.map((category) => (
+          <div key={category} className="mb-10">
+            <h2
+              className="text-sm font-bold tracking-[0.1em] uppercase text-primary mb-4 pb-2 border-b border-primary/20"
+              data-testid={`text-category-${category}`}
+            >
+              {category}
+            </h2>
+            <div className="space-y-3">
+              {faqItems
+                .filter((item) => item.category === category)
+                .map((item, index) => (
+                  <FaqAccordion key={index} item={item} index={faqItems.indexOf(item)} />
+                ))}
+            </div>
           </div>
+        ))}
+
+        <div className="mt-8 p-6 rounded-2xl bg-muted/50 text-center">
+          <p className="font-semibold mb-2">解決しない場合は</p>
+          <p className="text-sm text-muted-foreground mb-4">お気軽にお問い合わせください。担当者がご対応いたします。</p>
+          <a
+            href="/contact"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            お問い合わせはこちら
+          </a>
         </div>
-      ))}
+      </div>
     </div>
   );
 }
