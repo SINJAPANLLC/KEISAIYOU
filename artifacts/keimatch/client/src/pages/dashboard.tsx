@@ -238,26 +238,6 @@ export default function Dashboard() {
 
           {/* Right column */}
           <div className="space-y-6">
-            {/* Announcements */}
-            <Card className="border border-border">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Bell className="w-4 h-4 text-primary" />
-                  お知らせ
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {announcements.map((ann) => (
-                    <div key={ann.id} className="rounded-lg bg-muted/50 p-3">
-                      <p className="text-xs font-semibold text-foreground mb-1">{ann.title}</p>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{ann.body}</p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Quick actions */}
             <Card className="border border-border">
               <CardHeader className="pb-3">
