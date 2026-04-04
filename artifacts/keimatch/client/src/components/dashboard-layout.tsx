@@ -150,10 +150,7 @@ export default function DashboardLayout({ children, noScroll }: { children: Reac
     <div className="flex h-full overflow-hidden">
       {sidebarOpen && (
         <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30" data-testid="panel-sidebar">
-          <div className="flex items-center justify-between p-2 border-b border-border">
-            <Link href="/home">
-              <span className="text-sm font-bold text-primary px-1 cursor-pointer">KEI SAIYOU</span>
-            </Link>
+          <div className="flex items-center justify-end p-2 border-b border-border">
             <Button
               variant="ghost"
               size="icon"
@@ -196,8 +193,7 @@ export default function DashboardLayout({ children, noScroll }: { children: Reac
               onClick={() => setMobileOpen(false)}
             />
             <aside className="absolute left-0 top-0 bottom-0 w-64 bg-background border-r border-border flex flex-col animate-in slide-in-from-left duration-200">
-              <div className="flex items-center justify-between p-3 border-b border-border">
-                <span className="text-sm font-bold text-primary">KEI SAIYOU</span>
+              <div className="flex items-center justify-end p-3 border-b border-border">
                 <Button
                   variant="ghost"
                   size="icon"
