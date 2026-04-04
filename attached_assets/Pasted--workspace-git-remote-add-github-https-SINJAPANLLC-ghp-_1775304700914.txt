@@ -1,0 +1,65 @@
+~/workspace$ git remote add github https://SINJAPANLLC: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@github.com/SINJAPANLLC/KEISAIYOU.git 2>/dev/null || git remote set-url github https://SINJAPANLLC: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@github.com/SINJAPANLLC/KEISAIYOU.git && git push github main
+Enumerating objects: 1712, done.
+Counting objects: 100% (1712/1712), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (1677/1677), done.
+Writing objects: 100% (1712/1712), 24.33 MiB | 5.71 MiB/s, done.
+Total 1712 (delta 945), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (945/945), done.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Google OAuth Client ID ————————————————————————————
+remote:        locations:
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:19
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:3
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:17
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/KEISAIYOU/security/secret-scanning/unblock-secret/3BtO2bC6aAAaLWsWLokVfUa391C
+remote:     
+remote:     
+remote:       —— Google OAuth Client Secret ————————————————————————
+remote:        locations:
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:20
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:4
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:18
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/KEISAIYOU/security/secret-scanning/unblock-secret/3BtO2bW8DDr5AHvwpx8ZiZxay57
+remote:     
+remote:     
+remote:       —— Google OAuth Refresh Token ————————————————————————
+remote:        locations:
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-MTP-PASS-Kazuya8008-SMTP-FROM-info-tramatch-sinjapan-co_1772031446921.txt:21
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-YOUTUBE-API-KEY-AIzaSyBNduV5ru0zA2mzROmUt3WGZoZw8yOVsCc_1772031053836.txt:5
+remote:          - commit: 8776e8b7f52ef5553453de9421cb9449409f4d50
+remote:            path: artifacts/keimatch/attached_assets/Pasted-chiL0a2wSjZb1NNWgR-xT3BlbkFJmEMY8uSJtITQ3PDm6kAJUduIDWd_1772033802837.txt:19
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/SINJAPANLLC/KEISAIYOU/security/secret-scanning/unblock-secret/3BtO2aG9uWPttis6kgyDwYiEpNY
+remote:     
+remote: 
+remote: 
+To https://github.com/SINJAPANLLC/KEISAIYOU.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/SINJAPANLLC/KEISAIYOU.git'
+~/workspace$ 
