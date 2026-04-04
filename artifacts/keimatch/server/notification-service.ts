@@ -29,7 +29,7 @@ function wrapInEmailTemplate(subject: string, bodyText: string): string {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#1a2f6e;text-decoration:underline;word-break:break-all;">$1</a>')
+    .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#d05a2a;text-decoration:underline;word-break:break-all;">$1</a>')
     .replace(/\n/g, "<br>");
 
   return `<!DOCTYPE html>
@@ -50,7 +50,7 @@ function wrapInEmailTemplate(subject: string, bodyText: string): string {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
 
 <tr>
-<td style="background-color:#1a2f6e;padding:20px 24px;text-align:center;">
+<td style="background-color:#d05a2a;padding:20px 24px;text-align:center;">
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
 <tr>
 <td style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:1px;text-align:center;">
@@ -86,7 +86,7 @@ ${bodyHtml}
 本メールはKEI SAIYOUから自動送信されています。<br>
 心当たりのない場合はお手数ですが本メールを破棄してください。<br><br>
 合同会社SIN JAPAN<br>
-<a href="https://keisaiyou-sinjapan.com" style="color:#1a2f6e;text-decoration:none;">keisaiyou-sinjapan.com</a>
+<a href="https://keisaiyou-sinjapan.com" style="color:#d05a2a;text-decoration:none;">keisaiyou-sinjapan.com</a>
 </td>
 </tr>
 </table>
