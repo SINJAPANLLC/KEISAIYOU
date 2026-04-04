@@ -8,6 +8,7 @@ export default function CompanyInfo() {
     { label: "FAX", value: "046-212-2326" },
     { label: "メール", value: "info@sinjapan.jp" },
     { label: "事業内容", value: "軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」の運営" },
+    { label: "許認可", value: "関自貨第560号 / 14-ユ-302475" },
   ];
 
   return (
