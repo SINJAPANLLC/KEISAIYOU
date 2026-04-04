@@ -52,10 +52,10 @@ function wrapTextInEmailHtml(subject: string, bodyText: string): string {
 <tr><td align="center" style="padding:24px 16px;">
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:600px;background-color:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
 <tr>
-<td style="background-color:#1a2f6e;padding:20px 24px;text-align:center;">
+<td style="background-color:#d05a2a;padding:20px 24px;text-align:center;">
 <table cellpadding="0" cellspacing="0" border="0" width="100%">
-<tr><td style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:1px;text-align:center;">KEI MATCH</td></tr>
-<tr><td style="color:rgba(255,255,255,0.85);font-size:11px;text-align:center;padding-top:2px;">KEIKAMOTSU MATCH</td></tr>
+<tr><td style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:1px;text-align:center;">KEI SAIYOU</td></tr>
+<tr><td style="color:rgba(255,255,255,0.85);font-size:11px;text-align:center;padding-top:2px;">軽貨物ドライバー採用プラットフォーム</td></tr>
 </table>
 </td>
 </tr>
@@ -70,10 +70,10 @@ function wrapTextInEmailHtml(subject: string, bodyText: string): string {
 <td style="padding:0 24px 24px 24px;">
 <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #e4e4e7;">
 <tr><td style="padding-top:20px;color:#71717a;font-size:11px;line-height:1.6;text-align:center;">
-本メールはKEI MATCHから自動送信されています。<br>
+本メールはKEI SAIYOUから自動送信されています。<br>
 心当たりのない場合はお手数ですが本メールを破棄してください。<br><br>
 合同会社SIN JAPAN<br>
-<a href="https://keimatch-sinjapan.com" style="color:#1a2f6e;text-decoration:none;">keimatch-sinjapan.com</a>
+<a href="https://kei-saiyou.jp" style="color:#d05a2a;text-decoration:none;">kei-saiyou.jp</a>
 </td></tr>
 </table>
 </td>
@@ -613,7 +613,7 @@ export default function AdminNotifications() {
                       {currentChannel === "email" && (
                         <div>
                           <Label className="text-xs">メール件名</Label>
-                          <Input className="mt-1" value={formSubject} onChange={e => setFormSubject(e.target.value)} placeholder="例: 【KEI MATCH】ご登録ありがとうございます" data-testid="input-template-subject" />
+                          <Input className="mt-1" value={formSubject} onChange={e => setFormSubject(e.target.value)} placeholder="例: 【KEI SAIYOU】応募がありました" data-testid="input-template-subject" />
                         </div>
                       )}
                       <div>
@@ -649,8 +649,8 @@ export default function AdminNotifications() {
                             onChange={e => setFormBody(e.target.value)}
                             placeholder={
                               currentChannel === "line"
-                                ? "{{会社名}} 様\n新着荷物: {{荷物名}}\n{{出発地}}→{{到着地}}"
-                                : "{{会社名}} 様\n\nいつもKEI MATCHをご利用いただき..."
+                                ? "{{会社名}} 様\n【KEI SAIYOU】{{求人タイトル}}に応募がありました。\nマイページからご確認ください。"
+                                : "{{会社名}} 様\n\nいつもKEI SAIYOUをご利用いただき..."
                             }
                             data-testid="input-template-body"
                           />
@@ -660,7 +660,7 @@ export default function AdminNotifications() {
                               className="min-h-[250px] font-mono text-xs leading-relaxed"
                               value={formHtmlBody}
                               onChange={e => setFormHtmlBody(e.target.value)}
-                              placeholder={`<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; margin: 0; padding: 20px; }\n    .header { background: #1a2f6e; color: white; padding: 20px; text-align: center; }\n    .content { padding: 20px; }\n  </style>\n</head>\n<body>\n  <div class="header">\n    <h1>KEI MATCH</h1>\n  </div>\n  <div class="content">\n    <p>{{会社名}} 様</p>\n    <p>いつもKEI MATCHをご利用いただき...</p>\n  </div>\n</body>\n</html>`}
+                              placeholder={`<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { font-family: sans-serif; margin: 0; padding: 20px; }\n    .header { background: #d05a2a; color: white; padding: 20px; text-align: center; }\n    .content { padding: 20px; }\n  </style>\n</head>\n<body>\n  <div class="header">\n    <h1>KEI SAIYOU</h1>\n  </div>\n  <div class="content">\n    <p>{{会社名}} 様</p>\n    <p>いつもKEI SAIYOUをご利用いただき...</p>\n  </div>\n</body>\n</html>`}
                               data-testid="input-template-html-body"
                             />
                             {formHtmlBody.trim() && (
@@ -857,7 +857,7 @@ export default function AdminNotifications() {
                             <>
                               <p className="text-xs text-muted-foreground mb-2">HTMLメールプレビュー（実際の送信デザイン）</p>
                               <iframe
-                                srcDoc={previewTemplate.htmlBody || wrapTextInEmailHtml(previewTemplate.subject || "KEI MATCH", previewTemplate.body)}
+                                srcDoc={previewTemplate.htmlBody || wrapTextInEmailHtml(previewTemplate.subject || "KEI SAIYOU", previewTemplate.body)}
                                 className="w-full min-h-[400px] bg-white border border-border rounded-md"
                                 sandbox="allow-same-origin"
                                 title="HTML Email Preview"
