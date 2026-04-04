@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Plus, FileText, Users, Shield, ClipboardList, UserCog, DollarSign, MessageSquare, Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Briefcase, Bell } from "lucide-react";
+import { Home, Plus, Shield, UserCog, DollarSign, MessageSquare, Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Briefcase, Bell, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ const adminMenuGroups: AdminMenuGroup[] = [
   {
     groupLabel: "会員管理",
     items: [
-      { href: "/admin/applications", label: "承認申請", icon: ClipboardList },
       { href: "/admin/users", label: "ユーザー一覧", icon: UserCog },
     ],
   },
@@ -44,11 +43,11 @@ const adminMenuGroups: AdminMenuGroup[] = [
     ],
   },
   {
-    groupLabel: "運営",
+    groupLabel: "営業・運営",
     items: [
+      { href: "/admin/email-marketing", label: "営業メール管理", icon: Mail },
       { href: "/admin/contact-inquiries", label: "お問い合わせ", icon: MessageSquare },
       { href: "/admin/revenue", label: "収益管理", icon: DollarSign },
-      { href: "/admin/audit-logs", label: "操作ログ", icon: Activity },
       { href: "/admin/settings", label: "管理設定", icon: Wrench },
     ],
   },
