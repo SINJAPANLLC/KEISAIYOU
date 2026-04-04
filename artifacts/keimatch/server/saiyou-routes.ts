@@ -271,13 +271,13 @@ export function registerSaiyouRoutes(app: Express) {
         const d = new Date(a.createdAt);
         return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
       });
-      const monthlyTotal = thisMonth.filter((a) => a.paymentStatus === "paid").length * 3000;
+      const monthlyTotal = thisMonth.filter((a) => a.paymentStatus === "paid").length * 3300;
       const maxLimit = Math.max(...myJobs.map((j) => j.monthlyLimit), 30000);
       const history = apps.map((a) => ({
         id: a.id,
         applicantName: a.name,
         jobTitle: jobMap[a.jobId]?.title || "",
-        amount: 3000,
+        amount: 3300,
         status: a.paymentStatus,
         squarePaymentId: a.squarePaymentId,
         chargedAt: a.createdAt,
@@ -340,7 +340,7 @@ export function registerSaiyouRoutes(app: Express) {
         viewable: false,
       }).returning();
 
-      // Charge ¥3,000 via Square
+      // Charge ¥3,300（¥3,000税別）via Square
       let paymentStatus = "failed";
       let paymentId: string | undefined;
 
@@ -349,7 +349,7 @@ export function registerSaiyouRoutes(app: Express) {
           const result = await chargeSquareCard({
             customerId: company.squareCustomerId,
             cardId: company.squareCardId,
-            amountYen: 3000,
+            amountYen: 3300,
             note: `KEI SAIYOU応募通知 - ${job.title} - ${name}`,
           });
           paymentId = result.paymentId;
@@ -374,10 +374,10 @@ export function registerSaiyouRoutes(app: Express) {
       // Update job monthly spend
       if (viewable) {
         await db.update(jobListings).set({
-          monthlySpent: job.monthlySpent + 3000,
+          monthlySpent: job.monthlySpent + 3300,
           lastApplicationAt: new Date(),
           updatedAt: new Date(),
-          ...(job.monthlySpent + 3000 >= job.monthlyLimit ? { status: "paused" } : {}),
+          ...(job.monthlySpent + 3300 >= job.monthlyLimit ? { status: "paused" } : {}),
         }).where(eq(jobListings.id, jobId));
       }
 
@@ -631,8 +631,8 @@ ${jobXml}
       });
       const paidApps = allApps.filter((a) => a.paymentStatus === "paid");
       const thisMonthPaid = thisMonthApps.filter((a) => a.paymentStatus === "paid");
-      const totalRevenue = paidApps.length * 3000;
-      const monthlyRevenue = thisMonthPaid.length * 3000;
+      const totalRevenue = paidApps.length * 3300;
+      const monthlyRevenue = thisMonthPaid.length * 3300;
       const unpaidCompanies = [...new Set(allApps.filter((a) => a.paymentStatus === "failed").map((a) => {
         const job = allJobs.find((j) => j.id === a.jobId);
         return job?.userId;
@@ -684,7 +684,7 @@ ${jobXml}
         const d = new Date(a.createdAt);
         const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         if (!monthly[key]) monthly[key] = { revenue: 0, apps: 0 };
-        monthly[key].revenue += 3000;
+        monthly[key].revenue += 3300;
         monthly[key].apps += 1;
       }
       // Company breakdown
@@ -700,7 +700,7 @@ ${jobXml}
       }
       const companies = Object.entries(companyMap).map(([id, v]) => ({
         userId: id, companyName: v.companyName,
-        revenue: v.paidApps * 3000, paidApps: v.paidApps, failedApps: v.failedApps,
+        revenue: v.paidApps * 3300, paidApps: v.paidApps, failedApps: v.failedApps,
       })).sort((a, b) => b.revenue - a.revenue);
       res.json({ monthly, companies });
     } catch (err) {
@@ -750,7 +750,7 @@ ${jobXml}
       const result = await chargeSquareCard({
         customerId: company.squareCustomerId,
         cardId: company.squareCardId,
-        amountYen: 3000,
+        amountYen: 3300,
         note: `KEI SAIYOU 応募通知（再試行） - ${job.title}`,
       });
       const success = result.status === "COMPLETED";

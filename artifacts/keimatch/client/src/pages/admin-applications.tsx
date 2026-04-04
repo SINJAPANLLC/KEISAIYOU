@@ -57,7 +57,7 @@ export default function AdminApplications() {
   const totalCount = apps.length;
   const paidCount = apps.filter((a: any) => a.paymentStatus === "paid").length;
   const failedCount = apps.filter((a: any) => a.paymentStatus === "failed").length;
-  const totalRevenue = apps.filter((a: any) => a.paymentStatus === "paid").length * 3000;
+  const totalRevenue = apps.filter((a: any) => a.paymentStatus === "paid").length * 3300;
 
   const formatDate = (s: string) =>
     new Date(s).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -73,7 +73,7 @@ export default function AdminApplications() {
         a.jobTitle,
         a.companyName,
         a.paymentStatus === "paid" ? "成功" : a.paymentStatus === "failed" ? "失敗" : "未処理",
-        a.paymentStatus === "paid" ? 3000 : 0,
+        a.paymentStatus === "paid" ? 3300 : 0,
       ]),
     ];
     const csv = rows.map((r) => r.join(",")).join("\n");
@@ -194,7 +194,7 @@ export default function AdminApplications() {
                         <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">{formatDate(a.createdAt)}</td>
                         <td className="py-3 px-4 text-center">
                           {a.paymentStatus === "paid" ? (
-                            <Badge className="text-[10px] bg-emerald-100 text-emerald-800 border-emerald-300 border">¥3,000</Badge>
+                            <Badge className="text-[10px] bg-emerald-100 text-emerald-800 border-emerald-300 border">¥3,000税別</Badge>
                           ) : a.paymentStatus === "failed" ? (
                             <Badge className="text-[10px] bg-destructive/10 text-destructive border-destructive/30 border">失敗</Badge>
                           ) : (
@@ -283,7 +283,7 @@ export default function AdminApplications() {
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">課金ステータス</p>
                 {selectedApp.paymentStatus === "paid" ? (
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 border">課金済 ¥3,000</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 border">課金済 ¥3,000税別</Badge>
                 ) : selectedApp.paymentStatus === "failed" ? (
                   <div className="flex items-center gap-2">
                     <Badge className="bg-destructive/10 text-destructive border-destructive/30 border">決済失敗</Badge>

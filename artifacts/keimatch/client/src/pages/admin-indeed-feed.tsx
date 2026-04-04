@@ -55,8 +55,8 @@ export default function AdminIndeedFeed() {
     const paidApps = compApps.filter((a: any) => a.paymentStatus === "paid").length;
     const totalCompApps = compApps.length;
     const clicks = paidApps * 8 + Math.floor(Math.random() * 20); // Simulated clicks
-    const cpc = clicks > 0 ? Math.round((paidApps * 3000 * 0.3) / clicks) : 0;
-    const revenue = paidApps * 3000;
+    const cpc = clicks > 0 ? Math.round((paidApps * 3300 * 0.3) / clicks) : 0;
+    const revenue = paidApps * 3300;
     const adCost = Math.round(revenue * 0.3);
     const profit = revenue - adCost;
     return { ...c, paidApps, totalApps: totalCompApps, clicks, cpc, revenue, adCost, profit };

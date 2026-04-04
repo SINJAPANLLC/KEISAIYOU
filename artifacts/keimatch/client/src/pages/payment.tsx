@@ -233,7 +233,7 @@ export default function Payment() {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <p className="text-sm text-muted-foreground">
-              上限に達すると求人が自動停止されます（1応募 = ¥3,000）
+              上限に達すると求人が自動停止されます（1応募 = ¥3,000税別）
             </p>
             <div className="space-y-2">
               <Label>上限金額</Label>

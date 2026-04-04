@@ -293,7 +293,7 @@ export default function Applications() {
                     <div className="pt-2 flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">
-                        課金ステータス: {selected.paymentStatus === "paid" ? "課金済（¥3,000）" : selected.paymentStatus === "failed" ? "決済失敗" : "未課金"}
+                        課金ステータス: {selected.paymentStatus === "paid" ? "課金済（¥3,000税別）" : selected.paymentStatus === "failed" ? "決済失敗" : "未課金"}
                       </span>
                     </div>
                   </div>

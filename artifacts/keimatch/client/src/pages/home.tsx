@@ -149,7 +149,7 @@ export default function Home() {
               {[
                 <>求人をAI登録するだけ（1分）</>,
                 <>応募が来たらメールですぐ通知</>,
-                <>料金は<strong className="text-white font-black">3,000円 / 応募</strong>のシンプルな料金プラン</>,
+                <>料金は<strong className="text-white font-black">3,000円（税別）/ 応募</strong>のシンプルな料金プラン</>,
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-3">
                   <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -247,7 +247,7 @@ export default function Home() {
               },
               {
                 title: "シンプルな応募課金",
-                points: ["料金は3,000円 / 応募 のみ", "応募がなければ費用なし", "複雑なプランは一切なし"],
+                points: ["料金は3,000円（税別）/ 応募 のみ", "応募がなければ費用なし", "複雑なプランは一切なし"],
                 delay: "reveal-delay-2",
               },
             ].map(({ title, points, delay }) => (
@@ -284,7 +284,7 @@ export default function Home() {
                 ベーシックプラン
               </span>
               <p className="text-6xl font-black text-foreground mb-1 tracking-tight">¥3,000</p>
-              <p className="text-muted-foreground text-sm mb-9">応募通知 1件あたり</p>
+              <p className="text-muted-foreground text-sm mb-9">応募通知 1件あたり（税別）</p>
               <ul className="text-left space-y-3.5 mb-9">
                 {["初期費用・月額費用なし", "メール即時通知", "応募者ダッシュボード", "請求履歴管理"].map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-foreground">

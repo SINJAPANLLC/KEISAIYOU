@@ -269,7 +269,7 @@ export default function Dashboard() {
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 掲載は無料です。<br />
-                応募が届いた時点で <strong>¥3,000（税込）/ 1応募</strong> が発生します。<br />
+                応募が届いた時点で <strong>¥3,000（税別）/ 1応募</strong> が発生します。<br />
                 月の上限に達すると掲載が自動停止されます。
               </p>
             </div>

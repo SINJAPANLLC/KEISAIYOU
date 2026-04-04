@@ -89,7 +89,7 @@ export default function Register() {
             {[
               "無料で求人を掲載申請できる",
               "応募が来たらメールでリアルタイム通知",
-              "¥3,000 / 応募のシンプル料金",
+              "¥3,000（税別）/ 応募のシンプル料金",
             ].map((t) => (
               <li key={t} className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-white text-[10px] font-bold shrink-0">✓</span>

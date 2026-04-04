@@ -467,7 +467,7 @@ export default function Jobs() {
                   {MONTHLY_LIMITS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">上限到達で掲載が自動停止されます（1応募 = ¥3,000）</p>
+              <p className="text-xs text-muted-foreground">上限到達で掲載が自動停止されます（1応募 = ¥3,000税別）</p>
             </div>
 
             <div className="flex gap-2 pt-2">
