@@ -505,6 +505,7 @@ export async function registerRoutes(
   const profileUpdateSchema = z.object({
     companyName: z.string().min(1).max(200).optional(),
     companyNameKana: z.string().max(200).optional(),
+    prefecture: z.string().max(20).optional(),
     address: z.string().max(500).optional(),
     postalCode: z.string().max(20).optional(),
     contactName: z.string().max(100).optional(),

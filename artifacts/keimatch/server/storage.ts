@@ -261,7 +261,7 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserProfile(id: string, data: Partial<User>): Promise<User | undefined> {
     const allowedFields = [
-      "companyName", "companyNameKana", "address", "postalCode", "contactName",
+      "companyName", "companyNameKana", "prefecture", "address", "postalCode", "contactName",
       "phone", "fax", "email", "paymentTerms", "businessDescription",
       "representative", "establishedDate", "capital", "employeeCount",
       "businessArea", "transportLicenseNumber", "websiteUrl",
