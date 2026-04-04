@@ -745,6 +745,30 @@ ${jobXml}
     }
   });
 
+  app.post("/api/admin/sales/crawl", requireAdmin, async (req, res) => {
+    try {
+      const { prefecture, keyword, limit = 20 } = req.body;
+      if (!prefecture || !keyword) return res.status(400).json({ message: "都道府県とキーワードを入力してください" });
+      const { searchDuckDuckGoForUrls, crawlLeadsFromUrl } = await import("./lead-crawler");
+      const query = `${prefecture} ${keyword} 軽貨物`;
+      const urls = await searchDuckDuckGoForUrls(query);
+      let found = 0;
+      const maxUrls = Math.min(urls.length, Math.ceil(limit / 2));
+      for (let i = 0; i < maxUrls; i++) {
+        try {
+          const n = await crawlLeadsFromUrl(urls[i]);
+          found += n;
+          if (found >= limit) break;
+          await new Promise((r) => setTimeout(r, 500));
+        } catch { /* continue */ }
+      }
+      res.json({ searched: urls.length, found });
+    } catch (err: any) {
+      console.error("[sales/crawl]", err);
+      res.status(500).json({ message: "クロールに失敗しました" });
+    }
+  });
+
   app.post("/api/admin/sales/send", requireAdmin, async (req, res) => {
     try {
       const { leadIds, subject, body } = req.body;

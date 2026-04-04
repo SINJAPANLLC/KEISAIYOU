@@ -1131,7 +1131,7 @@ function addUniqueUrl(urls: string[], newUrl: string, japanOnly = false): boolea
   } catch { return false; }
 }
 
-async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
+export async function searchDuckDuckGoForUrls(query: string): Promise<string[]> {
   const urls: string[] = [];
 
   const userAgents = [
