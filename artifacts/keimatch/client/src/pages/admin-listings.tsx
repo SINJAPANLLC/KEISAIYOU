@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase, Search, MapPin, Building2, CheckCircle, XCircle, Pause, Play, Edit2,
-  Tag, Banknote, Clock, CalendarDays, Calendar, Rss, ExternalLink,
+  Tag, Banknote, Clock, CalendarDays, Calendar, Rss, ExternalLink, Sparkles, Loader2,
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -65,6 +65,35 @@ export default function AdminListings() {
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<JobListing | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const generateDescription = async () => {
+    if (!form.title || !form.area || !form.salary) {
+      toast({ variant: "destructive", title: "先にタイトル・エリア・給与を入力してください" });
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/ai/generate-job-description", {
+        title: form.title,
+        jobCategory: form.jobCategory,
+        employmentType: form.employmentType,
+        area: form.area,
+        salary: form.salary,
+        workHours: form.workHours,
+        holidays: form.holidays,
+      });
+      const data = await res.json();
+      if (data.description) {
+        up("description", data.description);
+        toast({ title: "AI文章を生成しました" });
+      }
+    } catch {
+      toast({ variant: "destructive", title: "AI生成に失敗しました" });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const { data: jobs = [], isLoading } = useQuery<JobListing[]>({
     queryKey: ["/api/admin/jobs"],
@@ -324,6 +353,20 @@ export default function AdminListings() {
                           >
                             <Edit2 className="w-3 h-3 mr-1" />編集
                           </Button>
+                          <a
+                            href={`/apply/${job.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-8 px-3 text-xs w-full border-orange-200 text-orange-700 hover:bg-orange-50"
+                              type="button"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />応募フォーム
+                            </Button>
+                          </a>
                           {job.status === "pending" && (
                             <>
                               <Button
@@ -437,13 +480,27 @@ export default function AdminListings() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>仕事内容</Label>
+              <div className="flex items-center justify-between">
+                <Label>仕事内容</Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={generateDescription}
+                  disabled={aiLoading}
+                  className="h-7 px-2 text-xs border-orange-300 text-orange-600 hover:bg-orange-50"
+                >
+                  {aiLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Sparkles className="w-3 h-3 mr-1" />}
+                  {aiLoading ? "生成中..." : "AIで自動生成"}
+                </Button>
+              </div>
               <textarea
-                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 value={form.description}
                 onChange={(e) => up("description", e.target.value)}
-                placeholder="仕事内容の詳細..."
+                placeholder="AIで自動生成するか、直接入力してください..."
               />
+              <p className="text-xs text-muted-foreground">タイトル・エリア・給与を入力後にAI生成できます</p>
             </div>
 
             <div className="space-y-1.5">

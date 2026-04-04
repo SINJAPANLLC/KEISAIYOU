@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, Calendar, Clock, CalendarDays, Tag, Sparkles } from "lucide-react";
+import { Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, Calendar, Clock, CalendarDays, Tag } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
 type Job = {
@@ -56,7 +56,6 @@ export default function Jobs() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Job | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
-  const [aiLoading, setAiLoading] = useState(false);
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({ queryKey: ["/api/jobs"] });
   const { data: allApps = [] } = useQuery<any[]>({
@@ -124,34 +123,6 @@ export default function Jobs() {
       description: job.description || "",
     });
     setOpen(true);
-  };
-
-  const generateDescription = async () => {
-    if (!form.title || !form.jobCategory || !form.area || !form.salary) {
-      toast({ variant: "destructive", title: "先にタイトル・職種・エリア・給与を入力してください" });
-      return;
-    }
-    setAiLoading(true);
-    try {
-      const res = await apiRequest("POST", "/api/ai/generate-job-description", {
-        title: form.title,
-        jobCategory: form.jobCategory,
-        employmentType: form.employmentType,
-        area: form.area,
-        salary: form.salary,
-        workHours: form.workHours,
-        holidays: form.holidays,
-      });
-      const data = await res.json();
-      if (data.description) {
-        up("description", data.description);
-        toast({ title: "AI文章を生成しました" });
-      }
-    } catch {
-      toast({ variant: "destructive", title: "AI生成に失敗しました" });
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -405,30 +376,17 @@ export default function Jobs() {
               </Select>
             </div>
 
-            {/* 仕事内容（AI生成） */}
+            {/* 仕事内容 */}
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label>仕事内容</Label>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={generateDescription}
-                  disabled={aiLoading}
-                  className="h-7 px-2 text-xs border-orange-300 text-orange-600 hover:bg-orange-50"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  {aiLoading ? "生成中..." : "AIで自動生成"}
-                </Button>
-              </div>
+              <Label>仕事内容</Label>
               <Textarea
                 value={form.description}
                 onChange={(e) => up("description", e.target.value)}
-                placeholder="AIで自動生成するか、直接入力してください"
-                rows={6}
+                placeholder="仕事内容を入力してください（管理者が確認・編集します）"
+                rows={5}
                 className="resize-none text-sm"
               />
-              <p className="text-xs text-muted-foreground">Indeed掲載時に表示される仕事内容です。タイトル・職種・エリア・給与を入力後にAI生成できます。</p>
+              <p className="text-xs text-muted-foreground">空欄でも掲載申請できます。管理者が内容を確認・修正してINDEEDに掲載します。</p>
             </div>
 
             <div className="flex gap-2 pt-2">
