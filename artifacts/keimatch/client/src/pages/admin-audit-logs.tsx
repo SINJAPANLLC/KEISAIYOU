@@ -96,11 +96,12 @@ export default function AdminAuditLogs() {
     <DashboardLayout>
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 sm:px-6 py-4">
-          <div className="bg-primary rounded-md p-5 mb-5 flex items-center gap-3">
-            <Shield className="w-6 h-6 text-primary-foreground" />
-            <div>
-              <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">操作ログ</h1>
-              <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">全ユーザーの操作履歴</p>
+          <div className="rounded-xl p-6 mb-5 hero-gradient relative overflow-hidden">
+            <div className="hero-grid absolute inset-0 opacity-30" />
+            <div className="relative z-10">
+              <p className="text-white/80 text-xs mb-0.5">AUDIT</p>
+              <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">操作ログ</h1>
+              <p className="text-white/70 text-sm mt-1">全ユーザーの操作履歴</p>
             </div>
           </div>
 

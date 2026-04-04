@@ -45,7 +45,7 @@ export default function AdminSettings() {
     queryKey: ["/api/admin/notification-channels/status"],
   });
 
-  const [siteName, setSiteName] = useState("KEI MATCH");
+  const [siteName, setSiteName] = useState("KEI SAIYOU");
   const [siteDescription, setSiteDescription] = useState("AI軽貨物案件マッチングサービス");
   const [siteKeywords, setSiteKeywords] = useState("軽貨物, マッチング, 配送, ラストマイル, 軽バン, 案件");
   const [approvalRequired, setApprovalRequired] = useState(true);
@@ -221,17 +221,21 @@ export default function AdminSettings() {
   return (
     <DashboardLayout>
       <div className="px-4 sm:px-6 py-6">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-foreground" data-testid="text-page-title">管理設定</h1>
-            <p className="text-sm text-muted-foreground mt-1">システム全体の設定を管理します</p>
-          </div>
+        <div className="rounded-xl p-6 mb-6 hero-gradient relative overflow-hidden">
+          <div className="hero-grid absolute inset-0 opacity-30" />
+          <div className="relative z-10 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-white/80 text-xs mb-0.5">SETTINGS</p>
+              <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">管理設定</h1>
+              <p className="text-white/70 text-sm mt-1">システム全体の設定を管理します</p>
+            </div>
           {maintenanceMode && (
             <Badge variant="destructive" className="no-default-hover-elevate no-default-active-elevate">
               <AlertTriangle className="w-3 h-3 mr-1" />
               メンテナンスモード有効
             </Badge>
           )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">

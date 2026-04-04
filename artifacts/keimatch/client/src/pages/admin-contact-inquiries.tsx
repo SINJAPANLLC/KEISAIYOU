@@ -166,14 +166,23 @@ export default function AdminContactInquiries() {
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6" data-testid="page-admin-contact-inquiries">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <MessageSquare className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold" data-testid="text-page-title">お問い合わせ管理</h1>
-            {unreadCount > 0 && (
-              <Badge variant="destructive" data-testid="badge-unread-count">{unreadCount}件未読</Badge>
-            )}
+        <div className="rounded-xl p-6 hero-gradient relative overflow-hidden mb-2">
+          <div className="hero-grid absolute inset-0 opacity-30" />
+          <div className="relative z-10 flex items-center justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-white/80 text-xs mb-0.5">CONTACT</p>
+              <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">お問い合わせ</h1>
+              <p className="text-white/70 text-sm mt-1 flex items-center gap-2">
+                問い合わせ一覧
+                {unreadCount > 0 && (
+                  <Badge variant="destructive" data-testid="badge-unread-count">{unreadCount}件未読</Badge>
+                )}
+              </p>
+            </div>
           </div>
+        </div>
+
+        <div className="flex justify-end">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-[150px]" data-testid="select-filter-status">
               <SelectValue />

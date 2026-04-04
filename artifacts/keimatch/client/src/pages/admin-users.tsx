@@ -229,9 +229,13 @@ export default function AdminUsers() {
       <div className="flex h-full">
         <div className="flex-1 overflow-y-auto transition-all duration-300">
           <div className="px-4 sm:px-6 py-4">
-            <div className="bg-primary rounded-md p-5 mb-5">
-              <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">ユーザー管理</h1>
-              <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">全ユーザーの管理・プラン切替</p>
+            <div className="rounded-xl p-6 mb-5 hero-gradient relative overflow-hidden">
+              <div className="hero-grid absolute inset-0 opacity-30" />
+              <div className="relative z-10">
+                <p className="text-white/80 text-xs mb-0.5">USERS</p>
+                <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">ユーザー一覧</h1>
+                <p className="text-white/70 text-sm mt-1">会員の管理・承認状態の確認</p>
+              </div>
             </div>
 
             <div className="flex justify-end mb-3">

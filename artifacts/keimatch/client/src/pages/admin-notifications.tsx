@@ -400,9 +400,13 @@ export default function AdminNotifications() {
   return (
     <DashboardLayout>
       <div className="px-4 sm:px-6 py-4 space-y-5">
-        <div className="bg-primary rounded-md p-5">
-          <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">通知管理</h1>
-          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">システム通知・メール通知・LINE通知のテンプレート管理</p>
+        <div className="rounded-xl p-6 hero-gradient relative overflow-hidden">
+          <div className="hero-grid absolute inset-0 opacity-30" />
+          <div className="relative z-10">
+            <p className="text-white/80 text-xs mb-0.5">NOTIFICATIONS</p>
+            <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">応募通知管理</h1>
+            <p className="text-white/70 text-sm mt-1">応募通知メールのテンプレート管理</p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">

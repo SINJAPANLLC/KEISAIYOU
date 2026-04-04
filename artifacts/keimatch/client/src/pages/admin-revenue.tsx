@@ -118,9 +118,13 @@ export default function AdminRevenue() {
   return (
     <DashboardLayout>
       <div className="px-4 sm:px-6 py-4 space-y-5">
-        <div className="bg-primary rounded-md p-5">
-          <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">収益管理</h1>
-          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">プラットフォーム利用状況・商流・収益の概要</p>
+        <div className="rounded-xl p-6 hero-gradient relative overflow-hidden">
+          <div className="hero-grid absolute inset-0 opacity-30" />
+          <div className="relative z-10">
+            <p className="text-white/80 text-xs mb-0.5">REVENUE</p>
+            <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">収益管理</h1>
+            <p className="text-white/70 text-sm mt-1">応募数・収益の概要（¥3,000 / 応募）</p>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">

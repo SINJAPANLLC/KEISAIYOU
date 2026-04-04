@@ -1,515 +1,184 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Package, Truck, Search, Pencil, Trash2, MapPin } from "lucide-react";
+import { Briefcase, Search, MapPin, Building2, Eye, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import DashboardLayout from "@/components/dashboard-layout";
-import type { CargoListing, TruckListing } from "@shared/schema";
 
-type TabType = "cargo" | "trucks";
+type JobListing = {
+  id: string;
+  title: string;
+  area: string;
+  status: string;
+  companyName?: string;
+  createdAt: string;
+};
 
 export default function AdminListings() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<TabType>("cargo");
   const [searchQuery, setSearchQuery] = useState("");
-  const [editingCargo, setEditingCargo] = useState<CargoListing | null>(null);
-  const [editingTruck, setEditingTruck] = useState<TruckListing | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ type: TabType; id: string; title: string } | null>(null);
-  const [cargoForm, setCargoForm] = useState({
-    title: "", departureArea: "", arrivalArea: "", desiredDate: "", vehicleType: "", price: "", status: "",
-  });
-  const [truckForm, setTruckForm] = useState({
-    title: "", currentArea: "", destinationArea: "", vehicleType: "", maxWeight: "", availableDate: "", price: "", status: "",
-  });
 
-  const { data: cargo, isLoading: cargoLoading } = useQuery<CargoListing[]>({
+  const { data: cargo, isLoading } = useQuery<any[]>({
     queryKey: ["/api/cargo"],
   });
 
-  const { data: trucks, isLoading: trucksLoading } = useQuery<TruckListing[]>({
-    queryKey: ["/api/trucks"],
-  });
-
-  const updateCargo = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Record<string, string> }) => {
-      await apiRequest("PATCH", `/api/admin/cargo/${id}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: "荷物掲載を更新しました" });
-      setEditingCargo(null);
-    },
-    onError: () => {
-      toast({ title: "更新に失敗しました", variant: "destructive" });
-    },
-  });
-
-  const updateTruck = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Record<string, string> }) => {
-      await apiRequest("PATCH", `/api/admin/trucks/${id}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
-      toast({ title: "空き車両掲載を更新しました" });
-      setEditingTruck(null);
-    },
-    onError: () => {
-      toast({ title: "更新に失敗しました", variant: "destructive" });
-    },
-  });
-
-  const deleteCargo = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/admin/cargo/${id}`);
+      await apiRequest("DELETE", `/api/cargo/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/cargo"] });
-      toast({ title: "荷物掲載を削除しました" });
-      setDeleteTarget(null);
+      toast({ title: "求人を削除しました" });
     },
     onError: () => {
       toast({ title: "削除に失敗しました", variant: "destructive" });
     },
   });
 
-  const deleteTruck = useMutation({
-    mutationFn: async (id: string) => {
-      await apiRequest("DELETE", `/api/admin/trucks/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/trucks"] });
-      toast({ title: "空き車両掲載を削除しました" });
-      setDeleteTarget(null);
-    },
-    onError: () => {
-      toast({ title: "削除に失敗しました", variant: "destructive" });
-    },
+  const listings = cargo ?? [];
+  const filtered = listings.filter((item: any) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      item.title?.toLowerCase().includes(q) ||
+      item.departureArea?.toLowerCase().includes(q) ||
+      item.companyName?.toLowerCase().includes(q)
+    );
   });
-
-  const filteredCargo = useMemo(() => {
-    if (!cargo) return [];
-    if (!searchQuery) return cargo;
-    const q = searchQuery.toLowerCase();
-    return cargo.filter((c) => c.title.toLowerCase().includes(q));
-  }, [cargo, searchQuery]);
-
-  const filteredTrucks = useMemo(() => {
-    if (!trucks) return [];
-    if (!searchQuery) return trucks;
-    const q = searchQuery.toLowerCase();
-    return trucks.filter((t) => t.title.toLowerCase().includes(q));
-  }, [trucks, searchQuery]);
-
-  const isLoading = activeTab === "cargo" ? cargoLoading : trucksLoading;
-  const currentCount = activeTab === "cargo" ? filteredCargo.length : filteredTrucks.length;
-
-  const openCargoEdit = (item: CargoListing) => {
-    setCargoForm({
-      title: item.title || "",
-      departureArea: item.departureArea || "",
-      arrivalArea: item.arrivalArea || "",
-      desiredDate: item.desiredDate || "",
-      vehicleType: item.vehicleType || "",
-      price: item.price || "",
-      status: item.status || "active",
-    });
-    setEditingCargo(item);
-  };
-
-  const openTruckEdit = (item: TruckListing) => {
-    setTruckForm({
-      title: item.title || "",
-      currentArea: item.currentArea || "",
-      destinationArea: item.destinationArea || "",
-      vehicleType: item.vehicleType || "",
-      maxWeight: item.maxWeight || "",
-      availableDate: item.availableDate || "",
-      price: item.price || "",
-      status: item.status || "active",
-    });
-    setEditingTruck(item);
-  };
-
-  const handleCargoSave = () => {
-    if (!editingCargo) return;
-    updateCargo.mutate({ id: editingCargo.id, data: cargoForm });
-  };
-
-  const handleTruckSave = () => {
-    if (!editingTruck) return;
-    updateTruck.mutate({ id: editingTruck.id, data: truckForm });
-  };
-
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-    if (deleteTarget.type === "cargo") {
-      deleteCargo.mutate(deleteTarget.id);
-    } else {
-      deleteTruck.mutate(deleteTarget.id);
-    }
-  };
 
   return (
     <DashboardLayout>
-      <div className="px-4 sm:px-6 py-4 overflow-y-auto h-full">
-        <div className="bg-primary rounded-md p-5 mb-5">
-          <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-page-title">掲載管理</h1>
-          <p className="text-sm text-primary-foreground/80 mt-1 text-shadow">荷物・空き車両掲載の管理</p>
+      <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
+        <div className="rounded-xl p-6 mb-6 hero-gradient relative overflow-hidden">
+          <div className="hero-grid absolute inset-0 opacity-30" />
+          <div className="relative z-10">
+            <p className="text-white/80 text-xs mb-0.5">LISTINGS</p>
+            <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">求人管理</h1>
+            <p className="text-white/70 text-sm mt-1">全企業の求人一覧を管理します</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-          <Card
-            className={`cursor-pointer hover-elevate ${activeTab === "cargo" ? "ring-2 ring-primary" : ""}`}
-            onClick={() => setActiveTab("cargo")}
-            data-testid="card-tab-cargo"
-          >
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center shrink-0">
-                  <Package className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground" data-testid="text-cargo-count">{cargo?.length ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">荷物掲載</p>
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground mb-1">総求人数</p>
+              <p className="text-2xl font-black text-foreground">{isLoading ? "—" : listings.length}</p>
             </CardContent>
           </Card>
-          <Card
-            className={`cursor-pointer hover-elevate ${activeTab === "trucks" ? "ring-2 ring-primary" : ""}`}
-            onClick={() => setActiveTab("trucks")}
-            data-testid="card-tab-trucks"
-          >
+          <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
-                  <Truck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground" data-testid="text-trucks-count">{trucks?.length ?? 0}</p>
-                  <p className="text-xs text-muted-foreground">空き車両掲載</p>
-                </div>
-              </div>
+              <p className="text-xs text-muted-foreground mb-1">掲載中</p>
+              <p className="text-2xl font-black text-emerald-600">
+                {isLoading ? "—" : listings.filter((l: any) => l.status === "active" || l.status === "open").length}
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground mb-1">クローズ</p>
+              <p className="text-2xl font-black text-muted-foreground">
+                {isLoading ? "—" : listings.filter((l: any) => l.status === "closed" || l.status === "completed").length}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="mb-4">
-          <CardContent className="p-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="タイトルで検索..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-                data-testid="input-listing-search"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
-          <span className="font-semibold text-sm" data-testid="text-result-count">
-            {currentCount} 件表示
-            {searchQuery && ` (「${searchQuery}」で検索中)`}
-          </span>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="求人タイトル・エリア・企業名で検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+            data-testid="input-listing-search"
+          />
         </div>
 
         {isLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Card key={i}><CardContent className="p-4"><Skeleton className="h-12 w-full" /></CardContent></Card>
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
           <Card>
-            <div className="divide-y divide-border">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="px-4 py-3"><Skeleton className="h-12 w-full" /></div>
-              ))}
-            </div>
+            <CardContent className="p-12 flex flex-col items-center text-center">
+              <Briefcase className="w-10 h-10 text-muted-foreground/30 mb-3" />
+              <p className="text-sm font-medium text-foreground mb-1" data-testid="text-empty-state">
+                {searchQuery ? "検索結果がありません" : "求人がまだありません"}
+              </p>
+              <p className="text-xs text-muted-foreground">企業がログインして求人を作成するとここに表示されます</p>
+            </CardContent>
           </Card>
-        ) : activeTab === "cargo" ? (
-          filteredCargo.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <Package className="w-10 h-10 text-muted-foreground/30 mb-2" />
-                <p className="text-sm text-muted-foreground">該当する荷物掲載がありません</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <div className="overflow-x-auto">
-                <table className="w-full" data-testid="table-cargo">
-                  <thead>
-                    <tr className="border-b bg-muted/60">
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">タイトル</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">エリア</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">日付</th>
-                      <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">ステータス</th>
-                      <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {filteredCargo.map((item, index) => (
-                      <tr
-                        key={item.id}
-                        className={`hover-elevate transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}
-                        data-testid={`row-cargo-${item.id}`}
-                      >
-                        <td className="px-3 py-3 align-top">
-                          <div className="font-bold text-foreground text-[12px] leading-tight truncate max-w-[180px]">{item.title}</div>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <span className="text-[12px] font-bold text-foreground truncate max-w-[140px] block">{item.companyName}</span>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <div className="flex items-center gap-1 text-[12px] text-muted-foreground">
-                            <MapPin className="w-3 h-3 shrink-0 text-primary/60" />
-                            <span className="truncate max-w-[160px]">{item.departureArea} → {item.arrivalArea}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <span className="text-[12px] text-muted-foreground font-bold whitespace-nowrap">{item.desiredDate}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center align-top">
-                          <Badge variant={item.status === "active" ? "default" : "secondary"} className="text-[10px]">
-                            {item.status === "active" ? "公開中" : item.status === "completed" ? "完了" : item.status === "cancelled" ? "キャンセル" : item.status}
-                          </Badge>
-                        </td>
-                        <td className="px-3 py-3 text-center align-top">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openCargoEdit(item)}
-                              data-testid={`button-edit-cargo-${item.id}`}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteTarget({ type: "cargo", id: item.id, title: item.title })}
-                              data-testid={`button-delete-cargo-${item.id}`}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )
         ) : (
-          filteredTrucks.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <Truck className="w-10 h-10 text-muted-foreground/30 mb-2" />
-                <p className="text-sm text-muted-foreground">該当する空き車両掲載がありません</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <div className="overflow-x-auto">
-                <table className="w-full" data-testid="table-trucks">
-                  <thead>
-                    <tr className="border-b bg-muted/60">
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">タイトル</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">企業名</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">エリア</th>
-                      <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">日付</th>
-                      <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">ステータス</th>
-                      <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {filteredTrucks.map((item, index) => (
-                      <tr
-                        key={item.id}
-                        className={`hover-elevate transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}
-                        data-testid={`row-truck-${item.id}`}
+          <div className="space-y-2" data-testid="list-job-listings">
+            {filtered.map((item: any) => (
+              <Card key={item.id} className="border border-border hover:shadow-sm transition-shadow">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Briefcase className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-foreground truncate">{item.title || "無題の求人"}</p>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] shrink-0 ${
+                          item.status === "active" || item.status === "open"
+                            ? "border-emerald-400 text-emerald-700 bg-emerald-50"
+                            : item.status === "closed" || item.status === "completed"
+                            ? "border-muted-foreground/30 text-muted-foreground"
+                            : "border-amber-400 text-amber-700 bg-amber-50"
+                        }`}
                       >
-                        <td className="px-3 py-3 align-top">
-                          <div className="font-bold text-foreground text-[12px] leading-tight truncate max-w-[180px]">{item.title}</div>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <span className="text-[12px] font-bold text-foreground truncate max-w-[140px] block">{item.companyName}</span>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <div className="flex items-center gap-1 text-[12px] text-muted-foreground">
-                            <MapPin className="w-3 h-3 shrink-0 text-primary/60" />
-                            <span className="truncate max-w-[160px]">{item.currentArea} → {item.destinationArea}</span>
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 align-top">
-                          <span className="text-[12px] text-muted-foreground font-bold whitespace-nowrap">{item.availableDate}</span>
-                        </td>
-                        <td className="px-3 py-3 text-center align-top">
-                          <Badge variant={item.status === "active" ? "default" : "secondary"} className="text-[10px]">
-                            {item.status === "active" ? "公開中" : item.status === "completed" ? "完了" : item.status === "cancelled" ? "キャンセル" : item.status}
-                          </Badge>
-                        </td>
-                        <td className="px-3 py-3 text-center align-top">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => openTruckEdit(item)}
-                              data-testid={`button-edit-truck-${item.id}`}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setDeleteTarget({ type: "trucks", id: item.id, title: item.title })}
-                              data-testid={`button-delete-truck-${item.id}`}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-          )
+                        {item.status === "active" || item.status === "open" ? "掲載中" :
+                         item.status === "closed" || item.status === "completed" ? "クローズ" : "下書き"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                      {item.departureArea && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {item.departureArea}
+                        </span>
+                      )}
+                      {item.companyName && (
+                        <span className="flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />
+                          {item.companyName}
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(item.createdAt).toLocaleDateString("ja-JP")}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      if (confirm("この求人を削除しますか？")) {
+                        deleteMutation.mutate(item.id);
+                      }
+                    }}
+                    disabled={deleteMutation.isPending}
+                    data-testid={`button-delete-listing-${item.id}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
-
-      <Dialog open={!!editingCargo} onOpenChange={(open) => { if (!open) setEditingCargo(null); }}>
-        <DialogContent data-testid="dialog-edit-cargo">
-          <DialogHeader>
-            <DialogTitle>荷物掲載を編集</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block">タイトル</label>
-              <Input value={cargoForm.title} onChange={(e) => setCargoForm({ ...cargoForm, title: e.target.value })} data-testid="input-edit-cargo-title" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">出発地</label>
-                <Input value={cargoForm.departureArea} onChange={(e) => setCargoForm({ ...cargoForm, departureArea: e.target.value })} data-testid="input-edit-cargo-departure" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">到着地</label>
-                <Input value={cargoForm.arrivalArea} onChange={(e) => setCargoForm({ ...cargoForm, arrivalArea: e.target.value })} data-testid="input-edit-cargo-arrival" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">希望日</label>
-                <Input value={cargoForm.desiredDate} onChange={(e) => setCargoForm({ ...cargoForm, desiredDate: e.target.value })} data-testid="input-edit-cargo-date" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">車両タイプ</label>
-                <Input value={cargoForm.vehicleType} onChange={(e) => setCargoForm({ ...cargoForm, vehicleType: e.target.value })} data-testid="input-edit-cargo-vehicle" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">運賃</label>
-                <Input value={cargoForm.price} onChange={(e) => setCargoForm({ ...cargoForm, price: e.target.value })} data-testid="input-edit-cargo-price" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">ステータス</label>
-                <Input value={cargoForm.status} onChange={(e) => setCargoForm({ ...cargoForm, status: e.target.value })} data-testid="input-edit-cargo-status" />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingCargo(null)} data-testid="button-cancel-edit-cargo">キャンセル</Button>
-            <Button onClick={handleCargoSave} disabled={updateCargo.isPending} data-testid="button-save-cargo">
-              {updateCargo.isPending ? "保存中..." : "保存"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!editingTruck} onOpenChange={(open) => { if (!open) setEditingTruck(null); }}>
-        <DialogContent data-testid="dialog-edit-truck">
-          <DialogHeader>
-            <DialogTitle>空き車両掲載を編集</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block">タイトル</label>
-              <Input value={truckForm.title} onChange={(e) => setTruckForm({ ...truckForm, title: e.target.value })} data-testid="input-edit-truck-title" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">現在地</label>
-                <Input value={truckForm.currentArea} onChange={(e) => setTruckForm({ ...truckForm, currentArea: e.target.value })} data-testid="input-edit-truck-current" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">行先</label>
-                <Input value={truckForm.destinationArea} onChange={(e) => setTruckForm({ ...truckForm, destinationArea: e.target.value })} data-testid="input-edit-truck-destination" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">車両タイプ</label>
-                <Input value={truckForm.vehicleType} onChange={(e) => setTruckForm({ ...truckForm, vehicleType: e.target.value })} data-testid="input-edit-truck-vehicle" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">最大積載量</label>
-                <Input value={truckForm.maxWeight} onChange={(e) => setTruckForm({ ...truckForm, maxWeight: e.target.value })} data-testid="input-edit-truck-weight" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">空き日</label>
-                <Input value={truckForm.availableDate} onChange={(e) => setTruckForm({ ...truckForm, availableDate: e.target.value })} data-testid="input-edit-truck-date" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">運賃</label>
-                <Input value={truckForm.price} onChange={(e) => setTruckForm({ ...truckForm, price: e.target.value })} data-testid="input-edit-truck-price" />
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground mb-1 block">ステータス</label>
-              <Input value={truckForm.status} onChange={(e) => setTruckForm({ ...truckForm, status: e.target.value })} data-testid="input-edit-truck-status" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingTruck(null)} data-testid="button-cancel-edit-truck">キャンセル</Button>
-            <Button onClick={handleTruckSave} disabled={updateTruck.isPending} data-testid="button-save-truck">
-              {updateTruck.isPending ? "保存中..." : "保存"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
-        <DialogContent data-testid="dialog-confirm-delete">
-          <DialogHeader>
-            <DialogTitle>削除の確認</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground py-2">
-            「{deleteTarget?.title}」を削除しますか？この操作は元に戻せません。
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTarget(null)} data-testid="button-cancel-delete">キャンセル</Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteCargo.isPending || deleteTruck.isPending}
-              data-testid="button-confirm-delete"
-            >
-              {(deleteCargo.isPending || deleteTruck.isPending) ? "削除中..." : "削除する"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

@@ -29,6 +29,7 @@ const pageImports = {
   payment: () => import("@/pages/payment"),
   services: () => import("@/pages/services"),
   userSettings: () => import("@/pages/user-settings"),
+  jobs: () => import("@/pages/jobs"),
   adminDashboard: () => import("@/pages/admin-dashboard"),
   adminApplications: () => import("@/pages/admin-applications"),
   adminUsers: () => import("@/pages/admin-users"),
@@ -85,6 +86,7 @@ const TransportLedger = lazy(pageImports.transportLedger);
 const Payment = lazy(pageImports.payment);
 const Services = lazy(pageImports.services);
 const UserSettings = lazy(pageImports.userSettings);
+const Jobs = lazy(pageImports.jobs);
 const AdminDashboard = lazy(pageImports.adminDashboard);
 const AdminApplications = lazy(pageImports.adminApplications);
 const AdminUsers = lazy(pageImports.adminUsers);
@@ -185,6 +187,8 @@ function Router() {
         <Route path="/payment">{() => <ProtectedRoute component={Payment} />}</Route>
         <Route path="/services">{() => <ProtectedRoute component={Services} />}</Route>
         <Route path="/settings">{() => <ProtectedRoute component={UserSettings} />}</Route>
+        <Route path="/jobs/new">{() => <ProtectedRoute component={Jobs} />}</Route>
+        <Route path="/jobs">{() => <ProtectedRoute component={Jobs} />}</Route>
         <Route path="/cargo/new">{() => <ProtectedRoute component={CargoForm} />}</Route>
         <Route path="/cargo/edit/:id">{() => <ProtectedRoute component={CargoForm} />}</Route>
         <Route path="/cargo/:id">{() => <ProtectedRoute component={CargoDetail} />}</Route>
