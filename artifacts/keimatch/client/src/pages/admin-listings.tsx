@@ -39,18 +39,9 @@ type JobListing = {
 const JOB_CATEGORIES = ["軽貨物ドライバー", "宅配ドライバー", "幹線輸送ドライバー", "EC配送", "フードデリバリー", "企業配送", "その他"];
 const EMPLOYMENT_TYPES = ["業務委託", "正社員", "契約社員", "パート・アルバイト"];
 const HOLIDAYS_OPTIONS = ["週休2日（土日）", "週休2日（シフト制）", "週1日以上", "隔週土日", "年間休日120日以上", "要相談"];
-const MONTHLY_LIMITS = [
-  { label: "3万円（最大9応募/月）",  value: "30000" },
-  { label: "5万円（最大15応募/月）", value: "50000" },
-  { label: "10万円（最大30応募/月）", value: "100000" },
-  { label: "20万円（最大60応募/月）", value: "200000" },
-  { label: "上限なし",               value: "9999999" },
-];
-
 const EMPTY_FORM = {
   title: "", jobCategory: "", employmentType: "", area: "",
   salary: "", workHours: "", holidays: "", description: "", requirements: "", benefits: "",
-  monthlyLimit: "30000",
 };
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -126,7 +117,6 @@ export default function AdminListings() {
       description: job.description || "",
       requirements: job.requirements || "",
       benefits: job.benefits || "",
-      monthlyLimit: String(job.monthlyLimit || 30000),
     });
     setEditOpen(true);
   };
@@ -137,7 +127,7 @@ export default function AdminListings() {
       toast({ variant: "destructive", title: "タイトル・エリア・給与は必須です" });
       return;
     }
-    updateMutation.mutate({ id: editing!.id, data: { ...form, monthlyLimit: Number(form.monthlyLimit) } });
+    updateMutation.mutate({ id: editing!.id, data: { ...form } });
   };
 
   const filtered = jobs.filter((j) => {
@@ -474,15 +464,6 @@ export default function AdminListings() {
                 onChange={(e) => up("benefits", e.target.value)}
                 placeholder="待遇・福利厚生..."
               />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label>月の上限金額</Label>
-              <Select value={form.monthlyLimit} onValueChange={(v) => up("monthlyLimit", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{MONTHLY_LIMITS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">1応募 = ¥3,000税別</p>
             </div>
 
             <div className="flex gap-2 pt-2">

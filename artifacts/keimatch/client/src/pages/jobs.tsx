@@ -39,15 +39,6 @@ const HOLIDAYS_OPTIONS = [
   "年間休日120日以上",
   "要相談",
 ];
-const MONTHLY_LIMITS = [
-  { label: "3万円（最大9応募/月）",  value: "30000" },
-  { label: "5万円（最大15応募/月）", value: "50000" },
-  { label: "10万円（最大30応募/月）", value: "100000" },
-  { label: "20万円（最大60応募/月）", value: "200000" },
-  { label: "上限なし",               value: "9999999" },
-];
-
-
 const EMPTY_FORM = {
   title: "",
   jobCategory: "",
@@ -56,7 +47,6 @@ const EMPTY_FORM = {
   salary: "",
   workHours: "",
   holidays: "",
-  monthlyLimit: "30000",
 };
 
 export default function Jobs() {
@@ -128,7 +118,6 @@ export default function Jobs() {
       salary: job.salary || "",
       workHours: job.workHours || "",
       holidays: job.holidays || "",
-      monthlyLimit: String(job.monthlyLimit),
     });
     setOpen(true);
   };
@@ -150,7 +139,6 @@ export default function Jobs() {
       description: `${form.jobCategory}として${form.area}エリアで活躍していただくお仕事です。`,
       requirements: "",
       benefits: "",
-      monthlyLimit: Number(form.monthlyLimit),
     };
     if (editing) {
       updateMutation.mutate({ id: editing.id, data });
@@ -383,16 +371,6 @@ export default function Jobs() {
                 <SelectTrigger><SelectValue placeholder="選択してください" /></SelectTrigger>
                 <SelectContent>{HOLIDAYS_OPTIONS.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
               </Select>
-            </div>
-
-            {/* 月の上限金額 */}
-            <div className="space-y-1.5">
-              <Label>月の上限金額</Label>
-              <Select value={form.monthlyLimit} onValueChange={(v) => up("monthlyLimit", v)}>
-                <SelectTrigger data-testid="select-monthly-limit"><SelectValue /></SelectTrigger>
-                <SelectContent>{MONTHLY_LIMITS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">上限到達で掲載が自動停止されます（1応募 = ¥3,000税別）</p>
             </div>
 
             <div className="flex gap-2 pt-2">
