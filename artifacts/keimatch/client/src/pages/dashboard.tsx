@@ -4,15 +4,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Briefcase, Users, CreditCard, Bell, ArrowRight, Calendar, AlertCircle } from "lucide-react";
+import { Plus, Users, CreditCard, ArrowRight, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
 
-const STATUS_LABELS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  active: { label: "掲載中", variant: "default" },
-  pending: { label: "審査中", variant: "secondary" },
-  paused: { label: "停止中", variant: "outline" },
-};
 
 const REVIEW_STATUS_LABELS: Record<string, string> = {
   new: "新着",
@@ -45,20 +40,12 @@ export default function Dashboard() {
   });
 
   const activeJobs = jobs.filter((j: any) => j.status === "active").length;
-  const pendingJobs = jobs.filter((j: any) => j.status === "pending").length;
-  const pausedJobs = jobs.filter((j: any) => j.status === "paused").length;
 
   const monthlyTotal = billing?.monthlyTotal ?? 0;
   const monthlyLimit = billing?.monthlyLimit ?? 30000;
-  const remaining = Math.max(0, monthlyLimit - monthlyTotal);
   const usagePct = monthlyLimit > 0 ? Math.min(100, Math.round((monthlyTotal / monthlyLimit) * 100)) : 0;
 
   const recentApps = applications.slice(0, 5);
-
-  const announcements = [
-    { id: "1", title: "Indeed掲載が自動で開始されます", body: "求人が審査通過後、XMLフィード経由でIndeedに自動掲載されます。", date: "2025-01-01" },
-    { id: "2", title: "応募通知はメール・LINEで届きます", body: "応募があった際、登録済みの連絡先にリアルタイム通知が届きます。", date: "2025-01-01" },
-  ];
 
   return (
     <DashboardLayout>
@@ -95,15 +82,6 @@ export default function Dashboard() {
               <p className="text-xs text-muted-foreground mb-1">今月の課金額</p>
               <p className="text-3xl font-black text-foreground" data-testid="stat-monthly-charge">¥{monthlyTotal.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">（税込）</p>
-            </CardContent>
-          </Card>
-          <Card className="border border-border">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground mb-1">残り上限金額</p>
-              <p className={`text-3xl font-black ${remaining < 10000 ? "text-destructive" : "text-foreground"}`} data-testid="stat-remaining">¥{remaining.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                約{Math.floor(remaining / 3300)}応募 / 上限¥{monthlyLimit >= 9999999 ? "なし" : monthlyLimit.toLocaleString()}
-              </p>
             </CardContent>
           </Card>
           <Card className="border border-border">
@@ -181,61 +159,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Job status summary */}
-            <Card className="border border-border">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-primary" />
-                  求人のステータス
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {jobs.length === 0 ? (
-                  <div className="text-center py-6">
-                    <p className="text-sm text-muted-foreground mb-4">求人がまだありません</p>
-                    <Link href="/jobs/new">
-                      <Button size="sm">
-                        <Plus className="w-4 h-4 mr-1.5" />最初の求人を作成
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="rounded-lg bg-green-50 border border-green-100 p-3 text-center">
-                        <p className="text-xl font-black text-green-700">{activeJobs}</p>
-                        <p className="text-xs text-green-600 font-medium">掲載中</p>
-                      </div>
-                      <div className="rounded-lg bg-amber-50 border border-amber-100 p-3 text-center">
-                        <p className="text-xl font-black text-amber-700">{pendingJobs}</p>
-                        <p className="text-xs text-amber-600 font-medium">審査中</p>
-                      </div>
-                      <div className="rounded-lg bg-muted border border-border p-3 text-center">
-                        <p className="text-xl font-black text-muted-foreground">{pausedJobs}</p>
-                        <p className="text-xs text-muted-foreground font-medium">停止中</p>
-                      </div>
-                    </div>
-                    <div className="divide-y divide-border">
-                      {jobs.slice(0, 4).map((j: any) => (
-                        <div key={j.id} className="py-2.5 flex items-center justify-between">
-                          <p className="text-sm font-medium text-foreground truncate flex-1 min-w-0">{j.title}</p>
-                          <Badge variant={STATUS_LABELS[j.status]?.variant || "secondary"} className="shrink-0 ml-2 text-xs">
-                            {STATUS_LABELS[j.status]?.label || j.status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                    {jobs.length > 4 && (
-                      <Link href="/jobs">
-                        <Button variant="ghost" size="sm" className="w-full mt-2 text-xs text-muted-foreground">
-                          すべての求人を見る <ArrowRight className="w-3 h-3 ml-1" />
-                        </Button>
-                      </Link>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right column */}
