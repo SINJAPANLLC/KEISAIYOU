@@ -77,18 +77,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Brand */}
-      <div className="px-4 py-4 border-b border-border/60">
-        <Link href={isAdmin ? "/admin" : "/home"}>
-          <span className="flex items-center gap-2 cursor-pointer">
-            <span className="text-primary font-black text-lg tracking-tight">8 KEI SAIYOU</span>
-          </span>
-        </Link>
-        {user && (
-          <p className="text-xs text-muted-foreground mt-1 truncate">{user.companyName || user.email}</p>
-        )}
-      </div>
-
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto p-2 space-y-4">
         {!isAdmin && (
