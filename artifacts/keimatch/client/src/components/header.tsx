@@ -249,7 +249,7 @@ export default function Header() {
 
   if (isAuthenticated) {
     return (
-      <header className="shrink-0 z-50 bg-primary">
+      <header className="shrink-0 z-50 bg-background border-b border-border">
         <div className="px-4 sm:px-6">
           <div className="flex items-center justify-between gap-4 h-12">
             <div className="flex items-center gap-4">
@@ -258,7 +258,7 @@ export default function Header() {
               </Link>
             </div>
 
-            <div className="flex items-center gap-2 [&_button]:text-white [&_button:hover]:bg-white/20 [&_svg]:text-white [&_span]:text-white">
+            <div className="flex items-center gap-2">
               <NotificationDropdown />
               <ProfileDropdown />
             </div>
