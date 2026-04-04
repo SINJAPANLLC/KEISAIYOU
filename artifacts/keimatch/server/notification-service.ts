@@ -83,7 +83,7 @@ ${bodyHtml}
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #e4e4e7;">
 <tr>
 <td style="padding-top:20px;color:#71717a;font-size:11px;line-height:1.6;text-align:center;">
-本メールはKEI MATCHから自動送信されています。<br>
+本メールはKEI SAIYOUから自動送信されています。<br>
 心当たりのない場合はお手数ですが本メールを破棄してください。<br><br>
 合同会社SIN JAPAN<br>
 <a href="https://keisaiyou-sinjapan.com" style="color:#1a2f6e;text-decoration:none;">keisaiyou-sinjapan.com</a>
