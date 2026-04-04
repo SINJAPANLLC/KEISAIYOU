@@ -638,14 +638,29 @@ ${jobXml}
         publishedAt: new Date(),
         updatedAt: new Date(),
       }).where(eq(jobListings.id, req.params.id)).returning();
+      // Notify the company
       await db.insert(notifications).values({
         userId: job.userId,
         type: "job_approved",
-        title: "求人が掲載されました",
-        message: `「${job.title}」の掲載が開始されました。`,
+        title: "求人がINDEEDに掲載されました",
+        message: `「${job.title}」の審査が完了し、INDEEDへの掲載が開始されました。`,
         relatedId: job.id,
       });
-      res.json(updated);
+      // Send email if configured
+      try {
+        const [company] = await db.select({ email: users.email, companyName: users.companyName })
+          .from(users).where(eq(users.id, job.userId));
+        if (company?.email) {
+          await sendEmail({
+            to: company.email,
+            subject: `【KEI SAIYOU】求人「${job.title}」がINDEEDに掲載されました`,
+            text: `${company.companyName} 様\n\n求人「${job.title}」の審査が完了し、INDEEDへの掲載が開始されました。\n\n応募が届き次第、マイページの「応募者一覧」でご確認いただけます。\n\n──\nKEI SAIYOU 運営事務局`,
+          });
+        }
+      } catch (emailErr) {
+        console.warn("[approve] email send failed:", emailErr);
+      }
+      res.json({ ...updated, indeedPublished: true });
     } catch {
       res.status(500).json({ message: "承認に失敗しました" });
     }

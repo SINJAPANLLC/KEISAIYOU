@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Briefcase, Search, MapPin, Building2, CheckCircle, XCircle, Pause, Play, Edit2,
-  Tag, Banknote, Clock, CalendarDays, Calendar,
+  Tag, Banknote, Clock, CalendarDays, Calendar, Rss, ExternalLink,
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -82,7 +82,10 @@ export default function AdminListings() {
 
   const approveMutation = useMutation({
     mutationFn: (id: string) => apiRequest("PATCH", `/api/admin/jobs/${id}/approve`).then((r) => r.json()),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/jobs"] }); toast({ title: "求人を承認しました" }); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/jobs"] });
+      toast({ title: "INDEEDに掲載しました", description: "求人がINDEED XMLフィードに追加されました。企業へ通知メールを送信しました。" });
+    },
     onError: () => toast({ variant: "destructive", title: "承認に失敗しました" }),
   });
 
@@ -158,10 +161,23 @@ export default function AdminListings() {
       <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto">
         <div className="rounded-xl p-6 mb-6 hero-gradient relative overflow-hidden">
           <div className="hero-grid absolute inset-0 opacity-30" />
-          <div className="relative z-10">
-            <p className="text-white/80 text-xs mb-0.5">LISTINGS</p>
-            <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">求人管理</h1>
-            <p className="text-white/70 text-sm mt-1">掲載申請の承認・掲載管理・内容編集</p>
+          <div className="relative z-10 flex items-start justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-white/80 text-xs mb-0.5">LISTINGS</p>
+              <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">求人管理</h1>
+              <p className="text-white/70 text-sm mt-1">承認した求人は自動でINDEEDに掲載されます</p>
+            </div>
+            <a
+              href={`${window.location.origin}/feed/indeed.xml`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-md px-3 py-2 transition-colors"
+              data-testid="link-indeed-feed"
+            >
+              <Rss className="w-3.5 h-3.5" />
+              INDEEDフィードURL
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
         </div>
 
@@ -227,6 +243,11 @@ export default function AdminListings() {
                           <div className="flex items-center gap-2 mb-3 flex-wrap">
                             <p className="text-base font-bold text-foreground leading-snug">{job.title}</p>
                             <Badge variant="outline" className={`text-[10px] shrink-0 ${s.color}`}>{s.label}</Badge>
+                            {job.status === "active" && (
+                              <Badge className="text-[10px] shrink-0 bg-[#2164F3] text-white border-0 gap-1 hover:bg-[#2164F3]">
+                                <Rss className="w-2.5 h-2.5" />INDEED掲載中
+                              </Badge>
+                            )}
                           </div>
 
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-4 mb-3">
@@ -317,12 +338,12 @@ export default function AdminListings() {
                             <>
                               <Button
                                 size="sm"
-                                className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
+                                className="h-8 px-3 text-xs bg-[#2164F3] hover:bg-[#1a50c5]"
                                 onClick={() => approveMutation.mutate(job.id)}
                                 disabled={approveMutation.isPending}
                                 data-testid={`button-approve-${job.id}`}
                               >
-                                <CheckCircle className="w-3 h-3 mr-1" />承認
+                                <Rss className="w-3 h-3 mr-1" />承認・INDEED掲載
                               </Button>
                               <Button
                                 size="sm"
@@ -351,11 +372,11 @@ export default function AdminListings() {
                           {(job.status === "paused" || job.status === "closed") && (
                             <Button
                               size="sm"
-                              className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700"
+                              className="h-8 px-3 text-xs bg-[#2164F3] hover:bg-[#1a50c5]"
                               onClick={() => approveMutation.mutate(job.id)}
                               disabled={approveMutation.isPending}
                             >
-                              <Play className="w-3 h-3 mr-1" />再掲載
+                              <Rss className="w-3 h-3 mr-1" />INDEED再掲載
                             </Button>
                           )}
                         </div>

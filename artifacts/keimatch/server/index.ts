@@ -4,12 +4,57 @@ import connectPgSimple from "connect-pg-simple";
 import compression from "compression";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
-import { createServer } from "http";
-import { dbPool } from "./db";
+import { createServer, type IncomingMessage, type ServerResponse } from "http";
+import { dbPool, db } from "./db";
+import { jobListings, users } from "@shared/schema";
+import { eq, desc, sql } from "drizzle-orm";
 
 const app = express();
 app.set("trust proxy", 1);
-const httpServer = createServer(app);
+
+// ── Indeed feed: intercept at raw HTTP level, completely bypassing Express/Vite ──
+async function indeedFeedHandler(req: IncomingMessage, res: ServerResponse): Promise<boolean> {
+  const u = req.url || "";
+  if (!u.startsWith("/feed/indeed.xml")) return false;
+  try {
+    const activeJobs = await db.select().from(jobListings).where(eq(jobListings.status, "active")).orderBy(desc(jobListings.publishedAt));
+    const companyIds = [...new Set(activeJobs.map((j) => j.userId))];
+    const companyMap: Record<string, any> = {};
+    if (companyIds.length) {
+      const companies = await db.select().from(users)
+        .where(sql`${users.id} = ANY(${sql.raw(`ARRAY['${companyIds.join("','")}']::varchar[]`)})`);
+      for (const c of companies) companyMap[c.id] = c;
+    }
+    const host = (req.headers["host"] || "localhost") as string;
+    const proto = (req.headers["x-forwarded-proto"] || "https") as string;
+    const baseUrl = process.env.APP_BASE_URL || `${proto}://${host}`;
+    const esc = (s: string) => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const jobXml = activeJobs.map((job) => {
+      const co = companyMap[job.userId];
+      const pub = job.publishedAt ? new Date(job.publishedAt).toISOString() : new Date(job.createdAt).toISOString();
+      const area = job.area || "";
+      const prefecture = area.replace(/[市区町村郡].+$/, "");
+      return `  <job>\n    <title><![CDATA[${esc(job.title)}]]></title>\n    <date>${pub}</date>\n    <referencenumber>${job.id}</referencenumber>\n    <url>${baseUrl}/apply/${job.id}</url>\n    <company><![CDATA[${esc(co?.companyName || "KEI SAIYOU")}]]></company>\n    <city><![CDATA[${esc(area)}]]></city>\n    <state><![CDATA[${esc(prefecture)}]]></state>\n    <country>JP</country>\n    <postalcode>${esc(co?.postalCode || "")}</postalcode>\n    <description><![CDATA[${esc(job.description)}${job.requirements ? "\n\n【応募条件】\n" + esc(job.requirements) : ""}]]></description>\n    <salary><![CDATA[${esc(job.salary)}]]></salary>\n    <jobtype><![CDATA[${esc(job.employmentType)}]]></jobtype>\n  </job>`;
+    }).join("\n");
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<source>\n  <publisher>KEI SAIYOU</publisher>\n  <publisherurl>${baseUrl}</publisherurl>\n  <lastBuildDate>${new Date().toISOString()}</lastBuildDate>\n${jobXml}\n</source>`;
+    res.writeHead(200, { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" });
+    res.end(xml);
+    return true;
+  } catch (err) {
+    console.error("[feed/indeed.xml raw]", err);
+    res.writeHead(500, { "Content-Type": "application/xml" });
+    res.end('<?xml version="1.0"?><error>Internal error</error>');
+    return true;
+  }
+}
+
+const httpServer = createServer((req, res) => {
+  indeedFeedHandler(req as any, res).then((handled) => {
+    if (!handled) app(req as any, res);
+  }).catch(() => {
+    app(req as any, res);
+  });
+});
 
 app.use(compression());
 
