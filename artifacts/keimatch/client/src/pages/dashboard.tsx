@@ -1,322 +1,177 @@
 import { Link } from "wouter";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Package, Truck, ArrowRight, MapPin, CheckCircle2, Circle, UserCog, Search, Handshake, Bell, ChevronDown, ChevronUp, ListChecks } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import type { CargoListing, TruckListing } from "@shared/schema";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
+import { Plus, Briefcase, CheckCircle2, Circle, ArrowRight, Settings, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import DashboardLayout from "@/components/dashboard-layout";
-import { formatPrice, hasNumericPrice } from "@/lib/utils";
 
-interface OnboardingProgress {
-  profileComplete: boolean;
-  cargoCount: number;
-  truckCount: number;
-  partnerCount: number;
-  notificationSettingDone: boolean;
-}
-
-function ListingSkeleton() {
-  return (
-    <Card>
-      <CardContent className="p-4 space-y-3">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-3 w-28" />
-      </CardContent>
-    </Card>
-  );
-}
-
-function OnboardingChecklist({ progress }: { progress: OnboardingProgress }) {
-  const [collapsed, setCollapsed] = useState(false);
-
-  const steps = [
-    {
-      id: "profile",
-      label: "プロフィールを完成させる",
-      description: "企業情報を設定すると企業情報登録済バッジが付与されます",
-      done: progress.profileComplete,
-      href: "/settings",
-      action: "設定へ",
-      time: "約2分",
-    },
-    {
-      id: "cargo",
-      label: "案件を登録する",
-      description: "最初の案件情報を登録して頂くと案件にNewバッジが付与されます",
-      done: progress.cargoCount > 0,
-      href: "/cargo/new",
-      action: "登録する",
-      time: "約3分",
-    },
-    {
-      id: "truck",
-      label: "空き車両を登録する",
-      description: "最初の空き車両情報を登録して頂くと空き車両にNewバッジが付与されます",
-      done: progress.truckCount > 0,
-      href: "/trucks",
-      action: "登録する",
-      time: "約3分",
-    },
-    {
-      id: "search",
-      label: "事業者を検索する",
-      description: "取引先候補の事業者を検索してみる",
-      done: false,
-      href: "/companies",
-      action: "検索する",
-      time: "約1分",
-    },
-    {
-      id: "partner",
-      label: "取引先を招待する",
-      description: "",
-      done: progress.partnerCount > 0,
-      href: "/partners",
-      action: "登録する",
-      time: "約1分",
-    },
-    {
-      id: "notification",
-      label: "通知設定を確認する",
-      description: "メール・LINE通知の設定を確認",
-      done: progress.notificationSettingDone,
-      href: "/settings",
-      action: "設定へ",
-      time: "約1分",
-    },
-  ];
-
-  const completedCount = steps.filter(s => s.done).length;
-  const totalCount = steps.length;
-  const progressPercent = Math.round((completedCount / totalCount) * 100);
-  const allDone = completedCount === totalCount;
-  const remainingCount = totalCount - completedCount;
-  const nextStep = steps.find(s => !s.done);
-
-  const encourageMessage = allDone
-    ? "すべて完了しました！準備万端です！"
-    : remainingCount === 1
-      ? "あと1つで完了です！もう少し！"
-      : `あと${remainingCount}つ完了するとすべての機能が活用できます`;
-
-  return (
-    <Card className={`mb-6 ${!allDone ? "border-primary/40 shadow-md" : ""}`} data-testid="card-onboarding-checklist">
-      <CardContent className="p-4 sm:p-5">
-        <div
-          className="flex items-center justify-between gap-4 flex-wrap cursor-pointer select-none"
-          onClick={() => setCollapsed(!collapsed)}
-          data-testid="button-toggle-checklist"
-        >
-          <div className="flex items-center gap-2">
-            <ListChecks className="w-5 h-5 text-primary" />
-            <h2 className="text-base font-bold text-foreground">はじめにやること</h2>
-            <Badge variant="secondary" className="text-xs">{completedCount}/{totalCount}</Badge>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${allDone ? "bg-emerald-500" : "bg-primary"}`}
-                  style={{ width: `${progressPercent}%` }}
-                />
-              </div>
-              <span className="text-xs text-muted-foreground font-medium">{progressPercent}%</span>
-            </div>
-            {collapsed ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronUp className="w-4 h-4 text-muted-foreground" />}
-          </div>
-        </div>
-
-        {!collapsed && (
-          <div className="mt-3 space-y-1" data-testid="list-onboarding-steps">
-            {steps.map((step) => {
-              const isNext = !step.done && step.id === nextStep?.id;
-              return (
-                <div
-                  key={step.id}
-                  className={`flex items-center gap-3 p-2.5 rounded-md transition-all ${
-                    step.done
-                      ? "opacity-60"
-                      : isNext
-                        ? "bg-primary/5 border border-primary/30 shadow-sm"
-                        : "hover-elevate"
-                  }`}
-                  data-testid={`step-${step.id}`}
-                >
-                  {step.done ? (
-                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                  ) : isNext ? (
-                    <div className="relative shrink-0">
-                      <Circle className="w-5 h-5 text-primary shrink-0" />
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-primary rounded-full animate-ping" />
-                    </div>
-                  ) : (
-                    <Circle className="w-5 h-5 text-muted-foreground shrink-0" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className={`text-sm font-medium ${step.done ? "line-through text-muted-foreground" : isNext ? "text-primary font-bold" : "text-foreground"}`}>
-                        {step.label}
-                      </p>
-                      {!step.done && (
-                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{step.time}</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{step.description}</p>
-                  </div>
-                  {!step.done && (
-                    <Link href={step.href}>
-                      <Button
-                        variant={isNext ? "default" : "outline"}
-                        size="sm"
-                        className={isNext ? "animate-pulse" : ""}
-                        data-testid={`button-step-${step.id}`}
-                      >
-                        {step.action}
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+interface OnboardingStep {
+  id: string;
+  label: string;
+  description: string;
+  done: boolean;
+  href: string;
+  action: string;
 }
 
 export default function Dashboard() {
   const { user } = useAuth();
 
-  const { data: onboardingProgress } = useQuery<OnboardingProgress>({
-    queryKey: ["/api/onboarding-progress"],
-  });
+  const onboardingSteps: OnboardingStep[] = [
+    {
+      id: "profile",
+      label: "企業プロフィールを完成させる",
+      description: "会社情報を入力すると求職者からの信頼度が上がります",
+      done: !!(user?.phone && user?.address),
+      href: "/settings",
+      action: "設定へ",
+    },
+    {
+      id: "job",
+      label: "最初の求人を作成する",
+      description: "募集エリア・勤務形態・報酬を入力するだけで公開できます",
+      done: false,
+      href: "/jobs/new",
+      action: "求人を作成",
+    },
+  ];
 
-  const { data: cargoListings, isLoading: cargoLoading } = useQuery<CargoListing[]>({
-    queryKey: ["/api/cargo"],
-  });
-
-  const { data: truckListings, isLoading: truckLoading } = useQuery<TruckListing[]>({
-    queryKey: ["/api/trucks"],
-  });
+  const doneCount = onboardingSteps.filter((s) => s.done).length;
+  const allDone = doneCount === onboardingSteps.length;
 
   return (
     <DashboardLayout>
-      <div className="px-4 sm:px-6 py-6">
-        <div className="bg-primary rounded-md p-5 mb-6">
-          <h1 className="text-xl font-bold text-primary-foreground text-shadow-lg" data-testid="text-dashboard-title">
-            {user?.companyName}さん、こんにちは
-          </h1>
-          <p className="text-sm text-primary-foreground mt-1 text-shadow">ダッシュボード</p>
+      <div className="px-4 sm:px-6 py-6 max-w-4xl mx-auto">
+        <div className="rounded-xl p-6 mb-6 hero-gradient relative overflow-hidden">
+          <div className="hero-grid absolute inset-0 opacity-30" />
+          <div className="relative z-10">
+            <p className="text-white/80 text-sm mb-1">ようこそ</p>
+            <h1 className="text-2xl font-bold text-white mb-1" data-testid="text-page-title">
+              {user?.companyName ?? "企業"} 様
+            </h1>
+            <p className="text-white/70 text-sm">KEI SAIYOUへようこそ。軽貨物ドライバーの採用をスタートしましょう。</p>
+          </div>
         </div>
 
-        {onboardingProgress && (
-          <OnboardingChecklist progress={onboardingProgress} />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <Card className="border border-border">
+            <CardContent className="p-5">
+              <p className="text-xs text-muted-foreground mb-1">掲載中の求人</p>
+              <p className="text-3xl font-black text-foreground">0</p>
+              <p className="text-xs text-muted-foreground mt-1">件</p>
+            </CardContent>
+          </Card>
+          <Card className="border border-border">
+            <CardContent className="p-5">
+              <p className="text-xs text-muted-foreground mb-1">受け取った応募</p>
+              <p className="text-3xl font-black text-foreground">0</p>
+              <p className="text-xs text-muted-foreground mt-1">件</p>
+            </CardContent>
+          </Card>
+          <Card className="border border-border">
+            <CardContent className="p-5">
+              <p className="text-xs text-muted-foreground mb-1">今週の新着応募</p>
+              <p className="text-3xl font-black text-foreground">0</p>
+              <p className="text-xs text-muted-foreground mt-1">件</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {!allDone && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-bold text-foreground">はじめの一歩</h2>
+              <span className="text-xs text-muted-foreground">{doneCount} / {onboardingSteps.length} 完了</span>
+            </div>
+            <div className="w-full bg-muted rounded-full h-1.5 mb-4">
+              <div
+                className="bg-primary h-1.5 rounded-full transition-all duration-500"
+                style={{ width: `${(doneCount / onboardingSteps.length) * 100}%` }}
+              />
+            </div>
+            <div className="space-y-3">
+              {onboardingSteps.map((step) => (
+                <Card key={step.id} className={`border ${step.done ? "border-border opacity-60" : "border-primary/30"}`}>
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="shrink-0">
+                      {step.done ? (
+                        <CheckCircle2 className="w-6 h-6 text-primary" />
+                      ) : (
+                        <Circle className="w-6 h-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold ${step.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {step.label}
+                      </p>
+                      {!step.done && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
+                      )}
+                    </div>
+                    {!step.done && (
+                      <Link href={step.href}>
+                        <Button size="sm" className="shrink-0">
+                          {step.action}
+                          <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                        </Button>
+                      </Link>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
         )}
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <Card>
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-                <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Package className="w-4 h-4 text-primary" />
-                  最新の案件情報
-                </h2>
-                <Link href="/cargo">
-                  <Button variant="ghost" size="sm" className="text-primary" data-testid="link-dashboard-all-cargo">
-                    すべて見る <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="divide-y divide-border">
-                {cargoLoading
-                  ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
-                  : cargoListings?.slice(0, 5).map((listing) => (
-                      <div key={listing.id} className="py-2.5 first:pt-0 last:pb-0 hover:bg-muted/30 px-2 -mx-2 rounded transition-colors" data-testid={`card-dash-cargo-${listing.id}`}>
-                        <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3">
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-foreground text-[13px] truncate">{listing.title || `${listing.departureArea}→${listing.arrivalArea} ${listing.cargoType || ''} ${listing.vehicleType || ''}`.trim()}</h3>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[12px] text-foreground w-[140px]">
-                            <MapPin className="w-3 h-3 text-primary shrink-0" />
-                            <span className="font-medium truncate">{listing.departureArea}</span>
-                            <ArrowRight className="w-2.5 h-2.5 text-foreground/50 shrink-0" />
-                            <span className="font-medium truncate">{listing.arrivalArea}</span>
-                          </div>
-                          <div className="w-[90px] text-right">
-                            {hasNumericPrice(listing.price) ? (
-                              <span className="text-[14px] font-bold text-primary">{formatPrice(listing.price)}円</span>
-                            ) : (
-                              <span className="text-[13px] font-bold text-primary">要相談</span>
-                            )}
-                          </div>
-                          <div className="w-[36px] text-center">
-                            <Badge variant="secondary" className="text-[11px] font-bold">{listing.vehicleType}</Badge>
-                          </div>
-                          <span className="text-[12px] text-foreground w-[76px] text-right">{listing.desiredDate}</span>
-                        </div>
-                      </div>
-                    ))}
-                {!cargoLoading && (!cargoListings || cargoListings.length === 0) && (
-                  <div className="py-6 text-center text-sm text-muted-foreground">案件情報はまだありません</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        <div>
+          <h2 className="font-bold text-foreground mb-3">クイックアクション</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link href="/jobs/new">
+              <Card className="border border-dashed border-primary/40 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer h-full">
+                <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">求人を作成する</p>
+                  <p className="text-xs text-muted-foreground">新しい求人票を作成・公開</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/jobs">
+              <Card className="border border-border hover:border-primary/40 hover:bg-muted/50 transition-colors cursor-pointer h-full">
+                <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">求人一覧を見る</p>
+                  <p className="text-xs text-muted-foreground">掲載中・下書きの求人を管理</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/settings">
+              <Card className="border border-border hover:border-primary/40 hover:bg-muted/50 transition-colors cursor-pointer h-full">
+                <CardContent className="p-5 flex flex-col items-center text-center gap-2">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">企業情報を設定する</p>
+                  <p className="text-xs text-muted-foreground">会社情報・連絡先を更新</p>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
 
-          <Card>
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-4 flex-wrap mb-4">
-                <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-primary" />
-                  最新の車両情報
-                </h2>
-                <Link href="/trucks">
-                  <Button variant="ghost" size="sm" className="text-primary" data-testid="link-dashboard-all-trucks">
-                    すべて見る <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </Link>
-              </div>
-              <div className="divide-y divide-border">
-                {truckLoading
-                  ? Array.from({ length: 3 }).map((_, i) => <ListingSkeleton key={i} />)
-                  : truckListings?.slice(0, 5).map((listing) => (
-                      <div key={listing.id} className="py-2.5 first:pt-0 last:pb-0 hover:bg-muted/30 px-2 -mx-2 rounded transition-colors" data-testid={`card-dash-truck-${listing.id}`}>
-                        <div className="grid grid-cols-[1fr_auto_auto_auto_auto] items-center gap-3">
-                          <div className="min-w-0">
-                            <h3 className="font-bold text-foreground text-[13px] truncate">{listing.title || `${listing.currentArea}→${listing.destinationArea || ''} ${listing.vehicleType || ''}`.trim()}</h3>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[12px] text-foreground w-[140px]">
-                            <MapPin className="w-3 h-3 text-primary shrink-0" />
-                            <span className="font-medium truncate">{listing.currentArea}</span>
-                            <ArrowRight className="w-2.5 h-2.5 text-foreground/50 shrink-0" />
-                            <span className="font-medium truncate">{listing.destinationArea}</span>
-                          </div>
-                          <div className="w-[90px] text-right">
-                            {hasNumericPrice(listing.price) ? (
-                              <span className="text-[14px] font-bold text-primary">{formatPrice(listing.price)}円</span>
-                            ) : (
-                              <span className="text-[13px] font-bold text-primary">要相談</span>
-                            )}
-                          </div>
-                          <div className="w-[36px] text-center">
-                            <Badge variant="secondary" className="text-[11px] font-bold">{listing.vehicleType}</Badge>
-                          </div>
-                          <span className="text-[12px] text-foreground w-[76px] text-right">{listing.availableDate}</span>
-                        </div>
-                      </div>
-                    ))}
-                {!truckLoading && (!truckListings || truckListings.length === 0) && (
-                  <div className="py-6 text-center text-sm text-muted-foreground">車両情報はまだありません</div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="mt-10 rounded-xl border border-border bg-muted/30 p-5">
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-foreground mb-1">料金について</p>
+              <p className="text-sm text-muted-foreground">
+                掲載は無料です。応募が届いた時点で <strong>¥3,000（税込）/ 1応募</strong> が発生します。応募がなければ費用は一切かかりません。
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </DashboardLayout>

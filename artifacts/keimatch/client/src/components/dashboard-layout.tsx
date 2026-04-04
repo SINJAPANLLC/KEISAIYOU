@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Truck, Plus, Shield, FileText, CheckCircle, XCircle, Building, Users, BookOpen, CreditCard, Star, Settings, Sparkles, ClipboardList, UserCog, DollarSign, Bell, PenTool, Wrench, Megaphone, Activity, MessageSquare, ChevronDown, ChevronRight, Menu, X, PanelLeftClose, PanelLeftOpen, Brain, Video, Mail, Share2, ImageIcon, Layout, Lightbulb } from "lucide-react";
+import { Home, Plus, FileText, Users, Shield, ClipboardList, UserCog, DollarSign, MessageSquare, Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Briefcase, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,66 +16,38 @@ type AdminMenuGroup = {
 };
 
 const userMenuItems: MenuItem[] = [
-  { href: "/cargo", label: "案件検索", icon: Sparkles },
-  { href: "/cargo/new", label: "案件登録", icon: Plus },
-  { href: "/my-cargo", label: "登録した案件", icon: FileText },
-  { href: "/completed-cargo", label: "成約した案件", icon: CheckCircle },
-  { href: "/trucks", label: "空き車両検索", icon: Sparkles },
-  { href: "/trucks/new", label: "空き車両登録", icon: Truck },
-  { href: "/companies", label: "企業検索", icon: Building },
-  { href: "/payment", label: "プラン", icon: CreditCard },
-  { href: "/services", label: "便利サービス", icon: Star },
-  { href: "/settings", label: "設定", icon: Settings },
+  { href: "/home", label: "ダッシュボード", icon: Home },
+  { href: "/jobs/new", label: "求人を作成", icon: Plus },
+  { href: "/jobs", label: "求人一覧", icon: Briefcase },
+  { href: "/settings", label: "アカウント設定", icon: Settings },
 ];
-
-const agentMenuItem: MenuItem = { href: "/admin/agents", label: "エージェント", icon: Building };
 
 const adminMenuGroups: AdminMenuGroup[] = [
   {
     groupLabel: "ダッシュボード",
     items: [
-      { href: "/admin", label: "管理画面", icon: Shield },
-      { href: "/admin/design", label: "設計ページ", icon: Lightbulb },
+      { href: "/admin", label: "管理ダッシュボード", icon: Shield },
     ],
   },
   {
-    groupLabel: "ユーザー・売上",
+    groupLabel: "会員管理",
     items: [
-      { href: "/admin/applications", label: "申請管理", icon: ClipboardList },
-      { href: "/admin/users", label: "ユーザー管理", icon: UserCog },
-      { href: "/admin/revenue", label: "収益管理", icon: DollarSign },
-      { href: "/admin/invoices", label: "請求書発行", icon: FileText },
+      { href: "/admin/applications", label: "承認申請", icon: ClipboardList },
+      { href: "/admin/users", label: "ユーザー一覧", icon: UserCog },
     ],
   },
   {
-    groupLabel: "コンテンツ管理",
+    groupLabel: "求人・応募管理",
     items: [
-      { href: "/admin/listings", label: "掲載管理", icon: Package },
-      { href: "/admin/announcements", label: "お知らせ", icon: Megaphone },
-      { href: "/admin/notifications", label: "通知管理", icon: Bell },
+      { href: "/admin/listings", label: "求人管理", icon: Briefcase },
+      { href: "/admin/notifications", label: "応募通知", icon: Bell },
+    ],
+  },
+  {
+    groupLabel: "運営",
+    items: [
       { href: "/admin/contact-inquiries", label: "お問い合わせ", icon: MessageSquare },
-    ],
-  },
-  {
-    groupLabel: "マーケティング",
-    items: [
-      { href: "/admin/seo", label: "SEO記事生成", icon: PenTool },
-      { href: "/admin/email-marketing", label: "メール営業", icon: Mail },
-      { href: "/admin/sns", label: "SNS管理", icon: Share2 },
-      { href: "/admin/youtube", label: "YouTube管理", icon: Video },
-      { href: "/admin/lp-gen", label: "LP生成", icon: Layout },
-    ],
-  },
-  {
-    groupLabel: "AI・制作ツール",
-    items: [
-      { href: "/admin/ai-training", label: "AI学習管理", icon: Brain },
-      { href: "/admin/media-gen", label: "画像・動画生成", icon: ImageIcon },
-    ],
-  },
-  {
-    groupLabel: "システム",
-    items: [
+      { href: "/admin/revenue", label: "収益管理", icon: DollarSign },
       { href: "/admin/audit-logs", label: "操作ログ", icon: Activity },
       { href: "/admin/settings", label: "管理設定", icon: Wrench },
     ],
@@ -88,7 +60,7 @@ function SidebarMenu({ items, onNavigate }: { items: MenuItem[]; onNavigate?: ()
   return (
     <nav className="space-y-1" data-testid="nav-sidebar">
       {items.map((item) => {
-        const isActive = location === item.href;
+        const isActive = location === item.href || (item.href !== "/home" && item.href !== "/admin" && location.startsWith(item.href));
         return (
           <Link key={item.href} href={item.href}>
             <button
@@ -122,8 +94,6 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       {isAdmin && (
         <>
           <div className="my-3 mx-2 border-t border-border" />
-          <SidebarMenu items={[agentMenuItem]} onNavigate={onNavigate} />
-          <div className="my-3 mx-2 border-t border-border" />
           <button
             onClick={() => setAdminMenuOpen(!adminMenuOpen)}
             className="w-full flex items-center justify-between px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors rounded-md"
@@ -155,7 +125,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export default function DashboardLayout({ children, noScroll }: { children: React.ReactNode; noScroll?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(() => {
-    const saved = localStorage.getItem("keikamotsu_sidebar_open");
+    const saved = localStorage.getItem("keisaiyou_sidebar_open");
     return saved !== null ? saved === "true" : true;
   });
   const [location] = useLocation();
@@ -165,7 +135,7 @@ export default function DashboardLayout({ children, noScroll }: { children: Reac
   }, [location]);
 
   useEffect(() => {
-    localStorage.setItem("keikamotsu_sidebar_open", String(sidebarOpen));
+    localStorage.setItem("keisaiyou_sidebar_open", String(sidebarOpen));
   }, [sidebarOpen]);
 
   useEffect(() => {
@@ -182,7 +152,9 @@ export default function DashboardLayout({ children, noScroll }: { children: Reac
       {sidebarOpen && (
         <aside className="hidden lg:flex flex-col w-56 shrink-0 border-r bg-muted/30" data-testid="panel-sidebar">
           <div className="flex items-center justify-between p-2 border-b border-border">
-            <span className="text-xs font-semibold text-muted-foreground px-1">メニュー</span>
+            <Link href="/home">
+              <span className="text-sm font-bold text-primary px-1 cursor-pointer">KEI SAIYOU</span>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
@@ -226,7 +198,7 @@ export default function DashboardLayout({ children, noScroll }: { children: Reac
             />
             <aside className="absolute left-0 top-0 bottom-0 w-64 bg-background border-r border-border flex flex-col animate-in slide-in-from-left duration-200">
               <div className="flex items-center justify-between p-3 border-b border-border">
-                <span className="text-sm font-semibold text-foreground">メニュー</span>
+                <span className="text-sm font-bold text-primary">KEI SAIYOU</span>
                 <Button
                   variant="ghost"
                   size="icon"
