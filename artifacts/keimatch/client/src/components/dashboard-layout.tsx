@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Plus, Shield, UserCog, DollarSign, MessageSquare, Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Briefcase, Bell, Mail } from "lucide-react";
+import { Home, Plus, Shield, UserCog, Users, DollarSign, MessageSquare, Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Briefcase, Bell, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
