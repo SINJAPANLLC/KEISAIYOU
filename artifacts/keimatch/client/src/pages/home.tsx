@@ -162,7 +162,7 @@ export default function Home() {
                   <CheckCircle2 className="w-3.5 h-3.5 text-white" />
                 </span>
                 <span>
-                  料金は3,000円（税別）&nbsp;/&nbsp;応募、成果報酬型
+                  料金は3,000円（税別）&nbsp;/&nbsp;応募のシンプルプラン
                 </span>
               </li>
             </ul>
