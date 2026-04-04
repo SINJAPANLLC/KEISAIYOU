@@ -4505,85 +4505,62 @@ JSON形式で以下を返してください（日本語で）:
     }
   });
 
-  // Sitemap.xml - dynamic generation
+  // Sitemap.xml - dynamic generation (KEI SAIYOU)
   app.get("/sitemap.xml", async (_req, res) => {
-    try {
-      const baseUrl = `${_req.protocol}://${_req.get("host")}`;
-      const articles = await storage.getPublishedSeoArticles();
+    const BASE = "https://keisaiyou-sinjapan.com";
+    const now = new Date().toISOString().split("T")[0];
 
-      const staticPages = [
-        { loc: "/", priority: "1.0", changefreq: "daily" },
-        { loc: "/cargo", priority: "0.9", changefreq: "hourly" },
-        { loc: "/trucks", priority: "0.9", changefreq: "hourly" },
-        { loc: "/column", priority: "0.8", changefreq: "daily" },
-        { loc: "/column/kyukakyusha", priority: "0.9", changefreq: "daily" },
-        { loc: "/column/truck-order", priority: "0.9", changefreq: "daily" },
-        { loc: "/column/carrier-sales", priority: "0.9", changefreq: "daily" },
-        { loc: "/guide/kyukakyusha-complete", priority: "1.0", changefreq: "weekly" },
-        { loc: "/compare/kyukakyusha-sites", priority: "0.9", changefreq: "monthly" },
-        { loc: "/alternative/trabox", priority: "0.9", changefreq: "monthly" },
-        { loc: "/guide", priority: "0.5", changefreq: "monthly" },
-        { loc: "/faq", priority: "0.5", changefreq: "monthly" },
-        { loc: "/contact", priority: "0.4", changefreq: "monthly" },
-        { loc: "/company-info", priority: "0.4", changefreq: "monthly" },
-        { loc: "/terms", priority: "0.3", changefreq: "yearly" },
-        { loc: "/privacy", priority: "0.3", changefreq: "yearly" },
-        { loc: "/login", priority: "0.6", changefreq: "monthly" },
-        { loc: "/register", priority: "0.6", changefreq: "monthly" },
-      ];
+    const staticPages = [
+      { loc: "/",             changefreq: "weekly",  priority: "1.0" },
+      { loc: "/guide",        changefreq: "monthly", priority: "0.8" },
+      { loc: "/faq",          changefreq: "monthly", priority: "0.8" },
+      { loc: "/contact",      changefreq: "monthly", priority: "0.7" },
+      { loc: "/company-info", changefreq: "monthly", priority: "0.6" },
+      { loc: "/terms",        changefreq: "yearly",  priority: "0.4" },
+      { loc: "/privacy",      changefreq: "yearly",  priority: "0.4" },
+    ];
 
-      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
-      for (const page of staticPages) {
-        xml += `  <url>\n`;
-        xml += `    <loc>${baseUrl}${page.loc}</loc>\n`;
-        xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
-        xml += `    <priority>${page.priority}</priority>\n`;
-        xml += `  </url>\n`;
-      }
-
-      for (const article of articles) {
-        const lastmod = new Date(article.createdAt).toISOString().split("T")[0];
-        xml += `  <url>\n`;
-        xml += `    <loc>${baseUrl}/column/${encodeURIComponent(article.slug)}</loc>\n`;
-        xml += `    <lastmod>${lastmod}</lastmod>\n`;
-        xml += `    <changefreq>monthly</changefreq>\n`;
-        xml += `    <priority>0.7</priority>\n`;
-        xml += `  </url>\n`;
-      }
-
-      xml += `</urlset>`;
-
-      res.set("Content-Type", "application/xml");
-      res.send(xml);
-    } catch (error) {
-      res.status(500).send("Sitemap generation failed");
+    for (const page of staticPages) {
+      xml += `  <url>\n    <loc>${BASE}${page.loc}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
     }
+
+    try {
+      const { db: dbConn } = await import("./db");
+      const { jobListings: jl } = await import("@shared/schema") as any;
+      const { eq: eqFn } = await import("drizzle-orm");
+      const publishedJobs = await dbConn.select({ id: jl.id, updatedAt: jl.updatedAt })
+        .from(jl).where(eqFn(jl.status, "published"));
+      for (const job of publishedJobs) {
+        const lastmod = job.updatedAt ? new Date(job.updatedAt).toISOString().split("T")[0] : now;
+        xml += `  <url>\n    <loc>${BASE}/apply/${job.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+      }
+    } catch { /* ignore */ }
+
+    xml += `</urlset>`;
+    res.set("Content-Type", "application/xml; charset=utf-8");
+    res.set("Cache-Control", "public, max-age=3600");
+    res.send(xml);
   });
 
-  // Robots.txt
+  // Robots.txt (KEI SAIYOU)
   app.get("/robots.txt", (_req, res) => {
-    const baseUrl = `${_req.protocol}://${_req.get("host")}`;
     const content = [
       "User-agent: *",
       "Allow: /",
       "Disallow: /admin",
       "Disallow: /admin/*",
       "Disallow: /home",
-      "Disallow: /my-cargo",
-      "Disallow: /my-trucks",
-      "Disallow: /completed-cargo",
-      "Disallow: /cancelled-cargo",
-      "Disallow: /partners",
-      "Disallow: /transport-ledger",
-      "Disallow: /payment",
-      "Disallow: /services",
+      "Disallow: /jobs",
+      "Disallow: /applications",
       "Disallow: /settings",
+      "Disallow: /payment",
+      "Disallow: /api/",
       "",
-      `Sitemap: ${baseUrl}/sitemap.xml`,
+      "Sitemap: https://keisaiyou-sinjapan.com/sitemap.xml",
     ].join("\n");
-    res.set("Content-Type", "text/plain");
+    res.set("Content-Type", "text/plain; charset=utf-8");
     res.send(content);
   });
 
