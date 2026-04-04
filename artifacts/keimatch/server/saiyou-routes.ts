@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { db } from "./db";
 import { eq, desc, and, sql, lt } from "drizzle-orm";
+import OpenAI from "openai";
 import {
   jobListings,
   applications,
@@ -481,6 +482,47 @@ export function registerSaiyouRoutes(app: Express) {
       res.json(job);
     } catch {
       res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/ai/generate-job-description", requireAuth, async (req, res) => {
+    try {
+      const { title, jobCategory, employmentType, area, salary, workHours, holidays, companyName } = req.body;
+      if (!title || !jobCategory || !area || !salary) {
+        return res.status(400).json({ message: "タイトル・職種・エリア・給与は必須です" });
+      }
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const prompt = `あなたは軽貨物・ドライバー求人の採用コピーライターです。
+Indeed向けに最適化された求人票の「仕事内容」欄を日本語で作成してください。
+
+条件:
+- 職種: ${jobCategory}
+- 勤務エリア: ${area}
+- 雇用形態: ${employmentType || "業務委託"}
+- 給与・報酬: ${salary}
+${workHours ? `- 勤務時間: ${workHours}` : ""}
+${holidays ? `- 休日: ${holidays}` : ""}
+${companyName ? `- 掲載企業: ${companyName}` : ""}
+
+ルール:
+1. 「KEI SAIYOU」「KEI MATCH」などプラットフォーム名は一切記載しない
+2. Indeed SEO向けキーワードを自然に含める（例: 軽貨物ドライバー、業務委託、高収入、自由な働き方 等）
+3. 見出しを使い読みやすく構成する（【仕事内容】【働き方の特徴】【こんな方に向いています】等）
+4. 応募者目線で魅力的に、かつ具体的に書く
+5. 400〜600文字程度
+6. 余計な前置きや「はい」「承知しました」は不要。本文のみ返答する`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 800,
+        temperature: 0.7,
+      });
+      const description = completion.choices[0]?.message?.content?.trim() || "";
+      res.json({ description });
+    } catch (err: any) {
+      console.error("[AI generate]", err.message);
+      res.status(500).json({ message: "AI生成に失敗しました" });
     }
   });
 
