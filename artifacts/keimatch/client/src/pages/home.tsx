@@ -116,81 +116,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      <style>{`
-        /* ── scroll reveal ── */
-        .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
-        .reveal.revealed { opacity: 1; transform: translateY(0); }
-        .reveal-delay-1 { transition-delay: 0.1s; }
-        .reveal-delay-2 { transition-delay: 0.22s; }
-        .reveal-delay-3 { transition-delay: 0.34s; }
-
-        /* ── hero background animation ── */
-        @keyframes heroBg {
-          0%,100% { background-position: 0% 50%; }
-          50%      { background-position: 100% 50%; }
-        }
-        .hero-gradient {
-          background: linear-gradient(135deg, hsl(20,85%,48%) 0%, hsl(20,85%,56%) 40%, hsl(28,90%,60%) 70%, hsl(18,80%,50%) 100%);
-          background-size: 300% 300%;
-          animation: heroBg 8s ease infinite;
-        }
-        /* ── hero grid overlay ── */
-        .hero-grid {
-          background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
-                            linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
-          background-size: 48px 48px;
-        }
-        /* ── logo wall ── */
-        .lw-slider { height: 100px; overflow: hidden; width: 100%;
-          -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
-          mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
-        }
-        .lw-track { display: flex; will-change: transform; }
-        .lw-track-a { animation: lwScrollA 34s linear infinite; }
-        .lw-track-b { animation: lwScrollB 20s linear infinite; }
-        .lw-slide { width: 180px; height: 100px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0 20px; }
-        .lw-slide img { max-width: 130px; max-height: 60px; object-fit: contain; filter: grayscale(25%); opacity: 0.8; transition: all .25s; }
-        .lw-slide img:hover { opacity: 1; filter: none; transform: scale(1.06); }
-        /* track-a: 10 logos × 180px = 1800px */
-        @keyframes lwScrollA { 0% { transform: translateX(0); } 100% { transform: translateX(-1800px); } }
-        /* track-b: 4 logos × 180px = 720px */
-        @keyframes lwScrollB { 0% { transform: translateX(0); } 100% { transform: translateX(-720px); } }
-        @media(max-width:768px){
-          .lw-slide { width: 140px; }
-          .lw-slide img { max-width: 100px; }
-          @keyframes lwScrollA { 100% { transform: translateX(-1400px); } }
-          @keyframes lwScrollB { 100% { transform: translateX(-560px); } }
-        }
-
-        /* ── step cards ── */
-        .step-card { transition: box-shadow .25s, transform .25s; }
-        .step-card:hover { transform: translateY(-5px); box-shadow: 0 16px 40px -8px rgba(0,0,0,.12); }
-        .step-accent { background: linear-gradient(135deg, hsl(20,85%,56%), hsl(28,90%,65%)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-
-        /* ── feature cards ── */
-        .feat-card { transition: box-shadow .25s, transform .25s; border-left: 3px solid hsl(20,85%,56%); }
-        .feat-card:hover { transform: translateY(-5px); box-shadow: 0 20px 48px -10px rgba(0,0,0,.13); }
-
-        /* ── pricing glow ── */
-        .price-card {
-          box-shadow: 0 0 0 2px hsl(20,85%,56%), 0 0 40px -4px hsl(20,85%,56%,0.3);
-          transition: box-shadow .3s;
-        }
-        .price-card:hover { box-shadow: 0 0 0 2px hsl(20,85%,56%), 0 0 60px -4px hsl(20,85%,56%,0.5); }
-        @keyframes pricePulse {
-          0%,100% { box-shadow: 0 0 0 0 hsl(20,85%,56%,0.4); }
-          50%      { box-shadow: 0 0 0 8px hsl(20,85%,56%,0); }
-        }
-        .price-badge { animation: pricePulse 2.5s ease-out infinite; }
-
-        /* ── CTA orbs ── */
-        @keyframes orbFloat {
-          0%,100% { transform: translateY(0) scale(1); }
-          50%      { transform: translateY(-20px) scale(1.05); }
-        }
-        .cta-orb-1 { animation: orbFloat 6s ease-in-out infinite; }
-        .cta-orb-2 { animation: orbFloat 8s ease-in-out infinite; animation-delay: -3s; }
-      `}</style>
 
       {/* ─── HERO ─── */}
       <section className="hero-gradient relative overflow-hidden">
@@ -382,8 +307,8 @@ export default function Home() {
       {/* ─── LOGO WALL 2 ─── */}
       <section className="py-10 bg-white border-y border-border/40">
         <div className="lw-slider">
-          <div className="lw-track lw-track-b" style={{ width: `${180 * LOGO_URLS_2.length * 2}px` }}>
-            {[...LOGO_URLS_2, ...LOGO_URLS_2].map((src, i) => (
+          <div className="lw-track lw-track-b" style={{ width: `${180 * LOGO_URLS_2.length * 6}px` }}>
+            {[...LOGO_URLS_2, ...LOGO_URLS_2, ...LOGO_URLS_2, ...LOGO_URLS_2, ...LOGO_URLS_2, ...LOGO_URLS_2].map((src, i) => (
               <div key={`lw2-${i}`} className="lw-slide"><img src={src} alt={`企業ロゴ${i + 1}`} /></div>
             ))}
           </div>
