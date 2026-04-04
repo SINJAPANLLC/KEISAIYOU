@@ -164,6 +164,7 @@ function AppLayout() {
   const [loc] = useLocation();
   const { isAuthenticated } = useAuth();
   const isDashboardPage = isAuthenticated && DASHBOARD_PATHS.some((p) => loc === p || loc.startsWith(p + "/"));
+  const isApplyPage = loc.startsWith("/apply/");
 
   usePreloadAllPages();
 
@@ -172,6 +173,10 @@ function AppLayout() {
       (window as any).__dismissSplash();
     }
   }, []);
+
+  if (isApplyPage) {
+    return <Router />;
+  }
 
   if (isDashboardPage) {
     return (

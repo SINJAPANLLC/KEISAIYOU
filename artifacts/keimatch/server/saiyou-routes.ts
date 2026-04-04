@@ -468,7 +468,7 @@ export function registerSaiyouRoutes(app: Express) {
   // ─── Public: Application form ───────────────────────────────────────────
   app.get("/api/public/jobs/:id", async (req, res) => {
     try {
-      const [job] = await db.select({
+      const [row] = await db.select({
         id: jobListings.id,
         title: jobListings.title,
         employmentType: jobListings.employmentType,
@@ -477,9 +477,12 @@ export function registerSaiyouRoutes(app: Express) {
         description: jobListings.description,
         requirements: jobListings.requirements,
         status: jobListings.status,
+        userId: jobListings.userId,
       }).from(jobListings).where(and(eq(jobListings.id, req.params.id), eq(jobListings.status, "active")));
-      if (!job) return res.status(404).json({ message: "求人が見つかりません" });
-      res.json(job);
+      if (!row) return res.status(404).json({ message: "求人が見つかりません" });
+      const [company] = await db.select({ companyName: users.companyName }).from(users).where(eq(users.id, row.userId));
+      const { userId, ...job } = row;
+      res.json({ ...job, companyName: company?.companyName || null });
     } catch {
       res.status(500).json({ message: "取得に失敗しました" });
     }
