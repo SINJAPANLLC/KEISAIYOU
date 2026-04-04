@@ -313,7 +313,7 @@ export default function Jobs() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "求人を編集" : "求人を新規作成"}</DialogTitle>
           </DialogHeader>
