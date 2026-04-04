@@ -245,18 +245,9 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
-  const dashboardPaths = [
-    "/home", "/cargo", "/cargo/new", "/trucks", "/trucks/new", "/my-trucks",
-    "/my-cargo", "/completed-cargo", "/companies", "/partners",
-    "/transport-ledger", "/payment", "/services", "/settings",
-    "/admin", "/admin/applications", "/admin/users", "/admin/revenue",
-    "/admin/notifications", "/admin/seo", "/admin/settings",
-  ];
-  const isOnDashboard = isAuthenticated && dashboardPaths.some((p) => location === p || location.startsWith(p + "/"));
-
   const navItems: { href: string; label: string }[] = [];
 
-  if (isOnDashboard) {
+  if (isAuthenticated) {
     return (
       <header className="shrink-0 z-50 bg-background border-b border-border">
         <div className="px-4 sm:px-6">
