@@ -151,7 +151,9 @@ export default function AdminApplications() {
             <SelectContent>
               <SelectItem value="all">全対応状況</SelectItem>
               <SelectItem value="new">新着</SelectItem>
-              <SelectItem value="reviewed">確認済み</SelectItem>
+              <SelectItem value="contacted">連絡済</SelectItem>
+              <SelectItem value="interviewing">面接中</SelectItem>
+              <SelectItem value="hired">採用</SelectItem>
               <SelectItem value="rejected">不採用</SelectItem>
             </SelectContent>
           </Select>
@@ -202,9 +204,17 @@ export default function AdminApplications() {
                           )}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <Badge variant="outline" className={`text-[10px] ${a.reviewStatus === "new" ? "border-blue-400 text-blue-700 bg-blue-50" : a.reviewStatus === "reviewed" ? "border-emerald-400 text-emerald-700 bg-emerald-50" : "border-muted-foreground/30 text-muted-foreground"}`}>
-                            {a.reviewStatus === "new" ? "新着" : a.reviewStatus === "reviewed" ? "確認済" : a.reviewStatus === "rejected" ? "不採用" : "新着"}
-                          </Badge>
+                          {(() => {
+                            const STATUS: Record<string, { label: string; cls: string }> = {
+                              new: { label: "新着", cls: "border-blue-400 text-blue-700 bg-blue-50" },
+                              contacted: { label: "連絡済", cls: "border-sky-400 text-sky-700 bg-sky-50" },
+                              interviewing: { label: "面接中", cls: "border-violet-400 text-violet-700 bg-violet-50" },
+                              hired: { label: "採用", cls: "border-emerald-400 text-emerald-700 bg-emerald-50" },
+                              rejected: { label: "不採用", cls: "border-muted-foreground/30 text-muted-foreground" },
+                            };
+                            const s = STATUS[a.reviewStatus] || STATUS.new;
+                            return <Badge variant="outline" className={`text-[10px] ${s.cls}`}>{s.label}</Badge>;
+                          })()}
                         </td>
                         <td className="py-3 px-4">
                           {a.paymentStatus === "failed" && (
@@ -235,7 +245,8 @@ export default function AdminApplications() {
             <DialogHeader>
               <DialogTitle>応募詳細</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-2 max-h-[70vh] overflow-y-auto pr-1">
+              {/* 応募者情報 */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">応募者名</p>
@@ -245,6 +256,20 @@ export default function AdminApplications() {
                   <p className="text-xs text-muted-foreground mb-0.5">応募日</p>
                   <p className="text-sm">{formatDate(selectedApp.createdAt)}</p>
                 </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {selectedApp.gender && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">性別</p>
+                    <p className="text-sm">{selectedApp.gender}</p>
+                  </div>
+                )}
+                {selectedApp.birthDate && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">生年月日</p>
+                    <p className="text-sm">{selectedApp.birthDate}</p>
+                  </div>
+                )}
               </div>
               {selectedApp.email && (
                 <div className="flex items-center gap-2 text-sm">
@@ -264,6 +289,20 @@ export default function AdminApplications() {
                   {selectedApp.address}
                 </div>
               )}
+              {selectedApp.workHistory && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">職歴</p>
+                  <p className="text-sm bg-muted/30 rounded p-2 whitespace-pre-wrap">{selectedApp.workHistory}</p>
+                </div>
+              )}
+              {selectedApp.resumeUrl && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">履歴書</p>
+                  <a href={selectedApp.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline flex items-center gap-1">
+                    <Briefcase className="w-3.5 h-3.5" />ファイルを開く
+                  </a>
+                </div>
+              )}
               <hr className="border-border" />
               <div>
                 <p className="text-xs text-muted-foreground mb-0.5">求人名</p>
@@ -277,6 +316,12 @@ export default function AdminApplications() {
                 <div>
                   <p className="text-xs text-muted-foreground mb-0.5">メッセージ</p>
                   <p className="text-sm bg-muted/30 rounded p-2 whitespace-pre-wrap">{selectedApp.message}</p>
+                </div>
+              )}
+              {selectedApp.memo && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">企業メモ</p>
+                  <p className="text-sm bg-amber-50 border border-amber-200 rounded p-2 whitespace-pre-wrap">{selectedApp.memo}</p>
                 </div>
               )}
               <hr className="border-border" />
