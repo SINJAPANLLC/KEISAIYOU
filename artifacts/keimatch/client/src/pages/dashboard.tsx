@@ -1,4 +1,6 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, Briefcase, CheckCircle2, Circle, ArrowRight, Settings, FileText } from "lucide-react";
@@ -16,6 +18,21 @@ interface OnboardingStep {
 
 export default function Dashboard() {
   const { user } = useAuth();
+
+  const { data: jobs = [] } = useQuery<any[]>({
+    queryKey: ["/api/jobs"],
+    queryFn: () => apiRequest("GET", "/api/jobs").then((r) => r.json()),
+  });
+
+  const { data: applications = [] } = useQuery<any[]>({
+    queryKey: ["/api/my/applications"],
+    queryFn: () => apiRequest("GET", "/api/my/applications").then((r) => r.json()),
+  });
+
+  const activeJobs = jobs.filter((j) => j.status === "active").length;
+  const totalApps = applications.length;
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const weeklyApps = applications.filter((a) => new Date(a.createdAt).getTime() > oneWeekAgo).length;
 
   const onboardingSteps: OnboardingStep[] = [
     {
@@ -57,21 +74,21 @@ export default function Dashboard() {
           <Card className="border border-border">
             <CardContent className="p-5">
               <p className="text-xs text-muted-foreground mb-1">掲載中の求人</p>
-              <p className="text-3xl font-black text-foreground">0</p>
+              <p className="text-3xl font-black text-foreground" data-testid="stat-active-jobs">{activeJobs}</p>
               <p className="text-xs text-muted-foreground mt-1">件</p>
             </CardContent>
           </Card>
           <Card className="border border-border">
             <CardContent className="p-5">
               <p className="text-xs text-muted-foreground mb-1">受け取った応募</p>
-              <p className="text-3xl font-black text-foreground">0</p>
+              <p className="text-3xl font-black text-foreground" data-testid="stat-total-apps">{totalApps}</p>
               <p className="text-xs text-muted-foreground mt-1">件</p>
             </CardContent>
           </Card>
           <Card className="border border-border">
             <CardContent className="p-5">
               <p className="text-xs text-muted-foreground mb-1">今週の新着応募</p>
-              <p className="text-3xl font-black text-foreground">0</p>
+              <p className="text-3xl font-black text-foreground" data-testid="stat-weekly-apps">{weeklyApps}</p>
               <p className="text-xs text-muted-foreground mt-1">件</p>
             </CardContent>
           </Card>

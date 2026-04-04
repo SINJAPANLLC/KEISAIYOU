@@ -91,6 +91,9 @@ app.use((req, res, next) => {
 
   await registerRoutes(httpServer, app);
 
+  const { registerSaiyouRoutes } = await import("./saiyou-routes");
+  const runScheduledChecks = registerSaiyouRoutes(app);
+
   if (process.env.NODE_ENV === "production") {
     setTimeout(async () => {
       try {
@@ -100,6 +103,8 @@ app.use((req, res, next) => {
         scheduleAutoPublish();
         const { scheduleLeadCrawler } = await import("./lead-crawler");
         scheduleLeadCrawler();
+        setInterval(runScheduledChecks, 60 * 60 * 1000);
+        runScheduledChecks();
       } catch (e) {
         console.error("Scheduler init error:", e);
       }

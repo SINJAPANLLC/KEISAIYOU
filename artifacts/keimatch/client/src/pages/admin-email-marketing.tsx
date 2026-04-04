@@ -1,715 +1,213 @@
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import DashboardLayout from "@/components/dashboard-layout";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Mail, Plus, Send, Trash2, Edit, Loader2, CheckCircle2, XCircle, Clock,
-  AlertTriangle, Eye, Search, Globe, Users, Settings, Bot, ExternalLink,
-} from "lucide-react";
-import DashboardLayout from "@/components/dashboard-layout";
+import { Upload, Users, Send, Trash2, Search, Plus, Clock, AlertCircle } from "lucide-react";
 
-type EmailCampaign = {
-  id: string;
-  name: string;
-  subject: string;
-  body: string;
-  recipients: string;
-  totalCount: number;
-  sentCount: number;
-  failedCount: number;
-  status: string;
-  sentAt: string | null;
-  createdAt: string;
-};
-
-type EmailLead = {
+type Lead = {
   id: string;
   companyName: string;
-  email: string | null;
-  fax: string | null;
-  phone: string | null;
-  website: string | null;
-  address: string | null;
-  industry: string | null;
-  source: string | null;
+  email?: string;
+  phone?: string;
   status: string;
-  sentAt: string | null;
-  sentSubject: string | null;
+  sentAt?: string;
   createdAt: string;
 };
 
-type LeadsResponse = {
-  leads: EmailLead[];
-  total: number;
-  todaySent: number;
-  newCount: number;
-  sentCount: number;
-  failedCount: number;
-};
-
-function campaignStatusBadge(status: string) {
-  switch (status) {
-    case "completed":
-      return <Badge className="bg-green-600 text-xs"><CheckCircle2 className="w-3 h-3 mr-1" />送信完了</Badge>;
-    case "failed":
-      return <Badge variant="destructive" className="text-xs"><XCircle className="w-3 h-3 mr-1" />失敗</Badge>;
-    case "sending":
-      return <Badge variant="default" className="text-xs"><Loader2 className="w-3 h-3 mr-1 animate-spin" />送信中</Badge>;
-    case "draft":
-      return <Badge variant="secondary" className="text-xs"><Clock className="w-3 h-3 mr-1" />下書き</Badge>;
-    default:
-      return <Badge variant="outline" className="text-xs">{status}</Badge>;
-  }
-}
-
-function leadStatusBadge(status: string) {
-  switch (status) {
-    case "new":
-      return <Badge variant="secondary" className="text-xs">未送信</Badge>;
-    case "sent":
-      return <Badge className="bg-green-600 text-xs">送信済</Badge>;
-    case "failed":
-      return <Badge variant="destructive" className="text-xs">失敗</Badge>;
-    default:
-      return <Badge variant="outline" className="text-xs">{status}</Badge>;
-  }
-}
-
-function formatDate(dateVal: string | Date | null) {
-  if (!dateVal) return "-";
-  const d = new Date(dateVal);
-  return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getDate().toString().padStart(2, "0")} ${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
-}
+const TEMPLATES = [
+  {
+    name: "初回営業",
+    subject: "【軽貨物ドライバー採用】KEI SAIYOUのご案内",
+    body: `{{companyName}} ご担当者様\n\nはじめまして。軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」の和哉と申します。\n\n軽貨物ドライバーの採用にお困りではございませんか？\n\nKEI SAIYOUは、応募通知ごとに¥3,000のシンプルな料金体系で、効率的にドライバーを採用できるサービスです。\n\n▶ 初期費用・月額費用は一切なし\n▶ 応募が来たときだけ課金される完全成功報酬型\n▶ 最短で求人掲載スタート\n\nご興味がございましたら、無料登録をお試しください。\nhttps://kei-saiyou.jp/register\n\n─\nKEI SAIYOU（合同会社SIN JAPAN）`,
+  },
+  {
+    name: "フォローアップ",
+    subject: "【再送】KEI SAIYOUの軽貨物採用サービス",
+    body: `{{companyName}} ご担当者様\n\n先日ご案内いたしましたKEI SAIYOUについて、改めてご連絡させていただきます。\n\n初月で複数名の採用に成功された企業様もいらっしゃいます。\n\n無料でお試しいただけますので、ぜひご検討ください。\nhttps://kei-saiyou.jp/register\n\n─\nKEI SAIYOU（合同会社SIN JAPAN）`,
+  },
+];
 
 export default function AdminEmailMarketing() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("leads");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
-  const [showConfirmSendDialog, setShowConfirmSendDialog] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<EmailCampaign | null>(null);
-  const [editingCampaign, setEditingCampaign] = useState<EmailCampaign | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [emailForm, setEmailForm] = useState({ subject: "", body: "" });
+  const [singleForm, setSingleForm] = useState({ companyName: "", email: "", phone: "" });
+  const [sending, setSending] = useState(false);
 
-  const [formName, setFormName] = useState("");
-  const [formSubject, setFormSubject] = useState("");
-  const [formBody, setFormBody] = useState("");
-  const [formRecipients, setFormRecipients] = useState("");
-
-  const [crawlUrl, setCrawlUrl] = useState("");
-  const [leadFilter, setLeadFilter] = useState("");
-  const [leadEmailSubject, setLeadEmailSubject] = useState("");
-  const [leadEmailBody, setLeadEmailBody] = useState("");
-  const [templateMode, setTemplateMode] = useState<"edit" | "preview">("edit");
-
-  const { data: campaigns, isLoading: campaignsLoading } = useQuery<EmailCampaign[]>({
-    queryKey: ["/api/admin/email-campaigns"],
-    refetchInterval: 5000,
+  const { data: leads = [], isLoading } = useQuery<Lead[]>({
+    queryKey: ["/api/admin/sales/leads"],
+    queryFn: () => apiRequest("GET", "/api/admin/sales/leads").then((r) => r.json()),
   });
 
-  const { data: leadsData, isLoading: leadsLoading } = useQuery<LeadsResponse>({
-    queryKey: ["/api/admin/email-leads", leadFilter],
-    queryFn: async () => {
-      const params = new URLSearchParams({ limit: "200" });
-      if (leadFilter) params.set("status", leadFilter);
-      const res = await fetch(`/api/admin/email-leads?${params}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Failed");
-      return res.json();
-    },
-    refetchInterval: 10000,
+  const importMutation = useMutation({
+    mutationFn: (rows: any[]) => apiRequest("POST", "/api/admin/sales/leads", rows).then((r) => r.json()),
+    onSuccess: (data) => { queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] }); toast({ title: `${data.inserted}件インポートしました` }); },
+    onError: () => toast({ variant: "destructive", title: "インポートに失敗しました" }),
   });
 
-  const { data: leadSettings } = useQuery<{ subject: string; body: string }>({
-    queryKey: ["/api/admin/email-leads/settings"],
-    queryFn: async () => {
-      const res = await fetch("/api/admin/email-leads/settings", { credentials: "include" });
-      if (!res.ok) return { subject: "", body: "" };
-      return res.json();
-    },
+  const addOneMutation = useMutation({
+    mutationFn: (row: typeof singleForm) => apiRequest("POST", "/api/admin/sales/leads", [row]).then((r) => r.json()),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] }); setSingleForm({ companyName: "", email: "", phone: "" }); toast({ title: "追加しました" }); },
   });
 
-  useEffect(() => {
-    if (leadSettings) {
-      if (leadSettings.subject) setLeadEmailSubject(leadSettings.subject);
-      if (leadSettings.body) setLeadEmailBody(leadSettings.body);
-    }
-  }, [leadSettings]);
-
-  const createMutation = useMutation({
-    mutationFn: async (data: { name: string; subject: string; body: string; recipients: string }) => {
-      const res = await apiRequest("POST", "/api/admin/email-campaigns", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-campaigns"] });
-      toast({ title: "キャンペーンを作成しました" });
-      setShowCreateDialog(false);
-      resetForm();
-    },
-    onError: () => toast({ title: "作成に失敗しました", variant: "destructive" }),
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/admin/sales/leads/${id}`).then((r) => r.json()),
+    onSuccess: (_, id) => { queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] }); setSelectedIds((p) => p.filter((x) => x !== id)); },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<EmailCampaign> }) => {
-      const res = await apiRequest("PATCH", `/api/admin/email-campaigns/${id}`, data);
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-campaigns"] });
-      toast({ title: "キャンペーンを更新しました" });
-      setEditingCampaign(null);
-      setShowCreateDialog(false);
-      resetForm();
-    },
-    onError: () => toast({ title: "更新に失敗しました", variant: "destructive" }),
-  });
+  const handleCSV = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.trim().split("\n");
+    if (lines.length < 2) return toast({ variant: "destructive", title: "CSVデータが空です" });
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+    const rows = lines.slice(1).map((line) => {
+      const vals = line.split(",").map((v) => v.trim().replace(/^"|"$/g, ""));
+      const obj: any = {};
+      headers.forEach((h, i) => { obj[h] = vals[i] || ""; });
+      return {
+        companyName: obj.companyName || obj.company_name || obj["会社名"] || "不明",
+        email: obj.email || obj["メール"] || obj["メールアドレス"] || "",
+        phone: obj.phone || obj["電話"] || obj["電話番号"] || "",
+        industry: "軽貨物", source: "csv",
+      };
+    }).filter((r) => r.companyName !== "不明");
+    if (!rows.length) return toast({ variant: "destructive", title: "有効データがありません" });
+    importMutation.mutate(rows);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
-  const deleteCampaignMutation = useMutation({
-    mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/admin/email-campaigns/${id}`); },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-campaigns"] });
-      toast({ title: "キャンペーンを削除しました" });
-    },
-  });
+  const handleSend = async () => {
+    if (!selectedIds.length) return toast({ variant: "destructive", title: "送信先を選択してください" });
+    if (!emailForm.subject || !emailForm.body) return toast({ variant: "destructive", title: "件名・本文を入力してください" });
+    setSending(true);
+    try {
+      const res = await apiRequest("POST", "/api/admin/sales/send", { leadIds: selectedIds, subject: emailForm.subject, body: emailForm.body });
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] });
+      setSelectedIds([]);
+      toast({ title: `${data.sentCount}件送信完了（失敗: ${data.failedCount}件）` });
+    } catch { toast({ variant: "destructive", title: "送信に失敗しました" }); }
+    finally { setSending(false); }
+  };
 
-  const sendCampaignMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await apiRequest("POST", `/api/admin/email-campaigns/${id}/send`);
-      return res.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-campaigns"] });
-      toast({ title: data.message || "送信を開始しました" });
-      setShowConfirmSendDialog(false);
-      setSelectedCampaign(null);
-    },
-    onError: () => toast({ title: "送信の開始に失敗しました", variant: "destructive" }),
-  });
-
-  const crawlMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/email-leads/crawl");
-      return res.json();
-    },
-    onSuccess: (data) => {
-      toast({ title: data.message });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
-    },
-    onError: () => toast({ title: "クロールの開始に失敗しました", variant: "destructive" }),
-  });
-
-  const crawlUrlMutation = useMutation({
-    mutationFn: async (url: string) => {
-      const res = await apiRequest("POST", "/api/admin/email-leads/crawl-url", { url });
-      return res.json();
-    },
-    onSuccess: (data) => {
-      toast({ title: data.message });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
-      setCrawlUrl("");
-    },
-    onError: () => toast({ title: "URLクロールに失敗しました", variant: "destructive" }),
-  });
-
-  const sendLeadsMutation = useMutation({
-    mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/admin/email-leads/send-now");
-      return res.json();
-    },
-    onSuccess: (data) => {
-      toast({ title: data.message });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
-    },
-    onError: () => toast({ title: "送信の開始に失敗しました", variant: "destructive" }),
-  });
-
-  const deleteLeadMutation = useMutation({
-    mutationFn: async (id: string) => { await apiRequest("DELETE", `/api/admin/email-leads/${id}`); },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/email-leads"] });
-    },
-  });
-
-  const saveSettingsMutation = useMutation({
-    mutationFn: async (data: { subject: string; body: string }) => {
-      const res = await apiRequest("PATCH", "/api/admin/email-leads/settings", data);
-      return res.json();
-    },
-    onSuccess: () => toast({ title: "テンプレートを保存しました" }),
-    onError: () => toast({ title: "保存に失敗しました", variant: "destructive" }),
-  });
-
-  function resetForm() {
-    setFormName("");
-    setFormSubject("");
-    setFormBody("");
-    setFormRecipients("");
-    setEditingCampaign(null);
-  }
-
-  function openCreate() { resetForm(); setShowCreateDialog(true); }
-
-  function openEdit(campaign: EmailCampaign) {
-    setEditingCampaign(campaign);
-    setFormName(campaign.name);
-    setFormSubject(campaign.subject);
-    setFormBody(campaign.body);
-    setFormRecipients(campaign.recipients);
-    setShowCreateDialog(true);
-  }
-
-  function handleSubmit() {
-    if (!formName || !formSubject || !formBody || !formRecipients) {
-      toast({ title: "すべての項目を入力してください", variant: "destructive" });
-      return;
-    }
-    if (editingCampaign) {
-      updateMutation.mutate({ id: editingCampaign.id, data: { name: formName, subject: formSubject, body: formBody, recipients: formRecipients } });
-    } else {
-      createMutation.mutate({ name: formName, subject: formSubject, body: formBody, recipients: formRecipients });
-    }
-  }
-
-  const recipientCount = formRecipients.split("\n").filter(e => e.trim() && e.includes("@")).length;
+  const filtered = leads.filter((l) => !search || l.companyName.toLowerCase().includes(search.toLowerCase()) || l.email?.toLowerCase().includes(search.toLowerCase()));
+  const toggleSelect = (id: string) => setSelectedIds((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
+  const toggleAll = () => { const ids = filtered.filter((l) => l.email).map((l) => l.id); setSelectedIds(selectedIds.length === ids.length ? [] : ids); };
 
   return (
     <DashboardLayout>
-      <div className="h-full overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-foreground flex items-center gap-2" data-testid="text-page-title">
-                <Mail className="w-5 h-5 text-primary" />
-                メール営業
-              </h1>
-              <p className="text-sm text-muted-foreground mt-1">AIリード自動収集 & 一括メール送信</p>
-            </div>
+      <div className="px-4 sm:px-6 py-6 max-w-5xl mx-auto">
+        <div className="rounded-xl p-6 mb-6 hero-gradient relative overflow-hidden">
+          <div className="hero-grid absolute inset-0 opacity-30" />
+          <div className="relative z-10">
+            <p className="text-white/80 text-xs mb-0.5">SALES</p>
+            <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">営業メール管理</h1>
+            <p className="text-white/70 text-sm mt-1">リード管理・一括メール送信</p>
           </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <Card>
-              <CardContent className="p-3 text-center">
-                <p className="text-2xl font-bold text-foreground" data-testid="text-stat-total">{leadsData?.total || 0}</p>
-                <p className="text-xs text-muted-foreground">総リード数</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3 text-center">
-                <p className="text-2xl font-bold text-blue-600" data-testid="text-stat-new">{leadsData?.newCount || 0}</p>
-                <p className="text-xs text-muted-foreground">未送信</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3 text-center">
-                <p className="text-2xl font-bold text-green-600" data-testid="text-stat-sent">{leadsData?.sentCount || 0}</p>
-                <p className="text-xs text-muted-foreground">送信済</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3 text-center">
-                <p className="text-2xl font-bold text-orange-600" data-testid="text-stat-today">{leadsData?.todaySent || 0}/300</p>
-                <p className="text-xs text-muted-foreground">本日送信</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="leads" data-testid="tab-leads">
-                <Users className="w-3.5 h-3.5 mr-1" />
-                リード一覧
-              </TabsTrigger>
-              <TabsTrigger value="crawl" data-testid="tab-crawl">
-                <Bot className="w-3.5 h-3.5 mr-1" />
-                自動収集
-              </TabsTrigger>
-              <TabsTrigger value="template" data-testid="tab-template">
-                <Settings className="w-3.5 h-3.5 mr-1" />
-                テンプレート
-              </TabsTrigger>
-              <TabsTrigger value="campaigns" data-testid="tab-campaigns">
-                <Send className="w-3.5 h-3.5 mr-1" />
-                キャンペーン
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="leads" className="mt-4 space-y-4">
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="flex gap-1.5">
-                  {[
-                    { key: "", label: "すべて" },
-                    { key: "new", label: "未送信" },
-                    { key: "sent", label: "送信済" },
-                    { key: "failed", label: "失敗" },
-                  ].map(f => (
-                    <Badge
-                      key={f.key}
-                      variant={leadFilter === f.key ? "default" : "secondary"}
-                      className="cursor-pointer px-3 py-1"
-                      onClick={() => setLeadFilter(f.key)}
-                      data-testid={`badge-filter-${f.key || "all"}`}
-                    >
-                      {f.label}
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex-1" />
-                <Button
-                  size="sm"
-                  onClick={() => sendLeadsMutation.mutate()}
-                  disabled={sendLeadsMutation.isPending || (leadsData?.newCount || 0) === 0}
-                  data-testid="button-send-leads"
-                >
-                  {sendLeadsMutation.isPending ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
-                  新規リードに一括送信
-                </Button>
-              </div>
-
-              {leadsLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-              ) : leadsData && leadsData.leads.length > 0 ? (
-                <div className="space-y-2">
-                  {leadsData.leads.map(lead => (
-                    <Card key={lead.id} data-testid={`card-lead-${lead.id}`}>
-                      <CardContent className="p-3">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="font-medium text-sm text-foreground truncate">{lead.companyName}</span>
-                              {leadStatusBadge(lead.status)}
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                              {lead.email && <span className="font-mono">{lead.email}</span>}
-                              {lead.fax && <span>FAX: {lead.fax}</span>}
-                              {lead.phone && <span>TEL: {lead.phone}</span>}
-                              {lead.industry && <span>{lead.industry}</span>}
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1 flex-wrap">
-                              {lead.website && (
-                                <a href={lead.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-0.5">
-                                  <ExternalLink className="w-3 h-3" />サイト
-                                </a>
-                              )}
-                              <span>取得: {formatDate(lead.createdAt)}</span>
-                              {lead.sentAt && <span>送信: {formatDate(lead.sentAt)}</span>}
-                            </div>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive shrink-0"
-                            onClick={() => deleteLeadMutation.mutate(lead.id)}
-                            data-testid={`button-delete-lead-${lead.id}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <Users className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-                    <p className="text-muted-foreground" data-testid="text-empty-leads">リードがありません</p>
-                    <p className="text-sm text-muted-foreground mt-1">「自動収集」タブからAIクロールを開始してください</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-
-            <TabsContent value="crawl" className="mt-4 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Bot className="w-4 h-4 text-primary" />
-                    AIリード自動収集
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="bg-muted/50 rounded-lg p-4 text-sm space-y-2">
-                    <p className="font-medium text-foreground">自動スケジュール</p>
-                    <p className="text-muted-foreground">毎日 07:00 JST にAIが自動でクロールを実行し、軽貨物運送企業のメールアドレスを収集します。</p>
-                    <p className="text-muted-foreground">毎日 10:00 JST に未送信リードへ営業メールを自動送信します（上限300件/日）。</p>
-                  </div>
-                  <Button
-                    onClick={() => crawlMutation.mutate()}
-                    disabled={crawlMutation.isPending}
-                    data-testid="button-start-crawl"
-                  >
-                    {crawlMutation.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Search className="w-4 h-4 mr-1.5" />}
-                    今すぐAIクロール実行
-                  </Button>
-                  <p className="text-xs text-muted-foreground">AIが検索クエリを生成し、軽貨物会社のウェブサイトからメール・FAX番号を自動抽出します。完了まで数分かかります。</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Globe className="w-4 h-4" />
-                    URL指定クロール
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex gap-2">
-                    <Input
-                      value={crawlUrl}
-                      onChange={(e) => setCrawlUrl(e.target.value)}
-                      placeholder="https://example.co.jp/company"
-                      className="flex-1"
-                      data-testid="input-crawl-url"
-                    />
-                    <Button
-                      onClick={() => { if (crawlUrl) crawlUrlMutation.mutate(crawlUrl); }}
-                      disabled={crawlUrlMutation.isPending || !crawlUrl}
-                      data-testid="button-crawl-url"
-                    >
-                      {crawlUrlMutation.isPending ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Search className="w-4 h-4 mr-1" />}
-                      抽出
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">企業のウェブサイトURLを入力すると、ページからメールアドレス・FAX番号を抽出します。</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="template" className="mt-4 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    自動送信メールテンプレート
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground">AIクロールで収集したリードへの自動送信メールの内容を設定します。{"{company}"}で会社名に置換されます。</p>
-                  <div>
-                    <Label>件名</Label>
-                    <Input
-                      value={leadEmailSubject}
-                      onChange={(e) => setLeadEmailSubject(e.target.value)}
-                      placeholder="軽貨物の案件獲得・空き車両活用でお困りではありませんか？｜軽貨物マッチ"
-                      data-testid="input-lead-subject"
-                    />
-                  </div>
-                  <div>
-                    <Label>本文</Label>
-                    <Textarea
-                      value={leadEmailBody}
-                      onChange={(e) => setLeadEmailBody(e.target.value)}
-                      placeholder="営業メールの本文を入力..."
-                      rows={15}
-                      data-testid="input-lead-body"
-                    />
-                  </div>
-                  <Button
-                    onClick={() => saveSettingsMutation.mutate({ subject: leadEmailSubject, body: leadEmailBody })}
-                    disabled={saveSettingsMutation.isPending}
-                    data-testid="button-save-template"
-                  >
-                    {saveSettingsMutation.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : null}
-                    テンプレートを保存
-                  </Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="campaigns" className="mt-4 space-y-4">
-              <div className="flex justify-end">
-                <Button onClick={openCreate} data-testid="button-create-campaign">
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  新規キャンペーン
-                </Button>
-              </div>
-
-              {campaignsLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
-              ) : campaigns && campaigns.length > 0 ? (
-                <div className="space-y-3">
-                  {campaigns.map((campaign) => {
-                    const recipientLines = campaign.recipients.split("\n").filter(e => e.trim() && e.includes("@"));
-                    return (
-                      <Card key={campaign.id} data-testid={`card-campaign-${campaign.id}`}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <h3 className="font-bold text-foreground truncate">{campaign.name}</h3>
-                                {campaignStatusBadge(campaign.status)}
-                              </div>
-                              <p className="text-sm text-muted-foreground truncate mb-2">件名: {campaign.subject}</p>
-                              <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                                <span>宛先: {recipientLines.length}件</span>
-                                {campaign.status !== "draft" && (
-                                  <>
-                                    <span className="text-green-600">成功: {campaign.sentCount}</span>
-                                    {campaign.failedCount > 0 && <span className="text-red-600">失敗: {campaign.failedCount}</span>}
-                                  </>
-                                )}
-                                <span>作成: {formatDate(campaign.createdAt)}</span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setSelectedCampaign(campaign); setShowPreviewDialog(true); }}>
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              {campaign.status === "draft" && (
-                                <>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(campaign)}>
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="default" size="sm" onClick={() => { setSelectedCampaign(campaign); setShowConfirmSendDialog(true); }}>
-                                    <Send className="w-3.5 h-3.5 mr-1" />送信
-                                  </Button>
-                                </>
-                              )}
-                              {campaign.status === "sending" && (
-                                <Button variant="outline" size="sm" disabled>
-                                  <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                                  {campaign.sentCount}/{campaign.totalCount}
-                                </Button>
-                              )}
-                              <Button
-                                variant="ghost" size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive"
-                                onClick={() => deleteCampaignMutation.mutate(campaign.id)}
-                                disabled={campaign.status === "sending"}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              ) : (
-                <Card>
-                  <CardContent className="p-12 text-center">
-                    <Mail className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
-                    <p className="text-muted-foreground">キャンペーンがありません</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
         </div>
-      </div>
 
-      <Dialog open={showCreateDialog} onOpenChange={(open) => { if (!open) { setShowCreateDialog(false); resetForm(); } }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingCampaign ? "キャンペーン編集" : "新規キャンペーン作成"}</DialogTitle>
-            <DialogDescription>手動でメール送信先を指定してキャンペーンを作成します</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>キャンペーン名</Label>
-              <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="例: 2026年3月 新規顧客開拓" data-testid="input-campaign-name" />
-            </div>
-            <div>
-              <Label>メール件名</Label>
-              <Input value={formSubject} onChange={(e) => setFormSubject(e.target.value)} placeholder="例: 軽貨物の案件獲得でお困りではありませんか？｜軽貨物マッチ" data-testid="input-campaign-subject" />
-            </div>
-            <div>
-              <Label>メール本文</Label>
-              <Textarea value={formBody} onChange={(e) => setFormBody(e.target.value)} placeholder="メール本文を入力..." rows={12} data-testid="input-campaign-body" />
-              <p className="text-xs text-muted-foreground mt-1">URLは自動的にリンクに変換されます。HTMLタグも使用可能です。</p>
-            </div>
-            <div>
-              <Label>送信先メールアドレス（1行に1アドレス）</Label>
-              <Textarea value={formRecipients} onChange={(e) => setFormRecipients(e.target.value)} placeholder={"example1@company.co.jp\nexample2@company.co.jp"} rows={6} data-testid="input-campaign-recipients" />
-              <p className="text-xs text-muted-foreground mt-1">
-                有効なメールアドレス: <span className="font-medium text-foreground">{recipientCount}件</span>
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowCreateDialog(false); resetForm(); }}>キャンセル</Button>
-            <Button onClick={handleSubmit} disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-submit-campaign">
-              {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-              {editingCampaign ? "更新" : "作成"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <Tabs defaultValue="leads">
+          <TabsList className="mb-4">
+            <TabsTrigger value="leads">リスト管理 ({leads.length})</TabsTrigger>
+            <TabsTrigger value="send">メール送信</TabsTrigger>
+          </TabsList>
 
-      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>メールプレビュー</DialogTitle>
-            <DialogDescription>{selectedCampaign?.name}</DialogDescription>
-          </DialogHeader>
-          {selectedCampaign && (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-xs text-muted-foreground">件名</Label>
-                <p className="font-medium text-foreground">{selectedCampaign.subject}</p>
+          <TabsContent value="leads" className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="会社名・メールで検索..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+              </div>
+              <input ref={fileInputRef} type="file" accept=".csv" onChange={handleCSV} className="hidden" />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importMutation.isPending}>
+                <Upload className="w-4 h-4 mr-1" />CSVインポート
+              </Button>
+            </div>
+            <Card><CardContent className="p-4">
+              <p className="text-xs font-semibold text-muted-foreground mb-3">1件追加</p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Input value={singleForm.companyName} onChange={(e) => setSingleForm((p) => ({ ...p, companyName: e.target.value }))} placeholder="会社名 *" className="flex-1" />
+                <Input value={singleForm.email} onChange={(e) => setSingleForm((p) => ({ ...p, email: e.target.value }))} placeholder="メールアドレス" type="email" className="flex-1" />
+                <Input value={singleForm.phone} onChange={(e) => setSingleForm((p) => ({ ...p, phone: e.target.value }))} placeholder="電話番号" className="flex-1" />
+                <Button size="sm" onClick={() => addOneMutation.mutate(singleForm)} disabled={!singleForm.companyName || addOneMutation.isPending}><Plus className="w-4 h-4 mr-1" />追加</Button>
+              </div>
+            </CardContent></Card>
+            <div className="flex items-center gap-2">
+              <Checkbox checked={selectedIds.length > 0 && selectedIds.length === filtered.filter((l) => l.email).length} onCheckedChange={toggleAll} id="all" />
+              <label htmlFor="all" className="text-xs text-muted-foreground cursor-pointer">全選択</label>
+              <span className="ml-auto text-xs text-muted-foreground">{filtered.length}件</span>
+            </div>
+            {isLoading ? (
+              <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Card key={i}><CardContent className="p-3"><Skeleton className="h-8 w-full" /></CardContent></Card>)}</div>
+            ) : filtered.length === 0 ? (
+              <Card><CardContent className="p-12 text-center"><Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" /><p className="text-sm text-muted-foreground">リードがありません</p></CardContent></Card>
+            ) : (
+              <div className="space-y-1" data-testid="list-leads">
+                {filtered.map((lead) => (
+                  <Card key={lead.id} className={`border transition-colors ${selectedIds.includes(lead.id) ? "border-primary bg-primary/5" : "border-border"}`}>
+                    <CardContent className="p-3 flex items-center gap-3">
+                      <Checkbox checked={selectedIds.includes(lead.id)} onCheckedChange={() => toggleSelect(lead.id)} disabled={!lead.email} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold truncate">{lead.companyName}</p>
+                          <Badge variant="outline" className={`text-[10px] shrink-0 ${lead.status === "sent" ? "border-emerald-400 text-emerald-700 bg-emerald-50" : "border-muted-foreground/30 text-muted-foreground"}`}>{lead.status === "sent" ? "送信済" : "未送信"}</Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground flex flex-wrap gap-2 mt-0.5">
+                          {lead.email ? <span>{lead.email}</span> : <span className="text-red-500">メールなし</span>}
+                          {lead.phone && <span>{lead.phone}</span>}
+                          {lead.sentAt && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(lead.sentAt).toLocaleDateString("ja-JP")}</span>}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteMutation.mutate(lead.id)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="send">
+            <Card><CardContent className="p-5 space-y-4">
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>「リスト管理」タブで送信先を選択してください（選択中: {selectedIds.length}件）</span>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">本文</Label>
-                <div className="border rounded-lg p-4 bg-muted/30 whitespace-pre-wrap text-sm">{selectedCampaign.body}</div>
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground">送信先 ({selectedCampaign.recipients.split("\n").filter(e => e.trim() && e.includes("@")).length}件)</Label>
-                <div className="border rounded-lg p-3 bg-muted/30 text-xs max-h-32 overflow-y-auto font-mono">
-                  {selectedCampaign.recipients.split("\n").filter(e => e.trim()).map((e, i) => (
-                    <div key={i} className={e.includes("@") ? "text-foreground" : "text-red-500"}>{e.trim()}</div>
-                  ))}
+                <p className="text-xs font-semibold text-muted-foreground mb-2">テンプレートを選択</p>
+                <div className="flex gap-2 flex-wrap">
+                  {TEMPLATES.map((t) => <Button key={t.name} variant="outline" size="sm" className="text-xs h-7" onClick={() => setEmailForm({ subject: t.subject, body: t.body })}>{t.name}</Button>)}
                 </div>
               </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showConfirmSendDialog} onOpenChange={setShowConfirmSendDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-orange-500" />
-              送信確認
-            </DialogTitle>
-            <DialogDescription>この操作は取り消せません。本当に送信しますか？</DialogDescription>
-          </DialogHeader>
-          {selectedCampaign && (
-            <div className="space-y-2 text-sm">
-              <p><span className="text-muted-foreground">キャンペーン:</span> <span className="font-medium">{selectedCampaign.name}</span></p>
-              <p><span className="text-muted-foreground">件名:</span> <span className="font-medium">{selectedCampaign.subject}</span></p>
-              <p><span className="text-muted-foreground">送信先:</span> <span className="font-medium">{selectedCampaign.recipients.split("\n").filter(e => e.trim() && e.includes("@")).length}件</span></p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConfirmSendDialog(false)}>キャンセル</Button>
-            <Button
-              variant="destructive"
-              onClick={() => selectedCampaign && sendCampaignMutation.mutate(selectedCampaign.id)}
-              disabled={sendCampaignMutation.isPending}
-              data-testid="button-confirm-send"
-            >
-              {sendCampaignMutation.isPending ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
-              送信開始
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <div className="space-y-2">
+                <Label>件名 <span className="text-destructive">*</span></Label>
+                <Input value={emailForm.subject} onChange={(e) => setEmailForm((p) => ({ ...p, subject: e.target.value }))} placeholder="件名" data-testid="input-email-subject" />
+              </div>
+              <div className="space-y-2">
+                <Label>本文 <span className="text-destructive">*</span></Label>
+                <p className="text-xs text-muted-foreground">{"{{companyName}}"} は各会社名に自動置換されます</p>
+                <Textarea value={emailForm.body} onChange={(e) => setEmailForm((p) => ({ ...p, body: e.target.value }))} rows={12} placeholder="本文" data-testid="textarea-email-body" />
+              </div>
+              <Button onClick={handleSend} disabled={sending || !selectedIds.length || !emailForm.subject || !emailForm.body} className="w-full" data-testid="button-send-email">
+                {sending ? "送信中..." : <><Send className="w-4 h-4 mr-2" />{selectedIds.length}件に送信する</>}
+              </Button>
+            </CardContent></Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </DashboardLayout>
   );
 }

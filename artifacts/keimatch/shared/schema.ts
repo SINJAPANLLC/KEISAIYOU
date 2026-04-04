@@ -17,7 +17,10 @@ export const users = pgTable("users", {
   permitFile: text("permit_file"),
   userType: text("user_type").notNull(),
   role: text("role").notNull().default("user"),
-  approved: boolean("approved").notNull().default(false),
+  approved: boolean("approved").notNull().default(true),
+  prefecture: text("prefecture"),
+  squareCustomerId: text("square_customer_id"),
+  squareCardId: text("square_card_id"),
   paymentTerms: text("payment_terms"),
   businessDescription: text("business_description"),
   companyNameKana: text("company_name_kana"),
@@ -570,3 +573,45 @@ export const landingPages = pgTable("landing_pages", {
 export const insertLandingPageSchema = createInsertSchema(landingPages).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertLandingPage = z.infer<typeof insertLandingPageSchema>;
 export type LandingPage = typeof landingPages.$inferSelect;
+
+export const jobListings = pgTable("job_listings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  title: text("title").notNull(),
+  employmentType: text("employment_type").notNull(),
+  salary: text("salary").notNull(),
+  area: text("area").notNull(),
+  description: text("description").notNull(),
+  requirements: text("requirements"),
+  status: text("status").notNull().default("pending"),
+  monthlyLimit: integer("monthly_limit").notNull().default(30000),
+  monthlySpent: integer("monthly_spent").notNull().default(0),
+  lastApplicationAt: timestamp("last_application_at"),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertJobListingSchema = createInsertSchema(jobListings).omit({ id: true, status: true, monthlySpent: true, lastApplicationAt: true, publishedAt: true, createdAt: true, updatedAt: true });
+export type InsertJobListing = z.infer<typeof insertJobListingSchema>;
+export type JobListing = typeof jobListings.$inferSelect;
+
+export const applications = pgTable("applications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").notNull(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email").notNull(),
+  licenseType: text("license_type"),
+  hasBlackNumber: boolean("has_black_number").default(false),
+  availableAreas: text("available_areas"),
+  message: text("message"),
+  paymentStatus: text("payment_status").notNull().default("pending"),
+  squarePaymentId: text("square_payment_id"),
+  viewable: boolean("viewable").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertApplicationSchema = createInsertSchema(applications).omit({ id: true, paymentStatus: true, squarePaymentId: true, viewable: true, createdAt: true });
+export type InsertApplication = z.infer<typeof insertApplicationSchema>;
+export type Application = typeof applications.$inferSelect;

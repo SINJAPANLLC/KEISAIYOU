@@ -30,6 +30,7 @@ const pageImports = {
   services: () => import("@/pages/services"),
   userSettings: () => import("@/pages/user-settings"),
   jobs: () => import("@/pages/jobs"),
+  apply: () => import("@/pages/apply"),
   adminDashboard: () => import("@/pages/admin-dashboard"),
   adminApplications: () => import("@/pages/admin-applications"),
   adminUsers: () => import("@/pages/admin-users"),
@@ -87,6 +88,7 @@ const Payment = lazy(pageImports.payment);
 const Services = lazy(pageImports.services);
 const UserSettings = lazy(pageImports.userSettings);
 const Jobs = lazy(pageImports.jobs);
+const Apply = lazy(pageImports.apply);
 const AdminDashboard = lazy(pageImports.adminDashboard);
 const AdminApplications = lazy(pageImports.adminApplications);
 const AdminUsers = lazy(pageImports.adminUsers);
@@ -187,6 +189,7 @@ function Router() {
         <Route path="/payment">{() => <ProtectedRoute component={Payment} />}</Route>
         <Route path="/services">{() => <ProtectedRoute component={Services} />}</Route>
         <Route path="/settings">{() => <ProtectedRoute component={UserSettings} />}</Route>
+        <Route path="/apply/:id" component={Apply} />
         <Route path="/jobs/new">{() => <ProtectedRoute component={Jobs} />}</Route>
         <Route path="/jobs">{() => <ProtectedRoute component={Jobs} />}</Route>
         <Route path="/cargo/new">{() => <ProtectedRoute component={CargoForm} />}</Route>

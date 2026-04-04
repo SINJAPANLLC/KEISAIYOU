@@ -3,52 +3,57 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { UserPlus, Upload, FileText, X } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useState, useEffect, useRef } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserPlus } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+const PREFECTURES = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+  "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+  "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+  "熊本県","大分県","宮崎県","鹿児島県","沖縄県",
+];
 
 export default function Register() {
   const [, setLocation] = useLocation();
-  const { register, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [agreed, setAgreed] = useState(false);
-  const [permitFile, setPermitFile] = useState<{ filePath: string; fileName: string } | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
-    email: "",
-    password: "",
     companyName: "",
-    address: "",
     contactName: "",
+    email: "",
     phone: "",
-    fax: "",
-    truckCount: "",
+    prefecture: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  useEffect(() => {
-    if (isAuthenticated) setLocation("/home");
-  }, [isAuthenticated, setLocation]);
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("permit", file);
-      const res = await fetch("/api/upload/permit", { method: "POST", body: formData });
-      if (!res.ok) throw new Error((await res.json()).message);
-      const data = await res.json();
-      setPermitFile(data);
-      toast({ title: "アップロード完了", description: "許可証がアップロードされました" });
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "アップロード失敗", description: error.message || "ファイルのアップロードに失敗しました" });
-    } finally {
-      setUploading(false);
-    }
-  };
+  const register = useMutation({
+    mutationFn: async (data: typeof form) => {
+      const res = await apiRequest("POST", "/api/saiyou/register", {
+        companyName: data.companyName,
+        contactName: data.contactName,
+        email: data.email,
+        phone: data.phone,
+        prefecture: data.prefecture,
+        password: data.password,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      setLocation("/home");
+    },
+    onError: (err: any) => {
+      toast({ variant: "destructive", title: "登録失敗", description: err.message || "登録に失敗しました" });
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,13 +61,15 @@ export default function Register() {
       toast({ variant: "destructive", title: "確認", description: "利用規約・プライバシーポリシーに同意してください" });
       return;
     }
-    try {
-      await register.mutateAsync({ ...form, permitFile: permitFile?.filePath || "" });
-      toast({ title: "登録完了", description: "管理者の承認後にログインできます。しばらくお待ちください。" });
-      setLocation("/login");
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "登録失敗", description: error.message || "登録に失敗しました" });
+    if (form.password !== form.confirmPassword) {
+      toast({ variant: "destructive", title: "確認", description: "パスワードが一致しません" });
+      return;
     }
+    if (form.password.length < 6) {
+      toast({ variant: "destructive", title: "確認", description: "パスワードは6文字以上で入力してください" });
+      return;
+    }
+    register.mutate(form);
   };
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
@@ -79,9 +86,13 @@ export default function Register() {
             軽貨物ドライバー採用は<br />これだけでいい
           </p>
           <ul className="space-y-3 text-white/90 text-sm">
-            {["無料で求人を掲載できる", "応募が来たらメールですぐ通知", "¥3,000 / 応募のシンプル料金"].map((t) => (
+            {[
+              "無料で求人を掲載申請できる",
+              "応募が来たらメールでリアルタイム通知",
+              "¥3,000 / 応募のシンプル料金",
+            ].map((t) => (
               <li key={t} className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">✓</span>
+                <span className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center text-white text-[10px] font-bold shrink-0">✓</span>
                 {t}
               </li>
             ))}
@@ -96,72 +107,56 @@ export default function Register() {
             <img src="/logo-keisaiyou.png" alt="KEI SAIYOU" className="h-10 w-auto" />
           </div>
           <h1 className="text-2xl font-bold mb-1">企業登録</h1>
-          <p className="text-sm text-muted-foreground mb-8">KEI SAIYOUに企業アカウントを作成</p>
+          <p className="text-sm text-muted-foreground mb-8">KEI SAIYOUに企業アカウントを作成（無料）</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">メールアドレス</Label>
+              <Label htmlFor="companyName">会社名 / 屋号 <span className="text-destructive">*</span></Label>
+              <Input id="companyName" value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="例: 〇〇運送株式会社" required className="h-11" data-testid="input-register-company" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contactName">担当者名 <span className="text-destructive">*</span></Label>
+              <Input id="contactName" value={form.contactName} onChange={(e) => update("contactName", e.target.value)} placeholder="例: 山田 太郎" required className="h-11" data-testid="input-register-contact-name" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">メールアドレス <span className="text-destructive">*</span></Label>
               <Input id="email" type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="info@example.co.jp" required className="h-11" data-testid="input-register-email" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">パスワード</Label>
+              <Label htmlFor="phone">電話番号 <span className="text-destructive">*</span></Label>
+              <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="03-0000-0000" required className="h-11" data-testid="input-register-phone" />
+            </div>
+            <div className="space-y-2">
+              <Label>都道府県 <span className="text-destructive">*</span></Label>
+              <Select onValueChange={(v) => update("prefecture", v)} required>
+                <SelectTrigger className="h-11" data-testid="select-prefecture">
+                  <SelectValue placeholder="都道府県を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PREFECTURES.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">パスワード <span className="text-destructive">*</span></Label>
               <Input id="password" type="password" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="6文字以上" required className="h-11" data-testid="input-register-password" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="companyName">会社名 / 屋号</Label>
-              <Input id="companyName" type="text" value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="例: 〇〇運送株式会社" required className="h-11" data-testid="input-register-company" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="address">所在地</Label>
-              <Input id="address" type="text" value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="例: 神奈川県横浜市中区1-2-3" className="h-11" data-testid="input-register-address" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contactName">担当者名</Label>
-              <Input id="contactName" type="text" value={form.contactName} onChange={(e) => update("contactName", e.target.value)} placeholder="例: 山田 太郎" className="h-11" data-testid="input-register-contact-name" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone">電話番号</Label>
-                <Input id="phone" type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="03-0000-0000" required className="h-11" data-testid="input-register-phone" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="fax">FAX番号</Label>
-                <Input id="fax" type="tel" value={form.fax} onChange={(e) => update("fax", e.target.value)} placeholder="03-0000-0001" className="h-11" data-testid="input-register-fax" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="truckCount">現在のドライバー数</Label>
-              <Input id="truckCount" type="text" value={form.truckCount} onChange={(e) => update("truckCount", e.target.value)} placeholder="例: 10名" className="h-11" data-testid="input-register-truck-count" />
-            </div>
-
-            <div className="space-y-2">
-              <Label>貨物軽自動車運送事業届出書</Label>
-              <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileUpload} className="hidden" data-testid="input-permit-file" />
-              {permitFile ? (
-                <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/30">
-                  <FileText className="w-5 h-5 text-primary shrink-0" />
-                  <span className="text-sm truncate flex-1" data-testid="text-permit-filename">{permitFile.fileName}</span>
-                  <Button type="button" variant="ghost" size="icon" onClick={() => { setPermitFile(null); if (fileInputRef.current) fileInputRef.current.value = ""; }} data-testid="button-remove-permit">
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              ) : (
-                <Button type="button" variant="outline" className="w-full h-11" onClick={() => fileInputRef.current?.click()} disabled={uploading} data-testid="button-upload-permit">
-                  {uploading ? "アップロード中..." : (<><Upload className="w-4 h-4 mr-2" />許可証をアップロード</>)}
-                </Button>
-              )}
-              <p className="text-xs text-muted-foreground">PDF、JPG、PNG形式（最大10MB）</p>
+              <Label htmlFor="confirmPassword">パスワード（確認）<span className="text-destructive">*</span></Label>
+              <Input id="confirmPassword" type="password" value={form.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} placeholder="もう一度入力" required className="h-11" data-testid="input-register-confirm-password" />
             </div>
 
             <div className="flex items-start gap-3 pt-1">
               <Checkbox id="agree" checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} data-testid="checkbox-agree" />
               <Label htmlFor="agree" className="text-sm text-muted-foreground leading-snug cursor-pointer">
-                <Link href="/terms" className="text-primary font-medium">利用規約</Link>、<Link href="/privacy" className="text-primary font-medium">プライバシーポリシー</Link>に同意する
+                <Link href="/terms" className="text-primary font-medium">利用規約</Link>・<Link href="/privacy" className="text-primary font-medium">プライバシーポリシー</Link>に同意する
               </Label>
             </div>
 
             <Button type="submit" className="w-full h-11 text-base" disabled={register.isPending || !agreed} data-testid="button-register-submit">
-              {register.isPending ? "登録中..." : (<><UserPlus className="w-4 h-4 mr-2" />同意して登録する</>)}
+              {register.isPending ? "登録中..." : (<><UserPlus className="w-4 h-4 mr-2" />無料で登録する</>)}
             </Button>
           </form>
 

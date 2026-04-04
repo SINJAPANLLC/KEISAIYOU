@@ -226,22 +226,26 @@ export async function registerRoutes(
       const user = await storage.createUser({
         ...parsed.data,
         password: hashedPassword,
+        approved: true,
       });
 
       const { password, ...safeUser } = user;
+
+      req.session.userId = user.id;
+      req.session.role = user.role;
 
       const admins = (await storage.getAllUsers()).filter((u) => u.role === "admin");
       for (const admin of admins) {
         await storage.createNotification({
           userId: admin.id,
           type: "user_registered",
-          title: "新規ユーザー登録",
-          message: `${parsed.data.companyName} が新規登録しました。承認をお願いします。`,
+          title: "新規企業登録",
+          message: `${parsed.data.companyName} が新規登録しました。`,
           relatedId: user.id,
         });
       }
 
-      res.status(201).json({ ...safeUser, message: "登録が完了しました。管理者の承認後にログインできます。" });
+      res.status(201).json({ ...safeUser, message: "登録が完了しました。" });
 
       const host = req.get("host") || "";
       const protocol = host.includes("localhost") ? "http" : "https";
@@ -255,16 +259,8 @@ export async function registerRoutes(
               username: parsed.data.email || "",
               appBaseUrl,
             },
-            "【KEI MATCH】会員登録ありがとうございます",
-            `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-<h2 style="color: #333;">会員登録ありがとうございます</h2>
-<p>{{companyName}} 様</p>
-<p>KEI MATCHへの会員登録ありがとうございます。</p>
-<p>現在、管理者による承認手続きを行っております。<br>承認が完了次第、ログインしてサービスをご利用いただけます。</p>
-<p>承認までしばらくお待ちください。</p>
-<hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-<p style="font-size: 12px; color: #888;">このメールはKEI MATCHから自動送信されています。<br><a href="{{appBaseUrl}}">{{appBaseUrl}}</a></p>
-</div>`
+            "【KEI SAIYOU】企業登録ありがとうございます",
+            `{{companyName}} 様\n\nKEI SAIYOUへの企業登録ありがとうございます。\n\nすぐにダッシュボードから求人を登録できます。\n{{appBaseUrl}}/home\n\n─\nKEI SAIYOU`
           );
           if (resolved) {
             await sendEmail(parsed.data.email, resolved.subject, resolved.body);
@@ -293,10 +289,6 @@ export async function registerRoutes(
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) {
         return res.status(401).json({ message: "メールアドレスまたはパスワードが正しくありません" });
-      }
-
-      if (!user.approved) {
-        return res.status(403).json({ message: "アカウントはまだ承認されていません。管理者の承認をお待ちください。" });
       }
 
       await storage.deleteSessionsByUserId(user.id);

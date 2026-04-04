@@ -54,12 +54,12 @@ function wrapInEmailTemplate(subject: string, bodyText: string): string {
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
 <tr>
 <td style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:1px;text-align:center;">
-KEI MATCH
+KEI SAIYOU
 </td>
 </tr>
 <tr>
 <td style="color:rgba(255,255,255,0.85);font-size:11px;text-align:center;padding-top:2px;">
-KEIKAMOTSU MATCH
+軽貨物ドライバー採用プラットフォーム
 </td>
 </tr>
 </table>
