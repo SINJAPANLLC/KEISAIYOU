@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import {
   BarChart3, TrendingUp, Download, DollarSign, Minus, Percent,
-  ArrowUpDown, ChevronDown, ChevronUp,
+  ArrowUpDown, ChevronDown, ChevronUp, Edit2, Check,
 } from "lucide-react";
 
 function SimpleBarChart({ data }: { data: { month: string; revenue: number }[] }) {
@@ -32,6 +33,9 @@ function SimpleBarChart({ data }: { data: { month: string; revenue: number }[] }
 export default function AdminRevenue() {
   const [sortField, setSortField] = useState<"revenue" | "paidApps">("revenue");
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
+  const [cpcCost, setCpcCost] = useState<number>(() => Number(localStorage.getItem("cpc_cost") ?? "0"));
+  const [cpcEditing, setCpcEditing] = useState(false);
+  const [cpcInput, setCpcInput] = useState("");
 
   const { data: stats } = useQuery<any>({
     queryKey: ["/api/admin/stats"],
@@ -44,10 +48,15 @@ export default function AdminRevenue() {
 
   const totalRevenue = stats?.totalRevenue ?? 0;
   const monthlyRevenue = stats?.monthlyRevenue ?? 0;
-  // Assume ad cost is 30% of revenue (CPC estimate)
-  const adCost = Math.round(totalRevenue * 0.3);
-  const profit = totalRevenue - adCost;
+  const profit = totalRevenue - cpcCost;
   const profitRate = totalRevenue > 0 ? Math.round((profit / totalRevenue) * 100) : 0;
+
+  const saveCpc = () => {
+    const val = Math.max(0, Number(cpcInput.replace(/,/g, "")) || 0);
+    setCpcCost(val);
+    localStorage.setItem("cpc_cost", String(val));
+    setCpcEditing(false);
+  };
 
   // Build last 6 months chart data
   const now = new Date();
@@ -113,23 +122,80 @@ export default function AdminRevenue() {
 
         {/* KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: "累計売上", value: `¥${totalRevenue.toLocaleString()}`, sub: `今月 ¥${monthlyRevenue.toLocaleString()}`, icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50" },
-            { label: "広告費（CPC概算）", value: `¥${adCost.toLocaleString()}`, sub: "売上の約30%", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "利益", value: `¥${profit.toLocaleString()}`, sub: "売上－広告費", icon: Minus, color: "text-violet-600", bg: "bg-violet-50" },
-            { label: "利益率", value: `${profitRate}%`, sub: "利益÷売上", icon: Percent, color: "text-amber-600", bg: "bg-amber-50" },
-          ].map((s) => (
-            <Card key={s.label} className="border border-border">
-              <CardContent className="p-5">
-                <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center mb-3`}>
-                  <s.icon className={`w-4 h-4 ${s.color}`} />
+          {/* 累計売上 */}
+          <Card className="border border-border">
+            <CardContent className="p-5">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center mb-3">
+                <DollarSign className="w-4 h-4 text-emerald-600" />
+              </div>
+              <p className="text-2xl font-black text-foreground">¥{totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">累計売上</p>
+              <p className="text-[10px] text-muted-foreground/70">今月 ¥{monthlyRevenue.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+
+          {/* 広告費（手動入力） */}
+          <Card className="border border-border">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-blue-600" />
                 </div>
-                <p className="text-2xl font-black text-foreground">{s.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
-                <p className="text-[10px] text-muted-foreground/70">{s.sub}</p>
-              </CardContent>
-            </Card>
-          ))}
+                {!cpcEditing && (
+                  <button
+                    onClick={() => { setCpcInput(String(cpcCost)); setCpcEditing(true); }}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              {cpcEditing ? (
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-sm font-semibold text-muted-foreground">¥</span>
+                  <Input
+                    autoFocus
+                    value={cpcInput}
+                    onChange={(e) => setCpcInput(e.target.value.replace(/[^0-9]/g, ""))}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveCpc(); if (e.key === "Escape") setCpcEditing(false); }}
+                    className="h-8 text-base font-black px-1"
+                    placeholder="0"
+                  />
+                  <button onClick={saveCpc} className="text-emerald-600 hover:text-emerald-700">
+                    <Check className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-2xl font-black text-foreground">¥{cpcCost.toLocaleString()}</p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">広告費（CPC）</p>
+              <p className="text-[10px] text-muted-foreground/70">鉛筆アイコンで手動入力</p>
+            </CardContent>
+          </Card>
+
+          {/* 利益 */}
+          <Card className="border border-border">
+            <CardContent className="p-5">
+              <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center mb-3">
+                <Minus className="w-4 h-4 text-violet-600" />
+              </div>
+              <p className="text-2xl font-black text-foreground">¥{profit.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">利益</p>
+              <p className="text-[10px] text-muted-foreground/70">売上－広告費</p>
+            </CardContent>
+          </Card>
+
+          {/* 利益率 */}
+          <Card className="border border-border">
+            <CardContent className="p-5">
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center mb-3">
+                <Percent className="w-4 h-4 text-amber-600" />
+              </div>
+              <p className="text-2xl font-black text-foreground">{profitRate}%</p>
+              <p className="text-xs text-muted-foreground mt-1">利益率</p>
+              <p className="text-[10px] text-muted-foreground/70">利益÷売上</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Monthly bar chart */}
