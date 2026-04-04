@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
 
 type MenuItem = {
   href: string;
@@ -38,7 +39,24 @@ const adminMenuItems: MenuItem[] = [
   { href: "/admin/settings",          label: "システム設定",     icon: Wrench },
 ];
 
-function SidebarMenu({ items, onNavigate }: { items: MenuItem[]; onNavigate?: () => void }) {
+function Badge({ count }: { count: number }) {
+  if (!count) return null;
+  return (
+    <span className="ml-auto shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-[18px] text-center">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
+function SidebarMenu({
+  items,
+  badges,
+  onNavigate,
+}: {
+  items: MenuItem[];
+  badges: Record<string, number>;
+  onNavigate?: () => void;
+}) {
   const [location] = useLocation();
 
   return (
@@ -47,6 +65,7 @@ function SidebarMenu({ items, onNavigate }: { items: MenuItem[]; onNavigate?: ()
         const isActive =
           location === item.href ||
           (item.href !== "/home" && item.href !== "/admin" && location.startsWith(item.href));
+        const badgeCount = badges[item.href] || 0;
         return (
           <Link key={item.href} href={item.href}>
             <button
@@ -59,7 +78,18 @@ function SidebarMenu({ items, onNavigate }: { items: MenuItem[]; onNavigate?: ()
               data-testid={`link-sidebar-${item.href.replace(/\//g, "-").slice(1)}`}
             >
               <item.icon className="w-4 h-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate flex-1 text-left">{item.label}</span>
+              {badgeCount > 0 && (
+                <span
+                  className={`shrink-0 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold leading-[18px] text-center ${
+                    isActive
+                      ? "bg-white/30 text-white"
+                      : "bg-destructive text-destructive-foreground"
+                  }`}
+                >
+                  {badgeCount > 99 ? "99+" : badgeCount}
+                </span>
+              )}
             </button>
           </Link>
         );
@@ -71,6 +101,12 @@ function SidebarMenu({ items, onNavigate }: { items: MenuItem[]; onNavigate?: ()
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { user, isAdmin } = useAuth();
 
+  const { data: badges = {} } = useQuery<Record<string, number>>({
+    queryKey: ["/api/sidebar-badges"],
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
+
   const handleLogout = async () => {
     await apiRequest("POST", "/api/logout");
     window.location.href = "/";
@@ -78,14 +114,13 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Navigation */}
       <div className="flex-1 overflow-y-auto p-2 space-y-4">
         {!isAdmin && (
           <div>
             <p className="px-3 py-1 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
               企業メニュー
             </p>
-            <SidebarMenu items={userMenuItems} onNavigate={onNavigate} />
+            <SidebarMenu items={userMenuItems} badges={badges} onNavigate={onNavigate} />
           </div>
         )}
 
@@ -95,20 +130,19 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               <p className="px-3 py-1 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                 企業メニュー
               </p>
-              <SidebarMenu items={userMenuItems} onNavigate={onNavigate} />
+              <SidebarMenu items={userMenuItems} badges={badges} onNavigate={onNavigate} />
             </div>
 
             <div className="border-t border-border/60 pt-3">
               <p className="px-3 py-1 text-[10px] font-semibold text-primary/70 uppercase tracking-widest mb-1">
                 管理者メニュー
               </p>
-              <SidebarMenu items={adminMenuItems} onNavigate={onNavigate} />
+              <SidebarMenu items={adminMenuItems} badges={badges} onNavigate={onNavigate} />
             </div>
           </>
         )}
       </div>
 
-      {/* Logout */}
       <div className="p-2 border-t border-border/60">
         <button
           onClick={handleLogout}

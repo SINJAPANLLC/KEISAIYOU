@@ -10,6 +10,7 @@ import {
   emailCampaigns,
   payments,
   refundRequests,
+  contactInquiries,
 } from "@shared/schema";
 import { sendEmail } from "./notification-service";
 import { chargeSquareCard } from "./square";
@@ -27,6 +28,47 @@ function requireAdmin(req: Request, res: Response, next: Function) {
 }
 
 export function registerSaiyouRoutes(app: Express) {
+
+  // ─── Sidebar badge counts ────────────────────────────────────────────────
+  app.get("/api/sidebar-badges", requireAuth, async (req, res) => {
+    try {
+      const isAdmin = req.session?.role === "admin";
+      const userId = req.session!.userId;
+
+      if (isAdmin) {
+        const [[pendingUsers], [pendingJobs], [newApps], [unreadInquiries], [pendingRefunds]] = await Promise.all([
+          db.select({ count: sql<number>`count(*)::int` }).from(users).where(eq(users.approved, false)),
+          db.select({ count: sql<number>`count(*)::int` }).from(jobListings).where(eq(jobListings.status, "pending")),
+          db.select({ count: sql<number>`count(*)::int` }).from(applications).where(eq(applications.reviewStatus, "new")),
+          db.select({ count: sql<number>`count(*)::int` }).from(contactInquiries).where(eq(contactInquiries.status, "unread")),
+          db.select({ count: sql<number>`count(*)::int` }).from(refundRequests).where(eq(refundRequests.status, "pending")),
+        ]);
+        res.json({
+          "/admin/users":              pendingUsers.count || 0,
+          "/admin/listings":           pendingJobs.count || 0,
+          "/admin/applications":       newApps.count || 0,
+          "/admin/contact-inquiries":  unreadInquiries.count || 0,
+          "/admin/refund-requests":    pendingRefunds.count || 0,
+        });
+      } else {
+        const myJobs = await db.select({ id: jobListings.id }).from(jobListings).where(eq(jobListings.userId, userId));
+        const jobIds = myJobs.map((j) => j.id);
+        let newCount = 0;
+        if (jobIds.length > 0) {
+          const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(applications)
+            .where(and(
+              sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${jobIds.join("','")}']::varchar[]`)})`,
+              eq(applications.reviewStatus, "new"),
+            ));
+          newCount = row?.count || 0;
+        }
+        res.json({ "/applications": newCount });
+      }
+    } catch (err) {
+      console.error("[sidebar-badges]", err);
+      res.json({});
+    }
+  });
 
   // ─── Registration (overrides old route behaviour) ───────────────────────
   // Patch: set approved=true so companies can log in immediately.
