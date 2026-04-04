@@ -153,14 +153,14 @@ function LoadingFallback() {
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return null;
+  if (isLoading) return <LoadingFallback />;
   if (!isAuthenticated) return <Redirect to="/login" />;
   return <Component />;
 }
 
 function AdminRoute({ component: Component }: { component: React.ComponentType }) {
   const { isAdmin, isLoading, isAuthenticated } = useAuth();
-  if (isLoading) return null;
+  if (isLoading) return <LoadingFallback />;
   if (!isAuthenticated) return <Redirect to="/login" />;
   if (!isAdmin) return <Redirect to="/home" />;
   return <Component />;
