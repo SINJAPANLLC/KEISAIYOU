@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote } from "lucide-react";
+import { Trash2, Search, FileText, CheckCircle, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -151,18 +151,6 @@ export default function AdminUsers() {
     },
   });
 
-  const changePlan = useMutation({
-    mutationFn: async ({ id, plan }: { id: string; plan: string }) => {
-      await apiRequest("PATCH", `/api/admin/users/${id}/plan`, { plan });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      toast({ title: "プランを変更しました" });
-    },
-    onError: () => {
-      toast({ title: "プラン変更に失敗しました", variant: "destructive" });
-    },
-  });
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState({ companyName: "", contactName: "", email: "", phone: "", password: "", role: "user" });
@@ -462,7 +450,6 @@ export default function AdminUsers() {
                         <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">連絡先</th>
                         <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">状態</th>
                         <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">ステータス</th>
-                        <th className="text-center px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">プラン</th>
                         <th className="text-left px-3 py-2.5 text-[11px] font-semibold text-muted-foreground whitespace-nowrap">登録日</th>
                       </tr>
                     </thead>
@@ -524,15 +511,6 @@ export default function AdminUsers() {
                                 <Badge variant="destructive" className="text-[10px]">未承認</Badge>
                               )}
                             </td>
-                            <td className="px-3 py-3 text-center align-top">
-                              {isAdmin ? (
-                                <span className="text-[11px] text-muted-foreground font-bold">-</span>
-                              ) : (
-                                <Badge variant={u.plan === "premium" || u.plan === "premium_full" ? "default" : "outline"} className="text-[10px]">
-                                  {u.plan === "premium" ? "β版プレミアム" : u.plan === "premium_full" ? "プレミアム" : "フリー"}
-                                </Badge>
-                              )}
-                            </td>
                             <td className="px-3 py-3 align-top">
                               <span className="text-[12px] text-muted-foreground font-bold whitespace-nowrap">{formatDate(u)}</span>
                             </td>
@@ -564,7 +542,6 @@ export default function AdminUsers() {
                 forceStop.mutate(id);
               }
             }}
-            onChangePlan={(id, plan) => changePlan.mutate({ id, plan })}
             onEditUser={(id, data) => { setEditSuccess(false); editUser.mutate({ id, data }); }}
             onChangeRole={(id, role) => {
               const label = role === "admin" ? "管理者に変更" : "一般ユーザーに変更";
@@ -574,7 +551,6 @@ export default function AdminUsers() {
             }}
             isApproving={approveUser.isPending}
             isDeleting={deleteUser.isPending}
-            isChangingPlan={changePlan.isPending}
             isEditing={editUser.isPending}
             isChangingRole={changeRole.isPending}
             editSuccess={editSuccess}
@@ -616,12 +592,10 @@ function UserDetailPanel({
   onApprove,
   onDelete,
   onForceStop,
-  onChangePlan,
   onEditUser,
   onChangeRole,
   isApproving,
   isDeleting,
-  isChangingPlan,
   isEditing,
   isChangingRole,
   editSuccess,
@@ -633,12 +607,10 @@ function UserDetailPanel({
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
   onForceStop: (id: string) => void;
-  onChangePlan: (id: string, plan: string) => void;
   onEditUser: (id: string, data: Record<string, string | null>) => void;
   onChangeRole: (id: string, role: string) => void;
   isApproving: boolean;
   isDeleting: boolean;
-  isChangingPlan: boolean;
   isEditing: boolean;
   isChangingRole: boolean;
   editSuccess: boolean;
@@ -819,10 +791,6 @@ function UserDetailPanel({
                   <Badge variant={user.approved ? "default" : "destructive"} className="text-xs">
                     {user.approved ? "承認済" : "未承認"}
                   </Badge>
-                  <Badge variant={user.plan === "premium" || user.plan === "premium_full" ? "default" : "outline"} className="text-xs">
-                    <Crown className="w-3 h-3 mr-1" />
-                    {user.plan === "premium" ? "β版プレミアム" : user.plan === "premium_full" ? "プレミアム" : "フリー"}
-                  </Badge>
                   {user.addedByUserId && (
                     <Badge variant="outline" className="text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
                       <UserPlus className="w-3 h-3 mr-1" />追加ユーザー
@@ -910,30 +878,6 @@ function UserDetailPanel({
                       {isApproving ? "承認中..." : "承認する"}
                     </Button>
                   )}
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs font-bold text-muted-foreground shrink-0">プラン</Label>
-                    <Select
-                      value={user.plan}
-                      onValueChange={(value) => {
-                        if (value !== user.plan) {
-                          const planLabels: Record<string, string> = { free: "フリー", premium: "β版プレミアム", premium_full: "プレミアム" };
-                          if (confirm(`${user.companyName} のプランを「${planLabels[value]}」に変更しますか？`)) {
-                            onChangePlan(user.id, value);
-                          }
-                        }
-                      }}
-                      disabled={isChangingPlan}
-                    >
-                      <SelectTrigger className="flex-1 h-8 text-sm" data-testid={`select-plan-${user.id}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="free">フリー</SelectItem>
-                        <SelectItem value="premium">β版プレミアム</SelectItem>
-                        <SelectItem value="premium_full">プレミアム</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
               )}
 
