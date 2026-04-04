@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, UserCheck, UserX, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote } from "lucide-react";
+import { Trash2, Search, FileText, CheckCircle, Crown, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -95,7 +95,7 @@ export default function AdminUsers() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const [filterType, setFilterType] = useState<"all" | "approved" | "pending" | "admin">("all");
+  const [filterType, setFilterType] = useState<"all" | "admin">("all");
 
   const { data: users, isLoading } = useQuery<SafeUser[]>({
     queryKey: ["/api/admin/users"],
@@ -106,15 +106,10 @@ export default function AdminUsers() {
     refetchInterval: 30000,
   });
 
-  const allNonAdmin = users?.filter(u => u.role !== "admin") ?? [];
-  const approvedCount = allNonAdmin.filter(u => u.approved).length;
-  const pendingCount = allNonAdmin.filter(u => !u.approved).length;
   const adminCount = users?.filter(u => u.role === "admin")?.length ?? 0;
 
   const filtered = useMemo(() => {
     return (users ?? []).filter((u) => {
-      if (filterType === "approved" && (u.role === "admin" || !u.approved)) return false;
-      if (filterType === "pending" && (u.role === "admin" || u.approved)) return false;
       if (filterType === "admin" && u.role !== "admin") return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -381,7 +376,7 @@ export default function AdminUsers() {
               </Card>
             )}
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+            <div className="grid grid-cols-2 gap-4 mb-5 max-w-sm">
               <Card
                 className={`cursor-pointer hover-elevate ${filterType === "all" ? "ring-2 ring-primary" : ""}`}
                 onClick={() => setFilterType("all")}
@@ -395,40 +390,6 @@ export default function AdminUsers() {
                     <div>
                       <p className="text-2xl font-bold text-foreground">{users?.length ?? 0}</p>
                       <p className="text-xs text-muted-foreground">全ユーザー</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card
-                className={`cursor-pointer hover-elevate ${filterType === "approved" ? "ring-2 ring-primary" : ""}`}
-                onClick={() => setFilterType("approved")}
-                data-testid="card-filter-approved"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center shrink-0">
-                      <UserCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{approvedCount}</p>
-                      <p className="text-xs text-muted-foreground">承認済み</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card
-                className={`cursor-pointer hover-elevate ${filterType === "pending" ? "ring-2 ring-primary" : ""}`}
-                onClick={() => setFilterType("pending")}
-                data-testid="card-filter-pending"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center shrink-0">
-                      <UserX className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
-                      <p className="text-xs text-muted-foreground">承認待ち</p>
                     </div>
                   </div>
                 </CardContent>
