@@ -34,7 +34,6 @@ const SAIYOU_EVENTS = [
   "registration_complete",
   "payment_failed",
   "password_reset",
-  "user_approved",
 ];
 
 const EVENT_META: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
@@ -43,7 +42,6 @@ const EVENT_META: Record<string, { label: string; icon: React.ReactNode; color: 
   registration_complete:{ label: "会員登録完了時",     icon: <UserCheck className="w-4 h-4" />,  color: "bg-violet-50 text-violet-700 border-violet-200" },
   payment_failed:       { label: "決済失敗時",         icon: <CreditCard className="w-4 h-4" />, color: "bg-red-50 text-red-700 border-red-200" },
   password_reset:       { label: "パスワードリセット時", icon: <KeyRound className="w-4 h-4" />, color: "bg-amber-50 text-amber-700 border-amber-200" },
-  user_approved:        { label: "アカウント承認時",   icon: <CheckCircle className="w-4 h-4" />,color: "bg-orange-50 text-orange-700 border-orange-200" },
 };
 
 function TemplateCard({ t }: { t: NotificationTemplate }) {
