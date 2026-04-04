@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Plus, Shield, UserCog, Users, DollarSign, MessageSquare, Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Briefcase, Bell, Mail } from "lucide-react";
+import { Home, Plus, Shield, Building2, Users, DollarSign, MessageSquare, Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen, ChevronDown, ChevronRight, Briefcase, Bell, Mail, CreditCard, Rss } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,48 +10,27 @@ type MenuItem = {
   icon: React.ElementType;
 };
 
-type AdminMenuGroup = {
-  groupLabel: string;
-  items: MenuItem[];
-};
-
 const userMenuItems: MenuItem[] = [
-  { href: "/home", label: "ダッシュボード", icon: Home },
-  { href: "/jobs/new", label: "求人を作成", icon: Plus },
-  { href: "/jobs", label: "求人一覧", icon: Briefcase },
-  { href: "/applications", label: "応募者一覧", icon: Users },
-  { href: "/settings", label: "アカウント設定", icon: Settings },
+  { href: "/home",         label: "ダッシュボード",   icon: Home },
+  { href: "/jobs/new",     label: "求人作成",         icon: Plus },
+  { href: "/jobs",         label: "求人一覧",         icon: Briefcase },
+  { href: "/applications", label: "応募者一覧",       icon: Users },
+  { href: "/payment",      label: "請求・決済",       icon: CreditCard },
+  { href: "/settings",     label: "アカウント設定",   icon: Settings },
 ];
 
-const adminMenuGroups: AdminMenuGroup[] = [
-  {
-    groupLabel: "ダッシュボード",
-    items: [
-      { href: "/admin", label: "管理ダッシュボード", icon: Shield },
-    ],
-  },
-  {
-    groupLabel: "会員管理",
-    items: [
-      { href: "/admin/users", label: "ユーザー一覧", icon: UserCog },
-    ],
-  },
-  {
-    groupLabel: "求人・応募管理",
-    items: [
-      { href: "/admin/listings", label: "求人管理", icon: Briefcase },
-      { href: "/admin/notifications", label: "応募通知", icon: Bell },
-    ],
-  },
-  {
-    groupLabel: "営業・運営",
-    items: [
-      { href: "/admin/email-marketing", label: "営業メール管理", icon: Mail },
-      { href: "/admin/contact-inquiries", label: "お問い合わせ", icon: MessageSquare },
-      { href: "/admin/revenue", label: "収益管理", icon: DollarSign },
-      { href: "/admin/settings", label: "管理設定", icon: Wrench },
-    ],
-  },
+const adminMenuItems: MenuItem[] = [
+  { href: "/admin",                  label: "ダッシュボード",    icon: Shield },
+  { href: "/admin/revenue",          label: "収益管理",          icon: DollarSign },
+  { href: "/admin/indeed-feed",      label: "INDEED 運用管理",  icon: Rss },
+  { href: "/admin/users",            label: "企業管理",          icon: Building2 },
+  { href: "/admin/listings",         label: "求人管理",          icon: Briefcase },
+  { href: "/admin/applications",     label: "応募者管理",        icon: Users },
+  { href: "/admin/email-marketing",  label: "営業メール",        icon: Mail },
+  { href: "/admin/notifications",    label: "通知管理",          icon: Bell },
+  { href: "/admin/contact-inquiries",label: "お問い合わせ",      icon: MessageSquare },
+  { href: "/admin/audit-logs",       label: "ユーザーログ",      icon: Activity },
+  { href: "/admin/settings",         label: "システム設定",      icon: Wrench },
 ];
 
 function SidebarMenu({ items, onNavigate }: { items: MenuItem[]; onNavigate?: () => void }) {
@@ -107,13 +86,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             )}
           </button>
           {adminMenuOpen && (
-            <div className="space-y-3 mt-1">
-              {adminMenuGroups.map((group) => (
-                <div key={group.groupLabel}>
-                  <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider">{group.groupLabel}</p>
-                  <SidebarMenu items={group.items} onNavigate={onNavigate} />
-                </div>
-              ))}
+            <div className="mt-1">
+              <SidebarMenu items={adminMenuItems} onNavigate={onNavigate} />
             </div>
           )}
         </>
