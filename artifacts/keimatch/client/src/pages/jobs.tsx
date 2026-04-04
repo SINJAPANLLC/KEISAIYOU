@@ -6,16 +6,12 @@ import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, AlertCircle, Calendar,
-} from "lucide-react";
+import { Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, Calendar } from "lucide-react";
 
 type Job = {
   id: string;
@@ -37,11 +33,44 @@ type Job = {
   monthlyLimit: number;
   monthlySpent: number;
   createdAt: string;
-  publishedAt?: string;
 };
 
 const JOB_CATEGORIES = ["軽貨物ドライバー", "宅配ドライバー", "幹線輸送ドライバー", "EC配送", "フードデリバリー", "企業配送", "その他"];
-const EMPLOYMENT_TYPES = ["業務委託", "正社員", "契約社員", "パート・アルバイト", "その他"];
+const EMPLOYMENT_TYPES = ["業務委託", "正社員", "契約社員", "パート・アルバイト"];
+const PREFECTURES = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+  "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+  "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+  "熊本県","大分県","宮崎県","鹿児島県","沖縄県",
+];
+const SALARY_OPTIONS = [
+  "月収20万〜30万円（歩合制）",
+  "月収30万〜40万円（歩合制）",
+  "月収40万〜50万円（歩合制）",
+  "月収50万円以上（歩合制）",
+  "日給1.5万〜2万円",
+  "時給1,500〜2,000円",
+  "要相談",
+];
+const WORK_HOURS_OPTIONS = [
+  "8:00〜17:00（実働8時間）",
+  "9:00〜18:00（実働8時間）",
+  "6:00〜15:00（実働8時間）",
+  "シフト制（週3日〜OK）",
+  "フルフレックス",
+  "要相談",
+];
+const HOLIDAYS_OPTIONS = [
+  "週休2日（土日）",
+  "週休2日（シフト制）",
+  "週1日以上",
+  "隔週土日",
+  "年間休日120日以上",
+  "要相談",
+];
 const MONTHLY_LIMITS = [
   { label: "3万円（最大9応募/月）", value: "30000" },
   { label: "5万円（最大15応募/月）", value: "50000" },
@@ -52,22 +81,18 @@ const MONTHLY_LIMITS = [
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending: { label: "審査中", color: "border-amber-400 text-amber-700 bg-amber-50" },
-  active: { label: "掲載中", color: "border-emerald-400 text-emerald-700 bg-emerald-50" },
-  paused: { label: "停止中", color: "border-muted-foreground/30 text-muted-foreground" },
-  closed: { label: "クローズ", color: "border-muted-foreground/30 text-muted-foreground" },
+  active:  { label: "掲載中", color: "border-emerald-400 text-emerald-700 bg-emerald-50" },
+  paused:  { label: "停止中", color: "border-muted-foreground/30 text-muted-foreground" },
+  closed:  { label: "クローズ", color: "border-muted-foreground/30 text-muted-foreground" },
 };
 
 const EMPTY_FORM = {
-  title: "",
   jobCategory: "",
   employmentType: "",
+  prefecture: "",
   salary: "",
-  area: "",
-  description: "",
-  requirements: "",
   workHours: "",
   holidays: "",
-  benefits: "",
   requiresLicense: false,
   requiresBlackNumber: false,
   requiresVehicle: false,
@@ -82,7 +107,6 @@ export default function Jobs() {
   const [form, setForm] = useState(EMPTY_FORM);
 
   const { data: jobs = [], isLoading } = useQuery<Job[]>({ queryKey: ["/api/jobs"] });
-
   const { data: allApps = [] } = useQuery<any[]>({
     queryKey: ["/api/my/applications"],
     queryFn: () => apiRequest("GET", "/api/my/applications").then((r) => r.json()),
@@ -93,8 +117,29 @@ export default function Jobs() {
     return acc;
   }, {});
 
+  const buildPayload = () => {
+    const title = `${form.jobCategory || "軽貨物ドライバー"}（${form.prefecture || "エリア未定"}）`;
+    return {
+      title,
+      jobCategory: form.jobCategory,
+      employmentType: form.employmentType,
+      salary: form.salary,
+      area: form.prefecture,
+      description: `${form.jobCategory}として${form.prefecture}エリアで活躍していただくお仕事です。`,
+      requirements: "",
+      workHours: form.workHours,
+      holidays: form.holidays,
+      benefits: "",
+      requiresLicense: form.requiresLicense,
+      requiresBlackNumber: form.requiresBlackNumber,
+      requiresVehicle: form.requiresVehicle,
+      requiresExperience: form.requiresExperience,
+      monthlyLimit: Number(form.monthlyLimit),
+    };
+  };
+
   const createMutation = useMutation({
-    mutationFn: (data: typeof EMPTY_FORM) =>
+    mutationFn: (data: ReturnType<typeof buildPayload>) =>
       apiRequest("POST", "/api/jobs", data).then((r) => r.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
@@ -127,7 +172,10 @@ export default function Jobs() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiRequest("DELETE", `/api/jobs/${id}`).then((r) => r.json()),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/jobs"] }); toast({ title: "求人を削除しました" }); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      toast({ title: "求人を削除しました" });
+    },
   });
 
   const up = (key: string, val: any) => setForm((f) => ({ ...f, [key]: val }));
@@ -136,16 +184,12 @@ export default function Jobs() {
   const openEdit = (job: Job) => {
     setEditing(job);
     setForm({
-      title: job.title,
       jobCategory: job.jobCategory || "",
-      employmentType: job.employmentType,
-      salary: job.salary,
-      area: job.area,
-      description: job.description,
-      requirements: job.requirements || "",
+      employmentType: job.employmentType || "",
+      prefecture: job.area || "",
+      salary: job.salary || "",
       workHours: job.workHours || "",
       holidays: job.holidays || "",
-      benefits: job.benefits || "",
       requiresLicense: job.requiresLicense ?? false,
       requiresBlackNumber: job.requiresBlackNumber ?? false,
       requiresVehicle: job.requiresVehicle ?? false,
@@ -157,22 +201,15 @@ export default function Jobs() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title || !form.employmentType || !form.salary || !form.area || !form.description) {
-      toast({ variant: "destructive", title: "必須項目を入力してください" });
+    if (!form.jobCategory || !form.employmentType || !form.prefecture || !form.salary) {
+      toast({ variant: "destructive", title: "必須項目を選択してください" });
       return;
     }
-    const data = {
-      ...form,
-      monthlyLimit: Number(form.monthlyLimit),
-      requiresLicense: Boolean(form.requiresLicense),
-      requiresBlackNumber: Boolean(form.requiresBlackNumber),
-      requiresVehicle: Boolean(form.requiresVehicle),
-      requiresExperience: Boolean(form.requiresExperience),
-    };
+    const data = buildPayload();
     if (editing) {
       updateMutation.mutate({ id: editing.id, data });
     } else {
-      createMutation.mutate(data as any);
+      createMutation.mutate(data);
     }
   };
 
@@ -225,9 +262,6 @@ export default function Jobs() {
             {jobs.map((job) => {
               const s = STATUS_MAP[job.status] ?? { label: job.status, color: "border-muted-foreground/30 text-muted-foreground" };
               const appCount = appCountByJob[job.id] || 0;
-              const usagePct = job.monthlyLimit < 9999999
-                ? Math.min(100, Math.round((job.monthlySpent / job.monthlyLimit) * 100))
-                : 0;
               return (
                 <Card key={job.id} className="border border-border" data-testid={`card-job-${job.id}`}>
                   <CardContent className="p-5">
@@ -244,58 +278,25 @@ export default function Jobs() {
                           <span className="flex items-center gap-1"><Users className="w-3 h-3" />応募 {appCount}件</span>
                           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(job.createdAt)}</span>
                         </div>
-                        {job.monthlyLimit < 9999999 && (
-                          <div className="mt-3">
-                            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                              <span>今月の利用額: ¥{job.monthlySpent.toLocaleString()}</span>
-                              <span>上限: ¥{job.monthlyLimit.toLocaleString()}</span>
-                            </div>
-                            <div className="w-full bg-muted rounded-full h-1.5">
-                              <div
-                                className={`h-1.5 rounded-full ${usagePct > 80 ? "bg-destructive" : "bg-primary"}`}
-                                style={{ width: `${usagePct}%` }}
-                              />
-                            </div>
-                          </div>
-                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-3 text-xs"
-                          onClick={() => openEdit(job)}
-                          data-testid={`button-edit-job-${job.id}`}
-                        >
+                        <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => openEdit(job)} data-testid={`button-edit-job-${job.id}`}>
                           <Edit2 className="w-3 h-3 mr-1" />編集
                         </Button>
                         {job.status === "active" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 px-3 text-xs"
-                            onClick={() => pauseMutation.mutate({ id: job.id, status: "paused" })}
-                          >
+                          <Button size="sm" variant="outline" className="h-8 px-3 text-xs" onClick={() => pauseMutation.mutate({ id: job.id, status: "paused" })}>
                             <Pause className="w-3 h-3 mr-1" />停止
                           </Button>
                         )}
                         {job.status === "paused" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 px-3 text-xs text-emerald-700 border-emerald-400 hover:bg-emerald-50"
-                            onClick={() => pauseMutation.mutate({ id: job.id, status: "active" })}
-                          >
+                          <Button size="sm" variant="outline" className="h-8 px-3 text-xs text-emerald-700 border-emerald-400 hover:bg-emerald-50" onClick={() => pauseMutation.mutate({ id: job.id, status: "active" })}>
                             <Play className="w-3 h-3 mr-1" />再開
                           </Button>
                         )}
                         <Button
-                          size="sm"
-                          variant="outline"
+                          size="sm" variant="outline"
                           className="h-8 px-3 text-xs text-destructive border-destructive/40 hover:bg-destructive/10"
-                          onClick={() => {
-                            if (confirm(`「${job.title}」を削除しますか？`)) deleteMutation.mutate(job.id);
-                          }}
+                          onClick={() => { if (confirm(`「${job.title}」を削除しますか？`)) deleteMutation.mutate(job.id); }}
                           data-testid={`button-delete-job-${job.id}`}
                         >
                           <Trash2 className="w-3 h-3" />
@@ -312,128 +313,66 @@ export default function Jobs() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editing ? "求人を編集" : "求人を新規作成"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
 
-            {/* タイトル */}
-            <div className="space-y-1.5">
-              <Label>求人タイトル <span className="text-destructive">*</span></Label>
-              <Input
-                value={form.title}
-                onChange={(e) => up("title", e.target.value)}
-                placeholder="例: 軽貨物ドライバー（神奈川エリア）"
-                required
-                data-testid="input-job-title"
-              />
-            </div>
-
             {/* 職種 */}
             <div className="space-y-1.5">
-              <Label>職種</Label>
+              <Label>職種 <span className="text-destructive">*</span></Label>
               <Select value={form.jobCategory} onValueChange={(v) => up("jobCategory", v)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="職種を選択" />
-                </SelectTrigger>
-                <SelectContent>
-                  {JOB_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
+                <SelectTrigger data-testid="select-job-category"><SelectValue placeholder="選択してください" /></SelectTrigger>
+                <SelectContent>{JOB_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
               </Select>
             </div>
 
             {/* 雇用形態 */}
             <div className="space-y-1.5">
               <Label>雇用形態 <span className="text-destructive">*</span></Label>
-              <Select value={form.employmentType} onValueChange={(v) => up("employmentType", v)} required>
-                <SelectTrigger data-testid="select-employment-type">
-                  <SelectValue placeholder="選択してください" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EMPLOYMENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              <Select value={form.employmentType} onValueChange={(v) => up("employmentType", v)}>
+                <SelectTrigger data-testid="select-employment-type"><SelectValue placeholder="選択してください" /></SelectTrigger>
+                <SelectContent>{EMPLOYMENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+
+            {/* 都道府県 */}
+            <div className="space-y-1.5">
+              <Label>勤務エリア（都道府県）<span className="text-destructive">*</span></Label>
+              <Select value={form.prefecture} onValueChange={(v) => up("prefecture", v)}>
+                <SelectTrigger data-testid="select-prefecture"><SelectValue placeholder="都道府県を選択" /></SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {PREFECTURES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* 給与 */}
+            {/* 給与帯 */}
             <div className="space-y-1.5">
               <Label>給与・報酬 <span className="text-destructive">*</span></Label>
-              <Input
-                value={form.salary}
-                onChange={(e) => up("salary", e.target.value)}
-                placeholder="例: 月収30万〜50万円（歩合制）"
-                required
-                data-testid="input-job-salary"
-              />
-            </div>
-
-            {/* 勤務エリア */}
-            <div className="space-y-1.5">
-              <Label>勤務エリア <span className="text-destructive">*</span></Label>
-              <Input
-                value={form.area}
-                onChange={(e) => up("area", e.target.value)}
-                placeholder="例: 神奈川県横浜市・川崎市"
-                required
-                data-testid="input-job-area"
-              />
-            </div>
-
-            {/* 仕事内容 */}
-            <div className="space-y-1.5">
-              <Label>仕事内容 <span className="text-destructive">*</span></Label>
-              <Textarea
-                value={form.description}
-                onChange={(e) => up("description", e.target.value)}
-                placeholder="仕事内容を詳しく入力してください..."
-                rows={4}
-                required
-                data-testid="textarea-job-description"
-              />
+              <Select value={form.salary} onValueChange={(v) => up("salary", v)}>
+                <SelectTrigger data-testid="select-salary"><SelectValue placeholder="選択してください" /></SelectTrigger>
+                <SelectContent>{SALARY_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
 
             {/* 勤務時間 */}
             <div className="space-y-1.5">
               <Label>勤務時間</Label>
-              <Input
-                value={form.workHours}
-                onChange={(e) => up("workHours", e.target.value)}
-                placeholder="例: 8:00〜18:00（実働8時間）"
-              />
+              <Select value={form.workHours} onValueChange={(v) => up("workHours", v)}>
+                <SelectTrigger><SelectValue placeholder="選択してください" /></SelectTrigger>
+                <SelectContent>{WORK_HOURS_OPTIONS.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
 
             {/* 休日 */}
             <div className="space-y-1.5">
               <Label>休日</Label>
-              <Input
-                value={form.holidays}
-                onChange={(e) => up("holidays", e.target.value)}
-                placeholder="例: 週休2日（土日）、年間120日"
-              />
-            </div>
-
-            {/* 待遇・福利厚生 */}
-            <div className="space-y-1.5">
-              <Label>待遇・福利厚生</Label>
-              <Textarea
-                value={form.benefits}
-                onChange={(e) => up("benefits", e.target.value)}
-                placeholder="例: 社会保険完備、交通費支給、車両貸与可"
-                rows={2}
-              />
-            </div>
-
-            {/* 応募条件 */}
-            <div className="space-y-1.5">
-              <Label>応募条件（テキスト）</Label>
-              <Textarea
-                value={form.requirements}
-                onChange={(e) => up("requirements", e.target.value)}
-                placeholder="例: やる気のある方歓迎！経験不問"
-                rows={2}
-                data-testid="textarea-job-requirements"
-              />
+              <Select value={form.holidays} onValueChange={(v) => up("holidays", v)}>
+                <SelectTrigger><SelectValue placeholder="選択してください" /></SelectTrigger>
+                <SelectContent>{HOLIDAYS_OPTIONS.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+              </Select>
             </div>
 
             {/* 応募条件チェックボックス */}
@@ -441,10 +380,10 @@ export default function Jobs() {
               <Label>応募条件</Label>
               <div className="grid grid-cols-2 gap-3 p-3 rounded-lg border border-border bg-muted/30">
                 {[
-                  { key: "requiresLicense", label: "免許必須" },
-                  { key: "requiresBlackNumber", label: "黒ナンバー必須" },
-                  { key: "requiresVehicle", label: "車両持込必須" },
-                  { key: "requiresExperience", label: "経験必須" },
+                  { key: "requiresLicense",      label: "免許必須" },
+                  { key: "requiresBlackNumber",  label: "黒ナンバー必須" },
+                  { key: "requiresVehicle",      label: "車両持込必須" },
+                  { key: "requiresExperience",   label: "経験必須" },
                 ].map(({ key, label }) => (
                   <div key={key} className="flex items-center gap-2">
                     <Checkbox
@@ -463,9 +402,7 @@ export default function Jobs() {
               <Label>月の上限金額</Label>
               <Select value={form.monthlyLimit} onValueChange={(v) => up("monthlyLimit", v)}>
                 <SelectTrigger data-testid="select-monthly-limit"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {MONTHLY_LIMITS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
-                </SelectContent>
+                <SelectContent>{MONTHLY_LIMITS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">上限到達で掲載が自動停止されます（1応募 = ¥3,000税別）</p>
             </div>
