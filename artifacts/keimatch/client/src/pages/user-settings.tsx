@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Mail, Phone, MapPin, User, Save, Loader2, CheckCircle, Bell, Lock, AlertTriangle } from "lucide-react";
+import { Building2, Mail, Phone, MapPin, User, Save, Loader2, CheckCircle, Bell, Lock, AlertTriangle, Landmark } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -40,6 +40,11 @@ export default function UserSettings() {
   const [prefecture, setPrefecture] = useState(user?.prefecture ?? "");
   const [address, setAddress] = useState(user?.address ?? "");
   const [notifyEmail, setNotifyEmail] = useState(user?.notifyEmail ?? true);
+  const [bankName, setBankName] = useState(user?.bankName ?? "");
+  const [bankBranch, setBankBranch] = useState(user?.bankBranch ?? "");
+  const [accountType, setAccountType] = useState(user?.accountType ?? "");
+  const [accountNumber, setAccountNumber] = useState(user?.accountNumber ?? "");
+  const [accountHolderKana, setAccountHolderKana] = useState(user?.accountHolderKana ?? "");
 
   useEffect(() => {
     if (user) {
@@ -50,6 +55,11 @@ export default function UserSettings() {
       setPrefecture(user.prefecture ?? "");
       setAddress(user.address ?? "");
       setNotifyEmail(user.notifyEmail ?? true);
+      setBankName(user.bankName ?? "");
+      setBankBranch(user.bankBranch ?? "");
+      setAccountType(user.accountType ?? "");
+      setAccountNumber(user.accountNumber ?? "");
+      setAccountHolderKana(user.accountHolderKana ?? "");
     }
   }, [user]);
 
@@ -79,7 +89,7 @@ export default function UserSettings() {
   });
 
   const handleSave = () => {
-    profileMutation.mutate({ companyName, contactName, phone, prefecture, address, notifyEmail });
+    profileMutation.mutate({ companyName, contactName, phone, prefecture, address, notifyEmail, bankName, bankBranch, accountType, accountNumber, accountHolderKana });
   };
 
   const handlePwChange = () => {
@@ -172,6 +182,51 @@ export default function UserSettings() {
                 <p className="text-xs text-muted-foreground mt-0.5">求人に応募があった際にメールで通知します</p>
               </div>
               <Switch checked={notifyEmail} onCheckedChange={setNotifyEmail} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bank account info */}
+        <Card className="border border-border mb-6">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Landmark className="w-4 h-4 text-primary" />
+              <h2 className="font-bold text-foreground">返金用口座情報</h2>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">返金が発生した際の振込先口座を登録してください。</p>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block">銀行名</Label>
+                  <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="〇〇銀行" />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block">支店名</Label>
+                  <Input value={bankBranch} onChange={(e) => setBankBranch(e.target.value)} placeholder="〇〇支店" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block">口座種別</Label>
+                  <Select value={accountType} onValueChange={setAccountType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="選択してください" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="普通">普通</SelectItem>
+                      <SelectItem value="当座">当座</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-1.5 block">口座番号</Label>
+                  <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="1234567" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-1.5 block">口座名義（カタカナ）</Label>
+                <Input value={accountHolderKana} onChange={(e) => setAccountHolderKana(e.target.value)} placeholder="カブシキガイシャ〇〇" />
+              </div>
             </div>
           </CardContent>
         </Card>
