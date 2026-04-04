@@ -145,6 +145,16 @@ app.use((req, res, next) => {
   const { registerSaiyouRoutes } = await import("./saiyou-routes");
   const runScheduledChecks = registerSaiyouRoutes(app);
 
+  // リードクロール・メール送信スケジューラは本番・開発共に常時起動
+  setTimeout(async () => {
+    try {
+      const { scheduleLeadCrawler } = await import("./lead-crawler");
+      scheduleLeadCrawler();
+    } catch (e) {
+      console.error("Lead crawler scheduler init error:", e);
+    }
+  }, 5000);
+
   if (process.env.NODE_ENV === "production") {
     setTimeout(async () => {
       try {
@@ -152,8 +162,6 @@ app.use((req, res, next) => {
         scheduleAutoArticleGeneration();
         const { scheduleAutoPublish } = await import("./youtube-auto-publisher");
         scheduleAutoPublish();
-        const { scheduleLeadCrawler } = await import("./lead-crawler");
-        scheduleLeadCrawler();
         setInterval(runScheduledChecks, 60 * 60 * 1000);
         runScheduledChecks();
       } catch (e) {
@@ -161,7 +169,7 @@ app.use((req, res, next) => {
       }
     }, 10000);
   } else {
-    console.log("[Dev] Skipping scheduled tasks in dev mode");
+    console.log("[Dev] Lead crawler active; other scheduled tasks skipped");
   }
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

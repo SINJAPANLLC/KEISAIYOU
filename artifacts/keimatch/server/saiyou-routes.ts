@@ -814,11 +814,11 @@ ${jobXml}
         const [company] = await db.select({ email: users.email, companyName: users.companyName })
           .from(users).where(eq(users.id, job.userId));
         if (company?.email) {
-          await sendEmail({
-            to: company.email,
-            subject: `【KEI SAIYOU】求人「${job.title}」が掲載されました`,
-            text: `${company.companyName} 様\n\n求人「${job.title}」の掲載が開始されました。\n\n応募が届き次第、マイページの「応募者一覧」でご確認いただけます。\n\n──\nKEI SAIYOU 運営事務局`,
-          });
+          await sendEmail(
+            company.email,
+            `【KEI SAIYOU】求人「${job.title}」が掲載されました`,
+            `${company.companyName} 様\n\n求人「${job.title}」の掲載が開始されました。\n\nINDEEDへの手動掲載もお忘れなくお願いします。\n応募が届き次第、マイページの「応募者一覧」でご確認いただけます。\n\n──\nKEI SAIYOU 運営事務局\nhttps://keisaiyou-sinjapan.com`,
+          );
         }
       } catch (emailErr) {
         console.warn("[approve] email send failed:", emailErr);

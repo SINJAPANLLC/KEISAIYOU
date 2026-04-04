@@ -100,6 +100,22 @@ const SEARCH_QUERIES = [
   "軽貨物 美容院 化粧品 配送 会社概要 メール",
   "軽貨物 オフィス 書類 宅配 会社概要 連絡先",
   "軽貨物 EC通販 委託 会社 info メール",
+  // ── 中小法人ターゲット強化クエリ（2026-04-04追加）───────────
+  "合同会社 軽貨物 配送 ドライバー 採用 連絡先",
+  "合同会社 軽貨物 運送 会社概要 メール",
+  "株式会社 軽貨物 ドライバー 募集 採用 連絡先",
+  "軽貨物 地域密着 中小 配送会社 info メール",
+  "軽貨物 小規模 配送業 会社概要 問い合わせ",
+  "軽貨物ドライバー 委託 採用 中小企業 info メール",
+  "軽貨物 配送 パートナー 急募 合同会社 連絡先",
+  "黒ナンバー ドライバー 募集 会社 連絡先 メール",
+  "軽貨物 業務委託 ドライバー 採用中 会社概要",
+  "軽貨物 フランチャイズ 加盟 配送 会社概要 メール",
+  "軽貨物 配送スタッフ 急募 会社 連絡先",
+  "軽貨物 中小 物流会社 ドライバー採用 info",
+  "配送会社 ドライバー 不足 採用活動 軽貨物 会社概要",
+  "軽貨物 事業拡大 ドライバー 確保 会社 メール",
+  "合同会社 GK 配送 物流 軽貨物 連絡先",
 ];
 
 const EMAIL_REGEX = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
@@ -1324,57 +1340,57 @@ export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: num
   const template = await storage.getAdminSetting("lead_email_subject");
   const bodyTemplate = await storage.getAdminSetting("lead_email_body");
 
-  const subject = template || "軽貨物の案件獲得・空き車両活用でお困りではありませんか？｜ケイマッチ";
+  const subject = template || "軽貨物ドライバーの採用、うまくいっていますか？｜KEI SAIYOU";
   const body = bodyTemplate || `{company}
 ご担当者様
 
 突然のご連絡、大変失礼いたします。
-軽貨物案件マッチングサービス「ケイマッチ」を運営しております、合同会社SIN JAPANと申します。
+軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」を運営しております、合同会社SIN JAPANと申します。
 
-貴社のホームページを拝見し、軽貨物配送事業を展開されていることを知り、ご連絡させていただきました。
+貴社のホームページを拝見し、軽貨物配送事業を展開されていることを知り、ドライバー採用のご支援ができればとご連絡差し上げました。
 
 ━━━━━━━━━━━━━━━━━━━━
 ■ こんなお悩みはありませんか？
 ━━━━━━━━━━━━━━━━━━━━
-☑ 帰り便・空き時間の案件が見つからない
-☑ 荷主の新規開拓に時間とコストがかかる
-☑ 繁忙期と閑散期の波が激しく収益が不安定
-☑ 案件情報が電話・FAX中心で非効率
+☑ ドライバーが集まらず、配送件数を増やせない
+☑ 求人サイトの掲載費が高く、採用コストが重い
+☑ Indeed・ハローワークだけでは応募数が足りない
+☑ 応募があっても、条件の合う人が来ない
 
 ━━━━━━━━━━━━━━━━━━━━
-■「ケイマッチ」でできること
+■「KEI SAIYOU」でできること
 ━━━━━━━━━━━━━━━━━━━━
-✅ AIが最適な案件を自動マッチング
-　→ 空き車両情報を登録するだけで、条件に合う案件をAIが自動提案
+✅ 完全成果報酬型：採用コストを大幅削減
+　→ 月額・掲載費0円。応募1件あたり3,300円（税込）のみ
 
-✅ スポット便・チャーター便・定期便に対応
-　→ 軽バン・軽トラ・冷蔵冷凍車など車種別に案件検索可能
+✅ Indeed連携で即日から応募が来る
+　→ 日本最大の求人サイトに掲載。黒ナンバー取得者にアプローチ
 
-✅ 全国の軽貨物事業者とつながる
-　→ 帰り便の確保や、繁忙期の車両確保にも活用できます
+✅ 応募者情報を一元管理
+　→ 氏名・電話番号・職歴・保有免許・履歴書をまとめて確認
 
-✅ 完全無料でスタート可能
-　→ 初期費用・月額費用なしで今すぐご利用いただけます
+✅ AIで求人票を自動作成
+　→ エリア・給与を入力するだけで魅力的な文章を自動生成
 
 ━━━━━━━━━━━━━━━━━━━━
-■ 30秒で無料登録
+■ 今すぐ無料で求人掲載
 ━━━━━━━━━━━━━━━━━━━━
-▼ サービス詳細・無料登録はこちら
+▼ 無料登録・詳細はこちら
 https://keisaiyou-sinjapan.com/register
 
-現在、サービス開始キャンペーンとして
-全機能を無料でご利用いただけます。
+初期費用・月額費用は一切かかりません。
+応募が来たときだけ、1件3,300円（税込）のみです。
 
 ━━━━━━━━━━━━━━━━━━━━
 
 ご多忙のところ恐縮ですが、
-貴社の配送事業の効率化にお役立ていただけましたら幸いです。
+貴社のドライバー採用活動にお役立ていただければ幸いです。
 
 ご質問・ご不明な点がございましたら、
-本メールへのご返信、またはお電話にてお気軽にお問い合わせください。
+本メールへのご返信にてお気軽にお問い合わせください。
 
 ━━━━━━━━━━━━━━━━━━━━
-ケイマッチ運営事務局
+KEI SAIYOU 運営事務局
 合同会社SIN JAPAN
 〒243-0303 神奈川県愛甲郡愛川町中津7287
 TEL: 046-212-2325
@@ -1465,27 +1481,26 @@ export async function retryFailedLeads(): Promise<{ sent: number; failed: number
 }
 
 export async function sendFollowUpEmails(): Promise<{ sent: number }> {
-  const followUpSubject = "【再送】軽貨物の案件・空き車両活用をお手伝いします｜ケイマッチ";
+  const followUpSubject = "【再送】軽貨物ドライバーの採用支援について｜KEI SAIYOU";
   const followUpBody = await storage.getAdminSetting("lead_followup_body");
   const defaultFollowUp = `{company}
 ご担当者様
 
 先日は突然のご連絡、失礼いたしました。
-軽貨物案件マッチングサービス「ケイマッチ」の運営事務局でございます。
+軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」の運営事務局でございます。
 
-その後、軽貨物の案件獲得や空き車両の活用について、
-お困りごとはございませんでしょうか？
+その後、軽貨物ドライバーの採用活動はいかがでしょうか？
 
-ケイマッチでは現在、全機能を無料でご利用いただけます。
+KEI SAIYOUは掲載費・月額費用0円、応募1件3,300円（税込）の完全成果報酬型のため、採用コストを大幅に削減できます。
 
-▼ 30秒で無料登録
+▼ 無料登録はこちら
 https://keisaiyou-sinjapan.com/register
 
 ご不明な点がございましたら、
 本メールへのご返信にてお気軽にお問い合わせください。
 
 ━━━━━━━━━━━━━━━━━━━━
-ケイマッチ運営事務局
+KEI SAIYOU 運営事務局
 合同会社SIN JAPAN
 〒243-0303 神奈川県愛甲郡愛川町中津7287
 TEL: 046-212-2325
@@ -1522,8 +1537,9 @@ URL: https://keisaiyou-sinjapan.com
 }
 
 export function scheduleLeadCrawler() {
-  const CRAWL_HOURS = [5, 8, 12, 16, 21];
-  const SEND_HOURS = [9, 11, 14, 17];
+  // 12時JST = クロール＋メール送信を同時実行（メインCron）
+  const CRAWL_HOURS = [5, 12, 19];       // 朝・昼・夜の3回
+  const SEND_HOURS  = [12, 15];           // 昼（クロール後）+ 午後
   const RETRY_HOURS = [10];
   const FOLLOWUP_HOURS = [13];
 
@@ -1571,5 +1587,5 @@ export function scheduleLeadCrawler() {
 
   const now = new Date();
   const jstHour = (now.getUTCHours() + 9) % 24;
-  console.log(`[Lead Crawler] Scheduled: crawl=${CRAWL_HOURS.join(",")}時, send=${SEND_HOURS.join(",")}時, retry=${RETRY_HOURS.join(",")}時, followup=${FOLLOWUP_HOURS.join(",")}時 JST (now: ${jstHour}時)`);
+  console.log(`[Lead Crawler] Scheduled: crawl=${CRAWL_HOURS.join(",")}時JST, send=${SEND_HOURS.join(",")}時JST (now: ${jstHour}時JST)`);
 }
