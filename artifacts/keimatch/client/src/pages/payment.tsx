@@ -17,10 +17,10 @@ import {
 import DashboardLayout from "@/components/dashboard-layout";
 
 const MONTHLY_LIMITS = [
-  { label: "3万円（約10応募/月）", value: 30000 },
-  { label: "5万円（約16応募/月）", value: 50000 },
-  { label: "10万円（約33応募/月）", value: 100000 },
-  { label: "20万円（約66応募/月）", value: 200000 },
+  { label: "3万円（約9応募/月）", value: 30000 },
+  { label: "5万円（約15応募/月）", value: 50000 },
+  { label: "10万円（約30応募/月）", value: 100000 },
+  { label: "20万円（約60応募/月）", value: 200000 },
   { label: "上限なし", value: 9999999 },
 ];
 
@@ -111,6 +111,7 @@ export default function Payment() {
               {isLoading ? <Skeleton className="h-8 w-24" /> : (
                 <p className="text-3xl font-black text-foreground">
                   {monthlyLimit >= 9999999 ? "上限なし" : `¥${monthlyLimit.toLocaleString()}`}
+                  {monthlyLimit < 9999999 && <span className="text-sm font-normal text-muted-foreground ml-1">（税別）</span>}
                 </p>
               )}
               {monthlyLimit < 9999999 && (
@@ -121,7 +122,12 @@ export default function Payment() {
                       style={{ width: `${usagePct}%` }}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{usagePct}% 使用</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-muted-foreground">{usagePct}% 使用</p>
+                    <p className="text-xs text-muted-foreground">
+                      残り ¥{Math.max(0, monthlyLimit - monthlyTotal).toLocaleString()}（約{Math.floor(Math.max(0, monthlyLimit - monthlyTotal) / 3300)}応募）
+                    </p>
+                  </div>
                 </>
               )}
             </CardContent>
