@@ -3,10 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Briefcase, Search, MapPin, Building2, CheckCircle, XCircle, Pause, Play,
-  Tag, Banknote, Clock, CalendarDays, Users, Calendar,
+  Briefcase, Search, MapPin, Building2, CheckCircle, XCircle, Pause, Play, Edit2,
+  Tag, Banknote, Clock, CalendarDays, Calendar,
 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -33,11 +36,28 @@ type JobListing = {
   publishedAt?: string;
 };
 
+const JOB_CATEGORIES = ["軽貨物ドライバー", "宅配ドライバー", "幹線輸送ドライバー", "EC配送", "フードデリバリー", "企業配送", "その他"];
+const EMPLOYMENT_TYPES = ["業務委託", "正社員", "契約社員", "パート・アルバイト"];
+const HOLIDAYS_OPTIONS = ["週休2日（土日）", "週休2日（シフト制）", "週1日以上", "隔週土日", "年間休日120日以上", "要相談"];
+const MONTHLY_LIMITS = [
+  { label: "3万円（最大9応募/月）",  value: "30000" },
+  { label: "5万円（最大15応募/月）", value: "50000" },
+  { label: "10万円（最大30応募/月）", value: "100000" },
+  { label: "20万円（最大60応募/月）", value: "200000" },
+  { label: "上限なし",               value: "9999999" },
+];
+
+const EMPTY_FORM = {
+  title: "", jobCategory: "", employmentType: "", area: "",
+  salary: "", workHours: "", holidays: "", description: "", requirements: "", benefits: "",
+  monthlyLimit: "30000",
+};
+
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending:  { label: "審査中",  color: "border-amber-400 text-amber-700 bg-amber-50" },
-  active:   { label: "掲載中",  color: "border-emerald-400 text-emerald-700 bg-emerald-50" },
-  paused:   { label: "停止中",  color: "border-muted-foreground/30 text-muted-foreground" },
-  closed:   { label: "クローズ", color: "border-muted-foreground/30 text-muted-foreground" },
+  pending: { label: "審査中",   color: "border-amber-400 text-amber-700 bg-amber-50" },
+  active:  { label: "掲載中",   color: "border-emerald-400 text-emerald-700 bg-emerald-50" },
+  paused:  { label: "停止中",   color: "border-muted-foreground/30 text-muted-foreground" },
+  closed:  { label: "クローズ", color: "border-muted-foreground/30 text-muted-foreground" },
 };
 
 const BORDER_COLOR: Record<string, string> = {
@@ -51,6 +71,9 @@ export default function AdminListings() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState<JobListing | null>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
 
   const { data: jobs = [], isLoading } = useQuery<JobListing[]>({
     queryKey: ["/api/admin/jobs"],
@@ -72,6 +95,47 @@ export default function AdminListings() {
     mutationFn: (id: string) => apiRequest("PATCH", `/api/admin/jobs/${id}/reject`).then((r) => r.json()),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/admin/jobs"] }); toast({ title: "求人を却下しました" }); },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      apiRequest("PUT", `/api/admin/jobs/${id}`, data).then((r) => r.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/jobs"] });
+      setEditOpen(false);
+      setEditing(null);
+      toast({ title: "求人を更新しました" });
+    },
+    onError: () => toast({ variant: "destructive", title: "更新に失敗しました" }),
+  });
+
+  const up = (key: string, val: any) => setForm((f) => ({ ...f, [key]: val }));
+
+  const openEdit = (job: JobListing) => {
+    setEditing(job);
+    setForm({
+      title: job.title || "",
+      jobCategory: job.jobCategory || "",
+      employmentType: job.employmentType || "",
+      area: job.area || "",
+      salary: job.salary || "",
+      workHours: job.workHours || "",
+      holidays: job.holidays || "",
+      description: job.description || "",
+      requirements: job.requirements || "",
+      benefits: job.benefits || "",
+      monthlyLimit: String(job.monthlyLimit || 30000),
+    });
+    setEditOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title || !form.area || !form.salary) {
+      toast({ variant: "destructive", title: "タイトル・エリア・給与は必須です" });
+      return;
+    }
+    updateMutation.mutate({ id: editing!.id, data: { ...form, monthlyLimit: Number(form.monthlyLimit) } });
+  };
 
   const filtered = jobs.filter((j) => {
     if (filterStatus !== "all" && j.status !== filterStatus) return false;
@@ -97,7 +161,7 @@ export default function AdminListings() {
           <div className="relative z-10">
             <p className="text-white/80 text-xs mb-0.5">LISTINGS</p>
             <h1 className="text-2xl font-bold text-white" data-testid="text-page-title">求人管理</h1>
-            <p className="text-white/70 text-sm mt-1">掲載申請の承認・掲載管理</p>
+            <p className="text-white/70 text-sm mt-1">掲載申請の承認・掲載管理・内容編集</p>
           </div>
         </div>
 
@@ -155,10 +219,7 @@ export default function AdminListings() {
               const borderColor = BORDER_COLOR[job.status] || "border-l-muted-foreground/20";
               const isPaused = job.status === "paused" || job.status === "closed";
               return (
-                <Card
-                  key={job.id}
-                  className={`border overflow-hidden ${isPaused ? "opacity-70" : ""}`}
-                >
+                <Card key={job.id} className={`border overflow-hidden ${isPaused ? "opacity-70" : ""}`}>
                   <div className={`flex h-full border-l-4 ${borderColor}`}>
                     <CardContent className="p-5 flex-1">
                       <div className="flex items-start justify-between gap-4">
@@ -243,6 +304,15 @@ export default function AdminListings() {
 
                         {/* Action buttons */}
                         <div className="flex flex-col gap-1.5 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-xs"
+                            onClick={() => openEdit(job)}
+                            data-testid={`button-edit-${job.id}`}
+                          >
+                            <Edit2 className="w-3 h-3 mr-1" />編集
+                          </Button>
                           {job.status === "pending" && (
                             <>
                               <Button
@@ -298,6 +368,113 @@ export default function AdminListings() {
           </div>
         )}
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={(v) => { setEditOpen(v); if (!v) setEditing(null); }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>求人を編集</DialogTitle>
+            {editing?.companyName && (
+              <p className="text-xs text-muted-foreground mt-1">掲載企業: {editing.companyName}</p>
+            )}
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label>タイトル <span className="text-destructive">*</span></Label>
+              <Input value={form.title} onChange={(e) => up("title", e.target.value)} placeholder="例: 軽貨物ドライバー（神奈川エリア）" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>職種</Label>
+                <Select value={form.jobCategory} onValueChange={(v) => up("jobCategory", v)}>
+                  <SelectTrigger><SelectValue placeholder="選択" /></SelectTrigger>
+                  <SelectContent>{JOB_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>雇用形態</Label>
+                <Select value={form.employmentType} onValueChange={(v) => up("employmentType", v)}>
+                  <SelectTrigger><SelectValue placeholder="選択" /></SelectTrigger>
+                  <SelectContent>{EMPLOYMENT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>勤務エリア <span className="text-destructive">*</span></Label>
+              <Input value={form.area} onChange={(e) => up("area", e.target.value)} placeholder="例: 神奈川県横浜市・川崎市" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>給与・報酬 <span className="text-destructive">*</span></Label>
+              <Input value={form.salary} onChange={(e) => up("salary", e.target.value)} placeholder="例: 月収30万〜50万円（歩合制）" />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>勤務時間</Label>
+                <Input value={form.workHours} onChange={(e) => up("workHours", e.target.value)} placeholder="例: 8:00〜18:00" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>休日</Label>
+                <Select value={form.holidays} onValueChange={(v) => up("holidays", v)}>
+                  <SelectTrigger><SelectValue placeholder="選択" /></SelectTrigger>
+                  <SelectContent>{HOLIDAYS_OPTIONS.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>仕事内容</Label>
+              <textarea
+                className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={form.description}
+                onChange={(e) => up("description", e.target.value)}
+                placeholder="仕事内容の詳細..."
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>応募条件・資格</Label>
+              <textarea
+                className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={form.requirements}
+                onChange={(e) => up("requirements", e.target.value)}
+                placeholder="応募条件・必要資格..."
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>待遇・福利厚生</Label>
+              <textarea
+                className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                value={form.benefits}
+                onChange={(e) => up("benefits", e.target.value)}
+                placeholder="待遇・福利厚生..."
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>月の上限金額</Label>
+              <Select value={form.monthlyLimit} onValueChange={(v) => up("monthlyLimit", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{MONTHLY_LIMITS.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}</SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">1応募 = ¥3,000税別</p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setEditOpen(false)}>
+                キャンセル
+              </Button>
+              <Button type="submit" className="flex-1" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "更新中..." : "更新する"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

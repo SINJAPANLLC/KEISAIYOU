@@ -677,6 +677,30 @@ ${jobXml}
     }
   });
 
+  app.put("/api/admin/jobs/:id", requireAdmin, async (req, res) => {
+    try {
+      const { title, jobCategory, employmentType, area, salary, workHours, holidays, description, requirements, benefits, monthlyLimit } = req.body;
+      const [updated] = await db.update(jobListings).set({
+        ...(title !== undefined && { title }),
+        ...(jobCategory !== undefined && { jobCategory }),
+        ...(employmentType !== undefined && { employmentType }),
+        ...(area !== undefined && { area }),
+        ...(salary !== undefined && { salary }),
+        ...(workHours !== undefined && { workHours }),
+        ...(holidays !== undefined && { holidays }),
+        ...(description !== undefined && { description }),
+        ...(requirements !== undefined && { requirements }),
+        ...(benefits !== undefined && { benefits }),
+        ...(monthlyLimit !== undefined && { monthlyLimit: Number(monthlyLimit) }),
+        updatedAt: new Date(),
+      }).where(eq(jobListings.id, req.params.id)).returning();
+      if (!updated) return res.status(404).json({ message: "求人が見つかりません" });
+      res.json(updated);
+    } catch {
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
   // ─── Admin: Sales leads ─────────────────────────────────────────────────
   app.get("/api/admin/sales/leads", requireAdmin, async (_req, res) => {
     try {
