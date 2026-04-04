@@ -18,6 +18,7 @@ import {
 } from "@shared/schema";
 import { sendEmail } from "./notification-service";
 import { chargeSquareCard } from "./square";
+import { storage } from "./storage";
 import bcrypt from "bcrypt";
 
 function requireAuth(req: Request, res: Response, next: Function) {
@@ -923,20 +924,83 @@ ${jobXml}
     }
   });
 
+  // バックグラウンドメガクロール状態管理
+  let megaCrawlRunning = false;
+  let megaCrawlFound = 0;
+  let megaCrawlTotal = 0;
+
+  app.post("/api/admin/sales/mega-crawl", requireAdmin, async (req, res) => {
+    if (megaCrawlRunning) {
+      return res.json({ status: "running", found: megaCrawlFound, total: megaCrawlTotal });
+    }
+    const { target = 300 } = req.body;
+    megaCrawlRunning = true;
+    megaCrawlFound = 0;
+
+    const PREFECTURES_ORDERED = [
+      "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+      "新潟県","富山県","石川県","福井県","長野県","山梨県","静岡県","岐阜県","愛知県",
+      "岡山県","広島県","鳥取県","島根県","山口県",
+      "徳島県","香川県","愛媛県","高知県",
+      "福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県",
+      "大阪府","兵庫県","京都府","奈良県","滋賀県","和歌山県","三重県",
+      "埼玉県","千葉県","茨城県","栃木県","群馬県","神奈川県","東京都",
+    ];
+
+    const { generateCompanyUrlsWithOpenAI: genUrls, crawlLeadsFromUrl } = await import("./lead-crawler") as any;
+
+    (async () => {
+      try {
+        let round = 0;
+        while (true) {
+          const countRes = await storage.getEmailLeadCount().catch(() => 0);
+          if (countRes >= target) break;
+          round++;
+          console.log(`[MegaCrawl] Round ${round} | ${countRes}/${target}件`);
+
+          for (const pref of PREFECTURES_ORDERED) {
+            const currentCount = await storage.getEmailLeadCount().catch(() => 0);
+            if (currentCount >= target) break;
+            megaCrawlTotal = currentCount;
+
+            try {
+              const urls: string[] = await genUrls(pref);
+              console.log(`[MegaCrawl] ${pref}: ${urls.length}URLs`);
+              for (const url of urls) {
+                try {
+                  const n = await crawlLeadsFromUrl(url, pref);
+                  if (n > 0) { megaCrawlFound += n; console.log(`[MegaCrawl] +1件 ${pref}: ${url}`); }
+                  await new Promise(r => setTimeout(r, 500));
+                } catch {}
+              }
+            } catch (e: any) {
+              console.error(`[MegaCrawl] ${pref} error:`, e.message);
+            }
+            await new Promise(r => setTimeout(r, 1500));
+          }
+        }
+        console.log(`[MegaCrawl] 完了! 今回+${megaCrawlFound}件追加`);
+      } catch (e: any) {
+        console.error("[MegaCrawl] Fatal:", e.message);
+      } finally {
+        megaCrawlRunning = false;
+      }
+    })();
+
+    return res.json({ status: "started", message: `バックグラウンドクロール開始。目標${target}件。` });
+  });
+
+  app.get("/api/admin/sales/mega-crawl/status", requireAdmin, async (req, res) => {
+    res.json({ running: megaCrawlRunning, found: megaCrawlFound, total: megaCrawlTotal });
+  });
+
   app.post("/api/admin/sales/crawl", requireAdmin, async (req, res) => {
     try {
       const { prefecture, keyword, limit = 20, useAI = true } = req.body;
       if (!prefecture) return res.status(400).json({ message: "都道府県を入力してください" });
-      const { searchDuckDuckGoForUrls, crawlLeadsFromUrl, crawlLeadsWithAI: runFullCrawl } = await import("./lead-crawler");
+      const { searchDuckDuckGoForUrls, crawlLeadsFromUrl } = await import("./lead-crawler");
       let found = 0;
       let searched = 0;
-
-      if (useAI && !keyword) {
-        // AI full crawl for specified prefecture only
-        const { crawlLeadsWithAI: fullCrawl } = await import("./lead-crawler");
-        const result = await fullCrawl(limit);
-        return res.json({ searched: result.searched, found: result.found });
-      }
 
       // AI URL generation for specific prefecture
       if (useAI && prefecture) {
@@ -947,7 +1011,7 @@ ${jobXml}
           for (const url of aiUrls) {
             if (found >= limit) break;
             try {
-              const n = await crawlLeadsFromUrl(url);
+              const n = await crawlLeadsFromUrl(url, prefecture);
               found += n;
               await new Promise((r) => setTimeout(r, 400));
             } catch { /* continue */ }
