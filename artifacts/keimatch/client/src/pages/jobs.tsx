@@ -386,7 +386,6 @@ export default function Jobs() {
                 rows={5}
                 className="resize-none text-sm"
               />
-              <p className="text-xs text-muted-foreground">空欄でも掲載申請できます。管理者が内容を確認・修正してINDEEDに掲載します。</p>
             </div>
 
             <div className="flex gap-2 pt-2">
