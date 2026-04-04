@@ -187,9 +187,12 @@ const NON_TRANSPORT_KEYWORDS = [
   "レストラン", "カフェ", "美容", "エステ", "クリニック", "病院",
   "学校", "塾", "予備校", "保険", "証券", "銀行",
   "セミナー", "イベント", "展示会", "内覧", "見学",
-  "弁護士", "税理士", "行政書士事務所", "司法書士",
+  "弁護士", "税理士", "行政書士事務所", "行政書士法人", "司法書士",
   "プログラミング", "IT企業", "ソフトウェア開発",
   "飲食店", "居酒屋", "寿司", "ラーメン",
+  "登録代行", "許可申請", "車庫証明", "自動車登録",
+  "採用情報", "求人サイト", "人材", "転職", "ハローワーク",
+  "フランチャイズ本部", "代理店募集", "MLM",
 ];
 
 const PORTAL_DOMAINS = [
@@ -461,7 +464,17 @@ function isAggregatorPage(url: string): boolean {
   } catch { return false; }
 }
 
-export async function crawlLeadsFromUrl(url: string): Promise<number> {
+function pickBestEmail(emails: string[]): string | null {
+  if (emails.length === 0) return null;
+  const priority = ["info", "contact", "mail", "office", "inquiry", "ask", "toiawase", "eigyo"];
+  for (const pref of priority) {
+    const found = emails.find(e => e.split("@")[0].toLowerCase().startsWith(pref));
+    if (found) return found;
+  }
+  return emails[0];
+}
+
+export async function crawlLeadsFromUrl(url: string, prefecture?: string): Promise<number> {
   console.log(`[Lead Crawler] Crawling: ${url}`);
   const html = await fetchPageContent(url);
   if (!html) return 0;
@@ -475,10 +488,11 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
   const companyName = extractCompanyName(html, url);
   const aggregator = isAggregatorPage(url);
 
+  const rawDomain = (() => { try { return new URL(url).hostname; } catch { return ""; } })();
+  const domain = rawDomain.replace(/^www\./, "");
+
   if (!aggregator) {
     try {
-      const rawDomain = new URL(url).hostname;
-      const domain = rawDomain.replace(/^www\./, "");
       const existingByDomain = await storage.getEmailLeadByDomain(domain);
       if (existingByDomain) {
         console.log(`[Lead Crawler] Skipped (domain already exists): ${domain}`);
@@ -502,61 +516,49 @@ export async function crawlLeadsFromUrl(url: string): Promise<number> {
     if (emails.length === 0) return 0;
   }
 
-  // アグリゲーターページ以外は、URLドメインと一致するメールを優先
-  if (!aggregator) {
+  // ドメインと一致するメールを優先してフィルタ
+  if (!aggregator && domain) {
     try {
-      const urlHostname = new URL(url).hostname.replace(/^www\./, "");
-      // Extract root domain (e.g. "akabou.jp" from "shizuoka.akabou.jp")
-      const urlParts = urlHostname.split(".");
+      const urlParts = domain.split(".");
       const rootDomain = urlParts.slice(-2).join(".");
       const matchingEmails = emails.filter(e => {
         const emailDomain = e.split("@")[1]?.toLowerCase() || "";
-        return emailDomain === urlHostname || emailDomain === rootDomain || emailDomain.endsWith("." + rootDomain);
+        return emailDomain === domain || emailDomain === rootDomain || emailDomain.endsWith("." + rootDomain);
       });
-      if (matchingEmails.length > 0) {
-        emails = matchingEmails;
-      }
-      // If no domain-matching email found, keep all emails (might be valid business email on different domain)
+      if (matchingEmails.length > 0) emails = matchingEmails;
     } catch {}
   }
 
-  let added = 0;
+  // 1ドメイン = 1リードのみ保存（最良のメールを1件選択）
+  const bestEmail = pickBestEmail(emails);
+  if (!bestEmail) return 0;
 
-  const crawledDomain = (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } })();
-
-  for (const email of emails) {
-    const existing = await storage.getEmailLeadByEmail(email);
-    // Allow same email if the domain is different (e.g., regional offices of same company)
-    if (existing) {
-      const existingDomain = (() => {
-        try {
-          const w = existing.website || "";
-          return new URL(w.startsWith("http") ? w : "https://" + w).hostname.replace(/^www\./, "");
-        } catch { return ""; }
-      })();
-      if (existingDomain === crawledDomain || !crawledDomain) continue;
-    }
-
-    try {
-      const industry = detectIndustry(html);
-      await storage.createEmailLead({
-        companyName,
-        email,
-        fax: faxes[0] || null,
-        phone: phones[0] || null,
-        website: url,
-        address: null,
-        industry,
-        source: url,
-        status: "new",
-      });
-      added++;
-    } catch (err) {
-      console.error(`[Lead Crawler] Failed to save lead ${email}:`, err);
-    }
+  const existing = await storage.getEmailLeadByEmail(bestEmail);
+  if (existing) {
+    console.log(`[Lead Crawler] Skipped (email already exists): ${bestEmail}`);
+    return 0;
   }
 
-  return added;
+  try {
+    const industry = detectIndustry(html);
+    await storage.createEmailLead({
+      companyName,
+      email: bestEmail,
+      fax: faxes[0] || null,
+      phone: phones[0] || null,
+      website: url,
+      address: null,
+      prefecture: prefecture || null,
+      industry,
+      source: url,
+      status: "new",
+    });
+    console.log(`[Lead Crawler] Saved: ${bestEmail} (${companyName}) [${prefecture || "?"}]`);
+    return 1;
+  } catch (err) {
+    console.error(`[Lead Crawler] Failed to save lead ${bestEmail}:`, err);
+    return 0;
+  }
 }
 
 const DIRECTORY_SOURCES = [
@@ -1265,11 +1267,21 @@ export async function generateCompanyUrlsWithOpenAI(prefecture: string): Promise
         model: "gpt-4o-mini",
         messages: [{
           role: "user",
-          content: `${prefecture}にある軽貨物配送・運送会社の公式ウェブサイトURLを15個教えてください。条件：
-- 実在する中小企業のみ（ヤマト・佐川・日本郵便などの大手は除く）
+          content: `${prefecture}で実際に軽貨物配送・軽貨物運送を事業として行っている中小企業の公式ウェブサイトURLを15個教えてください。
+
+【必須条件】
+- 軽貨物車（バン・軽トラック等）で実際に荷物を運んでいる事業者のみ
+- 中小企業・個人事業主レベル（ヤマト・佐川・Amazon Flex・Uber等は除く）
+- 各社の公式サイトのトップページURL（https://で始まる完全URL）
 - .co.jp / .jp / .ne.jp ドメイン優先
-- 各社の公式トップページURL（https://で始まる完全URL）
-- 会社概要またはお問い合わせページにメールアドレスが掲載されているような中小企業を優先
+
+【除外する業種】
+- 行政書士・司法書士・税理士（届出代行業者）
+- 求人サイト・転職サイト・求人情報ページ
+- フランチャイズ本部・代理店募集サイト
+- 大手物流会社（ヤマト・佐川・日本郵便・Amazon・楽天）
+- 一般的なトラック運送会社（軽貨物専門でないもの）
+
 {"urls": ["https://...", ...]} のJSON形式のみで返してください。`,
         }],
         response_format: { type: "json_object" },
@@ -1368,9 +1380,9 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
         for (const url of urls) {
           if (totalFound >= limit) break;
           totalSearched++;
-          const found = await crawlLeadsFromUrl(url);
+          const found = await crawlLeadsFromUrl(url, prefecture);
           totalFound += found;
-          if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${url}`);
+          if (found > 0) console.log(`[Lead Crawler] +${found} lead(s) from ${url} [${prefecture}]`);
           await new Promise(r => setTimeout(r, 500));
         }
         await new Promise(r => setTimeout(r, 1000));
