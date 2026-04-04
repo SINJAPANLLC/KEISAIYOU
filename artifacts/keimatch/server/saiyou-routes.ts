@@ -837,16 +837,16 @@ ${jobXml}
       const { prefecture, keyword, limit = 20 } = req.body;
       if (!prefecture || !keyword) return res.status(400).json({ message: "都道府県とキーワードを入力してください" });
       const { searchDuckDuckGoForUrls, crawlLeadsFromUrl } = await import("./lead-crawler");
-      const query = `${prefecture} ${keyword} 軽貨物`;
-      const urls = await searchDuckDuckGoForUrls(query);
+      const kw = keyword.replace(/　/g, " ").trim();
+      const baseQuery = kw.includes("軽貨物") ? `${prefecture} ${kw}` : `${prefecture} ${kw} 軽貨物`;
+      const urls = await searchDuckDuckGoForUrls(baseQuery);
       let found = 0;
-      const maxUrls = Math.min(urls.length, Math.ceil(limit / 2));
-      for (let i = 0; i < maxUrls; i++) {
+      for (let i = 0; i < urls.length; i++) {
+        if (found >= limit) break;
         try {
           const n = await crawlLeadsFromUrl(urls[i]);
           found += n;
-          if (found >= limit) break;
-          await new Promise((r) => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 400));
         } catch { /* continue */ }
       }
       res.json({ searched: urls.length, found });
