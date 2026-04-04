@@ -124,6 +124,12 @@ export default function Applications() {
           </div>
         </div>
 
+        {/* Speed-to-call notice */}
+        <div className="flex items-center gap-2.5 px-4 py-2.5 mb-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800">
+          <Phone className="w-4 h-4 shrink-0 text-amber-500" />
+          <p className="text-xs font-medium">採用率UPのため、5〜30分以内に電話連絡することを推奨しています。</p>
+        </div>
+
         {/* Filter bar */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
