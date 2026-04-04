@@ -49,7 +49,6 @@ const MONTHLY_LIMITS = [
 ];
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending: { label: "審査中", color: "border-amber-400 text-amber-700 bg-amber-50" },
   active:  { label: "掲載中", color: "border-emerald-400 text-emerald-700 bg-emerald-50" },
   paused:  { label: "停止中", color: "border-muted-foreground/30 text-muted-foreground" },
   closed:  { label: "クローズ", color: "border-muted-foreground/30 text-muted-foreground" },
@@ -88,7 +87,7 @@ export default function Jobs() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       setOpen(false);
-      toast({ title: "求人を申請しました", description: "管理者が審査後に掲載されます" });
+      toast({ title: "求人を掲載しました" });
     },
     onError: (e: any) => toast({ variant: "destructive", title: "エラー", description: e.message }),
   });
@@ -364,7 +363,7 @@ export default function Jobs() {
               >
                 {createMutation.isPending || updateMutation.isPending
                   ? "送信中..."
-                  : editing ? "更新する" : "掲載申請する"}
+                  : editing ? "更新する" : "掲載する"}
               </Button>
             </div>
           </form>

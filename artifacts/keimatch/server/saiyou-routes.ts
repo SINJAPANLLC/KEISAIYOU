@@ -92,7 +92,7 @@ export function registerSaiyouRoutes(app: Express) {
         description,
         requirements: requirements || "",
         monthlyLimit: parseInt(monthlyLimit) || 30000,
-        status: "pending",
+        status: "active",
       }).returning();
 
       // Notify admin
