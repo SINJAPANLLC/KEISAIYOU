@@ -101,7 +101,9 @@ export default function Dashboard() {
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground mb-1">残り上限金額</p>
               <p className={`text-3xl font-black ${remaining < 10000 ? "text-destructive" : "text-foreground"}`} data-testid="stat-remaining">¥{remaining.toLocaleString()}</p>
-              <p className="text-xs text-muted-foreground mt-1">/ ¥{monthlyLimit.toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                約{Math.floor(remaining / 3300)}応募 / 上限¥{monthlyLimit >= 9999999 ? "なし" : monthlyLimit.toLocaleString()}
+              </p>
             </CardContent>
           </Card>
           <Card className="border border-border">
