@@ -161,8 +161,8 @@ function buildEmailHtml(subject: string, body: string, previewCompany = "サン�
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#ffffff;font-family:'Hiragino Sans','Yu Gothic UI','Meiryo',sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;padding:32px 16px;">
   <tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
@@ -497,7 +497,7 @@ export default function AdminEmailMarketing() {
                   />
                 </div>
               ) : (
-                <div className="h-full overflow-y-auto bg-slate-100">
+                <div className="h-full overflow-y-auto bg-white">
                   <div className="max-w-[600px] mx-auto my-4 shadow-md">
                     <iframe
                       srcDoc={previewHtml}
