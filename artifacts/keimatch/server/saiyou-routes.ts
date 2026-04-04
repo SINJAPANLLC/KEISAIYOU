@@ -2,6 +2,9 @@ import type { Express, Request, Response } from "express";
 import { db } from "./db";
 import { eq, desc, and, sql, lt } from "drizzle-orm";
 import OpenAI from "openai";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import {
   jobListings,
   applications,
@@ -29,6 +32,44 @@ function requireAdmin(req: Request, res: Response, next: Function) {
 }
 
 export function registerSaiyouRoutes(app: Express) {
+
+  // ─── Resume file upload ──────────────────────────────────────────────────
+  const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+  const resumeStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+      cb(null, id);
+    },
+  });
+  const resumeUpload = multer({
+    storage: resumeStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: (_req, file, cb) => {
+      const allowed = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png"];
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, allowed.includes(ext));
+    },
+  });
+
+  // Public: upload resume (returns URL)
+  app.post("/api/upload/resume", resumeUpload.single("resume"), (req, res) => {
+    if (!req.file) return res.status(400).json({ message: "ファイルが見つかりません" });
+    const appBaseUrl = process.env.APP_BASE_URL || "https://keisaiyou-sinjapan.com";
+    const url = `${appBaseUrl}/api/uploads/${req.file.filename}`;
+    res.json({ url, filename: req.file.originalname });
+  });
+
+  // Authenticated: serve resume file
+  app.get("/api/uploads/:filename", requireAuth, (req, res) => {
+    const filename = path.basename(req.params.filename);
+    const filePath = path.join(UPLOADS_DIR, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: "ファイルが見つかりません" });
+    res.sendFile(filePath);
+  });
 
   // ─── Sidebar badge counts ────────────────────────────────────────────────
   app.get("/api/sidebar-badges", requireAuth, async (req, res) => {
@@ -531,7 +572,7 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
 
   app.post("/api/apply", async (req, res) => {
     try {
-      const { jobId, name, phone, email, licenseType, hasBlackNumber, availableAreas, message } = req.body;
+      const { jobId, name, phone, email, gender, birthDate, address, workHistory, resumeUrl, licenseType, hasBlackNumber, availableAreas, message } = req.body;
       if (!jobId || !name || !phone || !email) {
         return res.status(400).json({ message: "必須項目を入力してください" });
       }
@@ -565,6 +606,11 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
         name,
         phone,
         email,
+        gender: gender || null,
+        birthDate: birthDate || null,
+        address: address || null,
+        workHistory: workHistory || null,
+        resumeUrl: resumeUrl || null,
         licenseType: licenseType || null,
         hasBlackNumber: hasBlackNumber === true || hasBlackNumber === "true",
         availableAreas: availableAreas || null,

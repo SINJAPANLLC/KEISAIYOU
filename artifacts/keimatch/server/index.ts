@@ -8,6 +8,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from "http";
 import { dbPool, db } from "./db";
 import { jobListings, users } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
+import path from "path";
+import fs from "fs";
 
 const app = express();
 app.set("trust proxy", 1);
@@ -80,6 +82,10 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// Serve uploaded resumes (authenticated download via /api/uploads/:filename)
+const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const PgStore = connectPgSimple(session);
 
