@@ -147,9 +147,8 @@ export default function Home() {
             </p>
             <ul className="mt-7 space-y-3 text-base sm:text-lg text-white/90 max-w-md mx-auto text-left inline-block" data-testid="text-hero-subtitle">
               {[
-                <>求人をAI登録するだけ（1分）</>,
-                <>応募が来たらメールですぐ通知</>,
-                <>料金は<strong className="text-white font-black">3,000円（税別）/ 応募</strong>のシンプルな料金プラン</>,
+                "求人をAI登録するだけ（1分）",
+                "応募が来たらメールですぐ通知",
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-3">
                   <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
@@ -158,6 +157,14 @@ export default function Home() {
                   {item}
                 </li>
               ))}
+              <li className="flex items-start gap-3">
+                <span className="w-5 h-5 mt-0.5 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                </span>
+                <span>
+                  料金は<strong className="text-white font-black">3,000円（税別）&nbsp;/&nbsp;応募</strong>、成果報酬型
+                </span>
+              </li>
             </ul>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link href="/register">
