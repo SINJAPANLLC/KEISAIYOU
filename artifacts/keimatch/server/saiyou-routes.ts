@@ -205,10 +205,13 @@ export function registerSaiyouRoutes(app: Express) {
           name: applications.name,
           phone: applications.phone,
           email: applications.email,
-          licenseType: applications.licenseType,
-          hasBlackNumber: applications.hasBlackNumber,
-          availableAreas: applications.availableAreas,
+          gender: applications.gender,
+          birthDate: applications.birthDate,
+          address: applications.address,
+          workHistory: applications.workHistory,
+          resumeUrl: applications.resumeUrl,
           message: applications.message,
+          memo: applications.memo,
           paymentStatus: applications.paymentStatus,
           viewable: applications.viewable,
           reviewStatus: applications.reviewStatus,
@@ -247,7 +250,8 @@ export function registerSaiyouRoutes(app: Express) {
   app.patch("/api/applications/:id/review-status", requireAuth, async (req, res) => {
     try {
       const { status } = req.body;
-      if (!["new", "reviewed", "rejected"].includes(status)) {
+      const VALID_STATUSES = ["new", "contacted", "interviewing", "hired", "rejected"];
+      if (!VALID_STATUSES.includes(status)) {
         return res.status(400).json({ message: "無効なステータスです" });
       }
       // Verify the application belongs to this user's job
@@ -261,6 +265,23 @@ export function registerSaiyouRoutes(app: Express) {
       res.json(updated);
     } catch {
       res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  // Update application memo
+  app.patch("/api/applications/:id/memo", requireAuth, async (req, res) => {
+    try {
+      const { memo } = req.body;
+      const [app_] = await db.select().from(applications).where(eq(applications.id, req.params.id));
+      if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
+      if (!job || (job.userId !== req.session!.userId && req.session?.role !== "admin")) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const [updated] = await db.update(applications).set({ memo: memo || null }).where(eq(applications.id, req.params.id)).returning();
+      res.json(updated);
+    } catch {
+      res.status(500).json({ message: "メモの保存に失敗しました" });
     }
   });
 

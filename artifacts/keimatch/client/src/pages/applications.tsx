@@ -7,11 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Search, Users, Phone, Mail, FileText, Calendar, CheckCircle2, Clock, Lock, AlertCircle,
+  MapPin, User, Cake, Briefcase, StickyNote, Save, ExternalLink,
 } from "lucide-react";
 
 type Application = {
@@ -21,10 +23,13 @@ type Application = {
   name: string;
   phone: string;
   email: string;
-  licenseType: string;
-  hasBlackNumber: boolean;
-  availableAreas: string;
-  message: string;
+  gender?: string;
+  birthDate?: string;
+  address?: string;
+  workHistory?: string;
+  resumeUrl?: string;
+  message?: string;
+  memo?: string;
   paymentStatus: string;
   viewable: boolean;
   reviewStatus: string;
@@ -32,15 +37,26 @@ type Application = {
 };
 
 const REVIEW_STATUS: Record<string, { label: string; className: string }> = {
-  new: { label: "新着", className: "border-primary text-primary bg-primary/10" },
-  reviewed: { label: "確認済み", className: "border-emerald-400 text-emerald-700 bg-emerald-50" },
-  rejected: { label: "不採用", className: "border-muted-foreground/40 text-muted-foreground bg-muted/50" },
+  new:          { label: "新着",   className: "border-primary text-primary bg-primary/10" },
+  contacted:    { label: "連絡済", className: "border-blue-400 text-blue-700 bg-blue-50" },
+  interviewing: { label: "面接中", className: "border-amber-400 text-amber-700 bg-amber-50" },
+  hired:        { label: "採用",   className: "border-emerald-400 text-emerald-700 bg-emerald-50" },
+  rejected:     { label: "不採用", className: "border-muted-foreground/40 text-muted-foreground bg-muted/50" },
 };
+
+const STATUS_BUTTONS = [
+  { value: "new",          label: "新着" },
+  { value: "contacted",    label: "連絡済" },
+  { value: "interviewing", label: "面接中" },
+  { value: "hired",        label: "採用" },
+  { value: "rejected",     label: "不採用" },
+];
 
 export default function Applications() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<Application | null>(null);
+  const [memoText, setMemoText] = useState("");
   const { toast } = useToast();
 
   const { data: applications = [], isLoading } = useQuery<Application[]>({
@@ -63,6 +79,19 @@ export default function Applications() {
     onError: () => toast({ title: "更新に失敗しました", variant: "destructive" }),
   });
 
+  const memoMutation = useMutation({
+    mutationFn: async ({ id, memo }: { id: string; memo: string }) => {
+      const res = await apiRequest("PATCH", `/api/applications/${id}/memo`, { memo });
+      return res.json();
+    },
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my/applications"] });
+      if (selected) setSelected({ ...selected, memo: updated.memo });
+      toast({ title: "メモを保存しました" });
+    },
+    onError: () => toast({ title: "メモの保存に失敗しました", variant: "destructive" }),
+  });
+
   const filtered = applications.filter((a) => {
     const q = search.toLowerCase();
     const matchSearch = !search || (
@@ -77,6 +106,11 @@ export default function Applications() {
 
   const formatDate = (s: string) =>
     new Date(s).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  const openDetail = (app: Application) => {
+    setSelected(app);
+    setMemoText(app.memo || "");
+  };
 
   return (
     <DashboardLayout>
@@ -103,14 +137,14 @@ export default function Applications() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全ステータス</SelectItem>
-              <SelectItem value="new">新着</SelectItem>
-              <SelectItem value="reviewed">確認済み</SelectItem>
-              <SelectItem value="rejected">不採用</SelectItem>
+              {STATUS_BUTTONS.map((s) => (
+                <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -139,7 +173,7 @@ export default function Applications() {
                 <Card
                   key={app.id}
                   className="border border-border hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer"
-                  onClick={() => setSelected(app)}
+                  onClick={() => openDetail(app)}
                 >
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${isLocked ? "bg-muted" : "bg-primary/10"}`}>
@@ -161,6 +195,11 @@ export default function Applications() {
                         {app.paymentStatus === "failed" && (
                           <Badge variant="outline" className="text-[10px] shrink-0 border-destructive text-destructive bg-destructive/5">
                             <AlertCircle className="w-3 h-3 mr-1" />決済失敗
+                          </Badge>
+                        )}
+                        {app.memo && (
+                          <Badge variant="outline" className="text-[10px] shrink-0 border-amber-300 text-amber-700 bg-amber-50">
+                            <StickyNote className="w-3 h-3 mr-1" />メモあり
                           </Badge>
                         )}
                       </div>
@@ -219,18 +258,14 @@ export default function Applications() {
                   <div className="space-y-4">
                     {/* Status change */}
                     <div className="p-3 rounded-lg bg-muted/50">
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">ステータス変更</p>
-                      <div className="flex gap-2 flex-wrap">
-                        {[
-                          { value: "new", label: "新着" },
-                          { value: "reviewed", label: "確認済み" },
-                          { value: "rejected", label: "不採用" },
-                        ].map((s) => (
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">ステータス</p>
+                      <div className="flex gap-1.5 flex-wrap">
+                        {STATUS_BUTTONS.map((s) => (
                           <Button
                             key={s.value}
                             size="sm"
                             variant={selected.reviewStatus === s.value ? "default" : "outline"}
-                            className="text-xs h-7"
+                            className="text-xs h-7 px-2.5"
                             onClick={() => statusMutation.mutate({ id: selected.id, status: s.value })}
                             disabled={statusMutation.isPending}
                           >
@@ -242,26 +277,90 @@ export default function Applications() {
 
                     {/* Job */}
                     <div className="p-3 rounded-lg bg-muted/50">
-                      <p className="text-xs font-semibold text-muted-foreground mb-1">応募求人</p>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                        <Briefcase className="w-3 h-3" />応募求人
+                      </p>
                       <p className="text-sm font-medium">{selected.jobTitle || "求人削除済"}</p>
                     </div>
 
-                    {/* Contact */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                          <Phone className="w-3 h-3" />電話番号
-                        </p>
-                        <a href={`tel:${selected.phone}`} className="text-sm text-primary hover:underline">{selected.phone}</a>
+                    {/* Basic info */}
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">基本情報</p>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                            <Phone className="w-3 h-3" />電話番号
+                          </p>
+                          <a href={`tel:${selected.phone}`} className="text-sm text-primary hover:underline">{selected.phone}</a>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                            <Mail className="w-3 h-3" />メール
+                          </p>
+                          <a href={`mailto:${selected.email}`} className="text-sm text-primary hover:underline break-all">{selected.email}</a>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                          <Mail className="w-3 h-3" />メール
-                        </p>
-                        <a href={`mailto:${selected.email}`} className="text-sm text-primary hover:underline break-all">{selected.email}</a>
-                      </div>
+
+                      {(selected.gender || selected.birthDate) && (
+                        <div className="grid grid-cols-2 gap-3">
+                          {selected.gender && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                                <User className="w-3 h-3" />性別
+                              </p>
+                              <p className="text-sm">{selected.gender}</p>
+                            </div>
+                          )}
+                          {selected.birthDate && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                                <Cake className="w-3 h-3" />生年月日
+                              </p>
+                              <p className="text-sm">{selected.birthDate}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {selected.address && (
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />住所
+                          </p>
+                          <p className="text-sm">{selected.address}</p>
+                        </div>
+                      )}
                     </div>
 
+                    {/* Work history */}
+                    {selected.workHistory && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                          <Briefcase className="w-3 h-3" />職歴
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap bg-muted/40 rounded-lg p-3">{selected.workHistory}</p>
+                      </div>
+                    )}
+
+                    {/* Resume */}
+                    {selected.resumeUrl && (
+                      <div>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                          <FileText className="w-3 h-3" />履歴書
+                        </p>
+                        <a
+                          href={selected.resumeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3 h-3" />履歴書を確認する
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Message */}
                     {selected.message && (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-1">メッセージ</p>
@@ -269,8 +368,30 @@ export default function Applications() {
                       </div>
                     )}
 
+                    {/* Memo */}
+                    <div className="border-t pt-4">
+                      <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                        <StickyNote className="w-3 h-3" />社内メモ
+                      </p>
+                      <Textarea
+                        placeholder="この応募者に関するメモを記入..."
+                        value={memoText}
+                        onChange={(e) => setMemoText(e.target.value)}
+                        className="text-sm min-h-[80px] resize-none"
+                      />
+                      <Button
+                        size="sm"
+                        className="mt-2 text-xs"
+                        onClick={() => memoMutation.mutate({ id: selected.id, memo: memoText })}
+                        disabled={memoMutation.isPending || memoText === (selected.memo || "")}
+                      >
+                        <Save className="w-3 h-3 mr-1" />
+                        {memoMutation.isPending ? "保存中..." : "メモを保存"}
+                      </Button>
+                    </div>
+
                     {/* Payment status */}
-                    <div className="pt-2 flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">
                         課金ステータス: {selected.paymentStatus === "paid" ? "課金済（¥3,000税別）" : selected.paymentStatus === "failed" ? "決済失敗" : "未課金"}
