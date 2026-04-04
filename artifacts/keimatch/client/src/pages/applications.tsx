@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-  Search, Users, Phone, Mail, MapPin, FileText, Calendar, CheckCircle2, Clock, Lock, AlertCircle,
+  Search, Users, Phone, Mail, FileText, Calendar, CheckCircle2, Clock, Lock, AlertCircle,
 } from "lucide-react";
 
 type Application = {
@@ -262,26 +262,6 @@ export default function Applications() {
                       </div>
                     </div>
 
-                    {/* Requirements */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">免許種別</p>
-                        <p className="text-sm">{selected.licenseType || "未記入"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">黒ナンバー</p>
-                        <p className="text-sm">{selected.hasBlackNumber ? "あり" : "なし"}</p>
-                      </div>
-                    </div>
-
-                    {selected.availableAreas && (
-                      <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />稼働可能エリア
-                        </p>
-                        <p className="text-sm">{selected.availableAreas}</p>
-                      </div>
-                    )}
                     {selected.message && (
                       <div>
                         <p className="text-xs font-semibold text-muted-foreground mb-1">メッセージ</p>
