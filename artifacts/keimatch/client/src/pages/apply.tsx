@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Banknote, Briefcase, CheckCircle2, Loader2, Building2, Paperclip, X } from "lucide-react";
+import logoImg from "@/assets/logo-keisaiyou.png";
 
 const LICENSE_TYPES = ["普通自動車（AT限定）", "普通自動車", "準中型", "中型", "大型", "けん引"];
 const GENDER_OPTIONS = ["男性", "女性", "その他", "回答しない"];
@@ -144,7 +145,7 @@ export default function Apply() {
                 <p className="text-[10px] text-muted-foreground">採用情報</p>
               </div>
             </div>
-            <span className="text-[10px] font-bold text-orange-500 tracking-wide">KEI SAIYOU</span>
+            <img src={logoImg} alt="KEI SAIYOU" className="h-6 w-auto opacity-90" />
           </div>
         </div>
       </div>
