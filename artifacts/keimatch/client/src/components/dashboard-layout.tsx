@@ -19,6 +19,7 @@ const userMenuItems: MenuItem[] = [
   { href: "/home", label: "ダッシュボード", icon: Home },
   { href: "/jobs/new", label: "求人を作成", icon: Plus },
   { href: "/jobs", label: "求人一覧", icon: Briefcase },
+  { href: "/applications", label: "応募者一覧", icon: Users },
   { href: "/settings", label: "アカウント設定", icon: Settings },
 ];
 
