@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, Calendar } from "lucide-react";
+import { Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, Calendar, Clock, CalendarDays, Tag } from "lucide-react";
 
 type Job = {
   id: string;
@@ -219,7 +219,15 @@ export default function Jobs() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <p className="text-base font-bold text-foreground mb-3 leading-snug">{job.title}</p>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-2 gap-x-4">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-3 gap-x-4 mb-3">
+                            {job.jobCategory && (
+                              <div>
+                                <p className="text-[10px] text-muted-foreground mb-0.5">職種</p>
+                                <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                                  <Tag className="w-3 h-3 text-primary shrink-0" />{job.jobCategory}
+                                </p>
+                              </div>
+                            )}
                             <div>
                               <p className="text-[10px] text-muted-foreground mb-0.5">雇用形態</p>
                               <p className="text-sm font-medium text-foreground flex items-center gap-1">
@@ -238,6 +246,22 @@ export default function Jobs() {
                                 <Banknote className="w-3 h-3 text-primary shrink-0" />{job.salary}
                               </p>
                             </div>
+                            {job.workHours && (
+                              <div>
+                                <p className="text-[10px] text-muted-foreground mb-0.5">勤務時間</p>
+                                <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-primary shrink-0" />{job.workHours}
+                                </p>
+                              </div>
+                            )}
+                            {job.holidays && (
+                              <div>
+                                <p className="text-[10px] text-muted-foreground mb-0.5">休日</p>
+                                <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                                  <CalendarDays className="w-3 h-3 text-primary shrink-0" />{job.holidays}
+                                </p>
+                              </div>
+                            )}
                             <div>
                               <p className="text-[10px] text-muted-foreground mb-0.5">応募数</p>
                               <p className="text-sm font-bold text-primary flex items-center gap-1">
@@ -245,9 +269,9 @@ export default function Jobs() {
                               </p>
                             </div>
                           </div>
-                          <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1">
+                          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                             <Calendar className="w-3 h-3" />掲載開始: {formatDate(job.createdAt)}
-                            {isPaused && <span className="ml-2 text-muted-foreground font-medium">（停止中）</span>}
+                            {isPaused && <span className="ml-2 font-medium">（停止中）</span>}
                           </p>
                         </div>
                         <div className="flex flex-col gap-1.5 shrink-0">
