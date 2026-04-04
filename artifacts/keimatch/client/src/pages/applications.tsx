@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   Search, Users, Phone, Mail, FileText, Calendar, CheckCircle2, Clock, Lock, AlertCircle,
-  MapPin, User, Cake, Briefcase, StickyNote, Save, ExternalLink,
+  MapPin, User, Cake, Briefcase, StickyNote, Save, ExternalLink, RefreshCw, ChevronDown, ChevronUp,
 } from "lucide-react";
 
 type Application = {
@@ -57,6 +57,9 @@ export default function Applications() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selected, setSelected] = useState<Application | null>(null);
   const [memoText, setMemoText] = useState("");
+  const [refundOpen, setRefundOpen] = useState(false);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundDetail, setRefundDetail] = useState("");
   const { toast } = useToast();
 
   const { data: applications = [], isLoading } = useQuery<Application[]>({
@@ -90,6 +93,20 @@ export default function Applications() {
       toast({ title: "メモを保存しました" });
     },
     onError: () => toast({ title: "メモの保存に失敗しました", variant: "destructive" }),
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: async ({ id, reason, detail }: { id: string; reason: string; detail: string }) => {
+      const res = await apiRequest("POST", `/api/applications/${id}/refund-request`, { reason, detail });
+      return res.json();
+    },
+    onSuccess: () => {
+      setRefundOpen(false);
+      setRefundReason("");
+      setRefundDetail("");
+      toast({ title: "返金申請を送信しました", description: "管理者が確認後、処理いたします。" });
+    },
+    onError: (e: any) => toast({ title: "申請に失敗しました", description: e.message, variant: "destructive" }),
   });
 
   const filtered = applications.filter((a) => {
@@ -403,6 +420,55 @@ export default function Applications() {
                         課金ステータス: {selected.paymentStatus === "paid" ? "課金済（¥3,000税別）" : selected.paymentStatus === "failed" ? "決済失敗" : "未課金"}
                       </span>
                     </div>
+
+                    {/* Refund request */}
+                    {selected.paymentStatus === "paid" && (
+                      <div className="border-t pt-4">
+                        <button
+                          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full"
+                          onClick={() => setRefundOpen((o) => !o)}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                          <span>返金申請（重複・悪意ある応募など）</span>
+                          {refundOpen ? <ChevronUp className="w-3 h-3 ml-auto" /> : <ChevronDown className="w-3 h-3 ml-auto" />}
+                        </button>
+                        {refundOpen && (
+                          <div className="mt-3 space-y-3 p-3 rounded-lg bg-muted/40 border">
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">申請理由</p>
+                              <Select value={refundReason} onValueChange={setRefundReason}>
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="理由を選択..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="重複応募">重複応募（同一人物）</SelectItem>
+                                  <SelectItem value="連絡不通">連絡不通（電話・メール不通）</SelectItem>
+                                  <SelectItem value="スパム・悪意のある応募">スパム・悪意のある応募</SelectItem>
+                                  <SelectItem value="虚偽の情報">虚偽の情報</SelectItem>
+                                  <SelectItem value="その他">その他</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Textarea
+                              placeholder="詳細（任意）..."
+                              value={refundDetail}
+                              onChange={(e) => setRefundDetail(e.target.value)}
+                              className="text-xs min-h-[60px] resize-none"
+                            />
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full text-xs border-destructive text-destructive hover:bg-destructive/5"
+                              disabled={!refundReason || refundMutation.isPending}
+                              onClick={() => refundMutation.mutate({ id: selected.id, reason: refundReason, detail: refundDetail })}
+                            >
+                              <RefreshCw className="w-3 h-3 mr-1.5" />
+                              {refundMutation.isPending ? "送信中..." : "返金申請を送信"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </>

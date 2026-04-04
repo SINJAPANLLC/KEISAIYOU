@@ -9,6 +9,7 @@ import {
   emailLeads,
   emailCampaigns,
   payments,
+  refundRequests,
 } from "@shared/schema";
 import { sendEmail } from "./notification-service";
 import { chargeSquareCard } from "./square";
@@ -282,6 +283,108 @@ export function registerSaiyouRoutes(app: Express) {
       res.json(updated);
     } catch {
       res.status(500).json({ message: "メモの保存に失敗しました" });
+    }
+  });
+
+  // ─── Refund Requests ─────────────────────────────────────────────────────
+
+  // Company submits a refund request
+  app.post("/api/applications/:id/refund-request", requireAuth, async (req, res) => {
+    try {
+      const { reason, detail } = req.body;
+      if (!reason) return res.status(400).json({ message: "理由を選択してください" });
+      const [app_] = await db.select().from(applications).where(eq(applications.id, req.params.id));
+      if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
+      if (!job || job.userId !== req.session!.userId) return res.status(403).json({ message: "権限がありません" });
+      // Check not already requested
+      const existing = await db.select().from(refundRequests)
+        .where(and(eq(refundRequests.applicationId, req.params.id), eq(refundRequests.status, "pending")));
+      if (existing.length) return res.status(409).json({ message: "すでに返金申請中です" });
+      const [rr] = await db.insert(refundRequests).values({
+        applicationId: req.params.id,
+        companyUserId: req.session!.userId!,
+        reason,
+        detail: detail || null,
+        refundAmount: 3000,
+      }).returning();
+      // Notify admins
+      const admins = await db.select().from(users).where(eq(users.role, "admin"));
+      for (const admin of admins) {
+        await db.insert(notifications).values({
+          userId: admin.id,
+          type: "system",
+          title: "返金申請",
+          message: `「${app_.name}」への返金申請が届きました（理由: ${reason}）`,
+          relatedId: rr.id,
+        });
+      }
+      res.status(201).json(rr);
+    } catch (err) {
+      console.error("[refund/create]", err);
+      res.status(500).json({ message: "返金申請に失敗しました" });
+    }
+  });
+
+  // Company: check if refund request already exists for an application
+  app.get("/api/applications/:id/refund-request", requireAuth, async (req, res) => {
+    try {
+      const [rr] = await db.select().from(refundRequests)
+        .where(eq(refundRequests.applicationId, req.params.id))
+        .orderBy(desc(refundRequests.createdAt));
+      res.json(rr || null);
+    } catch {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Admin: list all refund requests
+  app.get("/api/admin/refund-requests", requireAuth, async (req, res) => {
+    try {
+      if (req.session?.role !== "admin") return res.status(403).json({ message: "権限がありません" });
+      const rows = await db.select().from(refundRequests).orderBy(desc(refundRequests.createdAt));
+      // Enrich with application + company info
+      const enriched = await Promise.all(rows.map(async (rr) => {
+        const [app_] = await db.select().from(applications).where(eq(applications.id, rr.applicationId));
+        const [company] = app_ ? await db.select().from(users).where(eq(users.id, rr.companyUserId)) : [null];
+        return {
+          ...rr,
+          applicantName: app_?.name || "削除済",
+          companyName: company?.companyName || company?.email || "不明",
+        };
+      }));
+      res.json(enriched);
+    } catch (err) {
+      console.error("[refund/admin/list]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Admin: approve or reject a refund request
+  app.patch("/api/admin/refund-requests/:id", requireAuth, async (req, res) => {
+    try {
+      if (req.session?.role !== "admin") return res.status(403).json({ message: "権限がありません" });
+      const { status, adminNote } = req.body;
+      if (!["approved", "rejected"].includes(status)) return res.status(400).json({ message: "無効なステータスです" });
+      const [updated] = await db.update(refundRequests)
+        .set({ status, adminNote: adminNote || null, resolvedAt: new Date() })
+        .where(eq(refundRequests.id, req.params.id))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "申請が見つかりません" });
+      // Notify the company user
+      await db.insert(notifications).values({
+        userId: updated.companyUserId,
+        type: "system",
+        title: status === "approved" ? "返金申請が承認されました" : "返金申請が却下されました",
+        message: status === "approved"
+          ? `返金申請が承認されました。¥3,000（税別）を返金処理します。${adminNote ? `\n管理者メモ: ${adminNote}` : ""}`
+          : `返金申請が却下されました。${adminNote ? `理由: ${adminNote}` : ""}`,
+        relatedId: updated.id,
+      });
+      res.json(updated);
+    } catch (err) {
+      console.error("[refund/admin/patch]", err);
+      res.status(500).json({ message: "更新に失敗しました" });
     }
   });
 

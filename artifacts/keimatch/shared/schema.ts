@@ -631,3 +631,17 @@ export const applications = pgTable("applications", {
 export const insertApplicationSchema = createInsertSchema(applications).omit({ id: true, paymentStatus: true, squarePaymentId: true, viewable: true, createdAt: true });
 export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type Application = typeof applications.$inferSelect;
+
+export const refundRequests = pgTable("refund_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  applicationId: varchar("application_id").notNull(),
+  companyUserId: varchar("company_user_id").notNull(),
+  reason: text("reason").notNull(),
+  detail: text("detail"),
+  status: text("status").notNull().default("pending"),
+  adminNote: text("admin_note"),
+  refundAmount: integer("refund_amount").notNull().default(3000),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  resolvedAt: timestamp("resolved_at"),
+});
+export type RefundRequest = typeof refundRequests.$inferSelect;
