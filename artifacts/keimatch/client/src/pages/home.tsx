@@ -146,15 +146,20 @@ export default function Home() {
           mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
         }
         .lw-track { display: flex; will-change: transform; }
-        .lw-track-a { animation: lwScroll 34s linear infinite; }
-        .lw-track-b { animation: lwScroll 24s linear infinite; }
+        .lw-track-a { animation: lwScrollA 34s linear infinite; }
+        .lw-track-b { animation: lwScrollB 20s linear infinite; }
         .lw-slide { width: 180px; height: 100px; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; padding: 0 20px; }
         .lw-slide img { max-width: 130px; max-height: 60px; object-fit: contain; filter: grayscale(25%); opacity: 0.8; transition: all .25s; }
         .lw-slide img:hover { opacity: 1; filter: none; transform: scale(1.06); }
-        @keyframes lwScroll { 0% { transform: translateX(0); } 100% { transform: translateX(calc(-180px * var(--n))); } }
+        /* track-a: 10 logos × 180px = 1800px */
+        @keyframes lwScrollA { 0% { transform: translateX(0); } 100% { transform: translateX(-1800px); } }
+        /* track-b: 4 logos × 180px = 720px */
+        @keyframes lwScrollB { 0% { transform: translateX(0); } 100% { transform: translateX(-720px); } }
         @media(max-width:768px){
           .lw-slide { width: 140px; }
           .lw-slide img { max-width: 100px; }
+          @keyframes lwScrollA { 100% { transform: translateX(-1400px); } }
+          @keyframes lwScrollB { 100% { transform: translateX(-560px); } }
         }
 
         /* ── step cards ── */
@@ -258,7 +263,7 @@ export default function Home() {
       {/* ─── LOGO WALL 1 ─── */}
       <section className="py-10 bg-white border-b border-border/40">
         <div className="lw-slider">
-          <div className="lw-track lw-track-a" style={{ ["--n" as string]: LOGO_URLS_1.length, width: `${180 * LOGO_URLS_1.length * 2}px` }}>
+          <div className="lw-track lw-track-a" style={{ width: `${180 * LOGO_URLS_1.length * 2}px` }}>
             {[...LOGO_URLS_1, ...LOGO_URLS_1].map((src, i) => (
               <div key={`lw1-${i}`} className="lw-slide"><img src={src} alt={`企業ロゴ${i + 1}`} /></div>
             ))}
@@ -377,7 +382,7 @@ export default function Home() {
       {/* ─── LOGO WALL 2 ─── */}
       <section className="py-10 bg-white border-y border-border/40">
         <div className="lw-slider">
-          <div className="lw-track lw-track-b" style={{ ["--n" as string]: LOGO_URLS_2.length, width: `${180 * LOGO_URLS_2.length * 2}px` }}>
+          <div className="lw-track lw-track-b" style={{ width: `${180 * LOGO_URLS_2.length * 2}px` }}>
             {[...LOGO_URLS_2, ...LOGO_URLS_2].map((src, i) => (
               <div key={`lw2-${i}`} className="lw-slide"><img src={src} alt={`企業ロゴ${i + 1}`} /></div>
             ))}
