@@ -6,10 +6,10 @@ import DashboardLayout from "@/components/dashboard-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Briefcase, Plus, Edit2, Trash2, Pause, Play, MapPin, Banknote, Users, Calendar } from "lucide-react";
 
@@ -24,11 +24,6 @@ type Job = {
   requirements: string;
   workHours?: string;
   holidays?: string;
-  benefits?: string;
-  requiresLicense?: boolean;
-  requiresBlackNumber?: boolean;
-  requiresVehicle?: boolean;
-  requiresExperience?: boolean;
   status: string;
   monthlyLimit: number;
   monthlySpent: number;
@@ -37,32 +32,6 @@ type Job = {
 
 const JOB_CATEGORIES = ["軽貨物ドライバー", "宅配ドライバー", "幹線輸送ドライバー", "EC配送", "フードデリバリー", "企業配送", "その他"];
 const EMPLOYMENT_TYPES = ["業務委託", "正社員", "契約社員", "パート・アルバイト"];
-const PREFECTURES = [
-  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
-  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
-  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
-  "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
-  "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
-  "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
-  "熊本県","大分県","宮崎県","鹿児島県","沖縄県",
-];
-const SALARY_OPTIONS = [
-  "月収20万〜30万円（歩合制）",
-  "月収30万〜40万円（歩合制）",
-  "月収40万〜50万円（歩合制）",
-  "月収50万円以上（歩合制）",
-  "日給1.5万〜2万円",
-  "時給1,500〜2,000円",
-  "要相談",
-];
-const WORK_HOURS_OPTIONS = [
-  "8:00〜17:00（実働8時間）",
-  "9:00〜18:00（実働8時間）",
-  "6:00〜15:00（実働8時間）",
-  "シフト制（週3日〜OK）",
-  "フルフレックス",
-  "要相談",
-];
 const HOLIDAYS_OPTIONS = [
   "週休2日（土日）",
   "週休2日（シフト制）",
@@ -72,11 +41,11 @@ const HOLIDAYS_OPTIONS = [
   "要相談",
 ];
 const MONTHLY_LIMITS = [
-  { label: "3万円（最大9応募/月）", value: "30000" },
+  { label: "3万円（最大9応募/月）",  value: "30000" },
   { label: "5万円（最大15応募/月）", value: "50000" },
   { label: "10万円（最大30応募/月）", value: "100000" },
   { label: "20万円（最大60応募/月）", value: "200000" },
-  { label: "上限なし", value: "9999999" },
+  { label: "上限なし",               value: "9999999" },
 ];
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
@@ -87,16 +56,13 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
 };
 
 const EMPTY_FORM = {
+  title: "",
   jobCategory: "",
   employmentType: "",
-  prefecture: "",
+  area: "",
   salary: "",
   workHours: "",
   holidays: "",
-  requiresLicense: false,
-  requiresBlackNumber: false,
-  requiresVehicle: false,
-  requiresExperience: false,
   monthlyLimit: "30000",
 };
 
@@ -117,30 +83,8 @@ export default function Jobs() {
     return acc;
   }, {});
 
-  const buildPayload = () => {
-    const title = `${form.jobCategory || "軽貨物ドライバー"}（${form.prefecture || "エリア未定"}）`;
-    return {
-      title,
-      jobCategory: form.jobCategory,
-      employmentType: form.employmentType,
-      salary: form.salary,
-      area: form.prefecture,
-      description: `${form.jobCategory}として${form.prefecture}エリアで活躍していただくお仕事です。`,
-      requirements: "",
-      workHours: form.workHours,
-      holidays: form.holidays,
-      benefits: "",
-      requiresLicense: form.requiresLicense,
-      requiresBlackNumber: form.requiresBlackNumber,
-      requiresVehicle: form.requiresVehicle,
-      requiresExperience: form.requiresExperience,
-      monthlyLimit: Number(form.monthlyLimit),
-    };
-  };
-
   const createMutation = useMutation({
-    mutationFn: (data: ReturnType<typeof buildPayload>) =>
-      apiRequest("POST", "/api/jobs", data).then((r) => r.json()),
+    mutationFn: (data: any) => apiRequest("POST", "/api/jobs", data).then((r) => r.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
       setOpen(false);
@@ -184,16 +128,13 @@ export default function Jobs() {
   const openEdit = (job: Job) => {
     setEditing(job);
     setForm({
+      title: job.title,
       jobCategory: job.jobCategory || "",
       employmentType: job.employmentType || "",
-      prefecture: job.area || "",
+      area: job.area || "",
       salary: job.salary || "",
       workHours: job.workHours || "",
       holidays: job.holidays || "",
-      requiresLicense: job.requiresLicense ?? false,
-      requiresBlackNumber: job.requiresBlackNumber ?? false,
-      requiresVehicle: job.requiresVehicle ?? false,
-      requiresExperience: job.requiresExperience ?? false,
       monthlyLimit: String(job.monthlyLimit),
     });
     setOpen(true);
@@ -201,11 +142,23 @@ export default function Jobs() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.jobCategory || !form.employmentType || !form.prefecture || !form.salary) {
-      toast({ variant: "destructive", title: "必須項目を選択してください" });
+    if (!form.title || !form.jobCategory || !form.employmentType || !form.area || !form.salary) {
+      toast({ variant: "destructive", title: "必須項目を入力・選択してください" });
       return;
     }
-    const data = buildPayload();
+    const data = {
+      title: form.title,
+      jobCategory: form.jobCategory,
+      employmentType: form.employmentType,
+      area: form.area,
+      salary: form.salary,
+      workHours: form.workHours,
+      holidays: form.holidays,
+      description: `${form.jobCategory}として${form.area}エリアで活躍していただくお仕事です。`,
+      requirements: "",
+      benefits: "",
+      monthlyLimit: Number(form.monthlyLimit),
+    };
     if (editing) {
       updateMutation.mutate({ id: editing.id, data });
     } else {
@@ -319,6 +272,17 @@ export default function Jobs() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-2">
 
+            {/* タイトル */}
+            <div className="space-y-1.5">
+              <Label>タイトル <span className="text-destructive">*</span></Label>
+              <Input
+                value={form.title}
+                onChange={(e) => up("title", e.target.value)}
+                placeholder="例: 軽貨物ドライバー（神奈川エリア）"
+                data-testid="input-job-title"
+              />
+            </div>
+
             {/* 職種 */}
             <div className="space-y-1.5">
               <Label>職種 <span className="text-destructive">*</span></Label>
@@ -337,33 +301,36 @@ export default function Jobs() {
               </Select>
             </div>
 
-            {/* 都道府県 */}
+            {/* 勤務エリア */}
             <div className="space-y-1.5">
-              <Label>勤務エリア（都道府県）<span className="text-destructive">*</span></Label>
-              <Select value={form.prefecture} onValueChange={(v) => up("prefecture", v)}>
-                <SelectTrigger data-testid="select-prefecture"><SelectValue placeholder="都道府県を選択" /></SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {PREFECTURES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>勤務エリア <span className="text-destructive">*</span></Label>
+              <Input
+                value={form.area}
+                onChange={(e) => up("area", e.target.value)}
+                placeholder="例: 神奈川県横浜市・川崎市"
+                data-testid="input-job-area"
+              />
             </div>
 
-            {/* 給与帯 */}
+            {/* 給与・報酬 */}
             <div className="space-y-1.5">
               <Label>給与・報酬 <span className="text-destructive">*</span></Label>
-              <Select value={form.salary} onValueChange={(v) => up("salary", v)}>
-                <SelectTrigger data-testid="select-salary"><SelectValue placeholder="選択してください" /></SelectTrigger>
-                <SelectContent>{SALARY_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
+              <Input
+                value={form.salary}
+                onChange={(e) => up("salary", e.target.value)}
+                placeholder="例: 月収30万〜50万円（歩合制）"
+                data-testid="input-job-salary"
+              />
             </div>
 
             {/* 勤務時間 */}
             <div className="space-y-1.5">
               <Label>勤務時間</Label>
-              <Select value={form.workHours} onValueChange={(v) => up("workHours", v)}>
-                <SelectTrigger><SelectValue placeholder="選択してください" /></SelectTrigger>
-                <SelectContent>{WORK_HOURS_OPTIONS.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
-              </Select>
+              <Input
+                value={form.workHours}
+                onChange={(e) => up("workHours", e.target.value)}
+                placeholder="例: 8:00〜18:00（実働8時間）"
+              />
             </div>
 
             {/* 休日 */}
@@ -373,28 +340,6 @@ export default function Jobs() {
                 <SelectTrigger><SelectValue placeholder="選択してください" /></SelectTrigger>
                 <SelectContent>{HOLIDAYS_OPTIONS.map((h) => <SelectItem key={h} value={h}>{h}</SelectItem>)}</SelectContent>
               </Select>
-            </div>
-
-            {/* 応募条件チェックボックス */}
-            <div className="space-y-2">
-              <Label>応募条件</Label>
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-lg border border-border bg-muted/30">
-                {[
-                  { key: "requiresLicense",      label: "免許必須" },
-                  { key: "requiresBlackNumber",  label: "黒ナンバー必須" },
-                  { key: "requiresVehicle",      label: "車両持込必須" },
-                  { key: "requiresExperience",   label: "経験必須" },
-                ].map(({ key, label }) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <Checkbox
-                      id={key}
-                      checked={Boolean(form[key as keyof typeof form])}
-                      onCheckedChange={(v) => up(key, Boolean(v))}
-                    />
-                    <label htmlFor={key} className="text-sm text-foreground cursor-pointer">{label}</label>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* 月の上限金額 */}
