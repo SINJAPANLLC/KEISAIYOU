@@ -34,6 +34,8 @@ const pageImports = {
   adminRefundRequests:    () => import("@/pages/admin-refund-requests"),
   adminAuditLogs:         () => import("@/pages/admin-audit-logs"),
   adminSettings:          () => import("@/pages/admin-settings"),
+  adminDrivers:           () => import("@/pages/admin-drivers"),
+  driverRegister:         () => import("@/pages/driver-register"),
   guide:                  () => import("@/pages/guide"),
   faq:                    () => import("@/pages/faq"),
   contact:                () => import("@/pages/contact"),
@@ -65,6 +67,8 @@ const AdminContactInquiries = lazy(pageImports.adminContactInquiries);
 const AdminRefundRequests = lazy(pageImports.adminRefundRequests);
 const AdminAuditLogs      = lazy(pageImports.adminAuditLogs);
 const AdminSettings       = lazy(pageImports.adminSettings);
+const AdminDrivers        = lazy(pageImports.adminDrivers);
+const DriverRegister      = lazy(pageImports.driverRegister);
 const Guide               = lazy(pageImports.guide);
 const Faq                 = lazy(pageImports.faq);
 const Contact             = lazy(pageImports.contact);
@@ -130,6 +134,7 @@ function Router() {
         <Route path="/company-info" component={CompanyInfoPage} />
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />
+        <Route path="/driver-register" component={DriverRegister} />
 
         {/* User (protected) */}
         <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
@@ -153,6 +158,7 @@ function Router() {
         <Route path="/admin/refund-requests">{() => <AdminRoute component={AdminRefundRequests} />}</Route>
         <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
         <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
+        <Route path="/admin/drivers">{() => <AdminRoute component={AdminDrivers} />}</Route>
 
         <Route component={NotFound} />
       </Switch>

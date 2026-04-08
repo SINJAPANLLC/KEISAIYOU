@@ -633,6 +633,34 @@ export const insertApplicationSchema = createInsertSchema(applications).omit({ i
 export type InsertApplication = z.infer<typeof insertApplicationSchema>;
 export type Application = typeof applications.$inferSelect;
 
+export const driverRegistrations = pgTable("driver_registrations", {
+  id: integer("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  prefecture: text("prefecture"),
+  address: text("address"),
+  birthDate: text("birth_date"),
+  age: integer("age"),
+  gender: text("gender"),
+  licenseType: text("license_type"),
+  hasBlackNumber: boolean("has_black_number").default(false),
+  ownsVehicle: boolean("owns_vehicle").default(false),
+  experience: text("experience"),
+  experienceYears: text("experience_years"),
+  employmentType: text("employment_type"),
+  desiredArea: text("desired_area"),
+  availableFrom: text("available_from"),
+  prMessage: text("pr_message"),
+  source: text("source").default("keisaiyou"),
+  status: text("status").default("new"),
+  memo: text("memo"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+export type DriverRegistration = typeof driverRegistrations.$inferSelect;
+export type InsertDriverRegistration = typeof driverRegistrations.$inferInsert;
+
 export const refundRequests = pgTable("refund_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   applicationId: varchar("application_id").notNull(),

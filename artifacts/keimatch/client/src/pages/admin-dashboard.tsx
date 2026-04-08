@@ -262,6 +262,7 @@ export default function AdminDashboard() {
                   { label: "収益管理", href: "/admin/revenue", icon: BarChart2 },
                   { label: "INDEED運用", href: "/admin/indeed-feed", icon: TrendingUp },
                   { label: "企業管理", href: "/admin/users", icon: Briefcase },
+                  { label: "求職者管理", href: "/admin/drivers", icon: Briefcase },
                   { label: "お問い合わせ", href: "/admin/contact-inquiries", icon: MessageSquare },
                 ].map((item) => (
                   <Button

@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import {
   Home, Plus, Shield, Building2, Users, DollarSign, MessageSquare,
   Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen,
-  Briefcase, Bell, Mail, CreditCard, LogOut, RefreshCw,
+  Briefcase, Bell, Mail, CreditCard, LogOut, RefreshCw, Car,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
@@ -30,6 +30,7 @@ const adminMenuItems: MenuItem[] = [
   { href: "/admin/users",             label: "企業管理",         icon: Building2 },
   { href: "/admin/listings",          label: "求人管理",         icon: Briefcase },
   { href: "/admin/applications",      label: "応募者管理",       icon: Users },
+  { href: "/admin/drivers",           label: "求職者管理",       icon: Car },
   { href: "/admin/email-marketing",   label: "営業メール",       icon: Mail },
   { href: "/admin/notifications",     label: "通知管理",         icon: Bell },
   { href: "/admin/contact-inquiries", label: "お問い合わせ",     icon: MessageSquare },

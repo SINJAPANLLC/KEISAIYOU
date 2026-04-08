@@ -994,6 +994,85 @@ ${jobXml}
     res.json({ running: megaCrawlRunning, found: megaCrawlFound, total: megaCrawlTotal });
   });
 
+  // ドライバー求職者登録（ログイン不要）
+  app.post("/api/driver-register", async (req, res) => {
+    try {
+      const {
+        name, phone, email, prefecture, address, birthDate, gender,
+        licenseType, hasBlackNumber, ownsVehicle, experience, experienceYears,
+        employmentType, desiredArea, availableFrom, prMessage, source,
+      } = req.body;
+      if (!name?.trim()) return res.status(400).json({ message: "お名前を入力してください" });
+      if (!phone?.trim()) return res.status(400).json({ message: "電話番号を入力してください" });
+      const result = await db.execute(sql`
+        INSERT INTO driver_registrations
+          (name, phone, email, prefecture, address, birth_date, gender, license_type,
+           has_black_number, owns_vehicle, experience, experience_years, employment_type,
+           desired_area, available_from, pr_message, source, status)
+        VALUES
+          (${name.trim()}, ${phone.trim()}, ${email || null}, ${prefecture || null},
+           ${address || null}, ${birthDate || null}, ${gender || null}, ${licenseType || null},
+           ${!!hasBlackNumber}, ${!!ownsVehicle}, ${experience || null}, ${experienceYears || null},
+           ${employmentType || null}, ${desiredArea || null}, ${availableFrom || null},
+           ${prMessage || null}, ${source || "keisaiyou"}, 'new')
+        RETURNING id
+      `);
+      res.json({ success: true, id: (result as any).rows?.[0]?.id });
+    } catch (err: any) {
+      console.error("[driver-register]", err);
+      res.status(500).json({ message: "登録に失敗しました" });
+    }
+  });
+
+  // 管理者：求職者一覧
+  app.get("/api/admin/drivers", requireAdmin, async (req, res) => {
+    try {
+      const page = Math.max(1, parseInt(req.query.page as string) || 1);
+      const limit = Math.min(100, parseInt(req.query.limit as string) || 20);
+      const offset = (page - 1) * limit;
+      const search = (req.query.search as string || "").trim();
+      const status = req.query.status as string;
+
+      let whereClause = sql`WHERE 1=1`;
+      if (search) {
+        whereClause = sql`WHERE (name ILIKE ${`%${search}%`} OR phone ILIKE ${`%${search}%`} OR prefecture ILIKE ${`%${search}%`})`;
+      }
+      if (status && status !== "all") {
+        whereClause = search
+          ? sql`WHERE (name ILIKE ${`%${search}%`} OR phone ILIKE ${`%${search}%`} OR prefecture ILIKE ${`%${search}%`}) AND status = ${status}`
+          : sql`WHERE status = ${status}`;
+      }
+
+      const [rows, countRows] = await Promise.all([
+        db.execute(sql`SELECT * FROM driver_registrations ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`),
+        db.execute(sql`SELECT COUNT(*) as cnt FROM driver_registrations ${whereClause}`),
+      ]);
+      const drivers = (rows as any).rows || [];
+      const total = parseInt((countRows as any).rows?.[0]?.cnt || "0");
+      res.json({ drivers, total });
+    } catch (err: any) {
+      console.error("[admin/drivers]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // 管理者：求職者ステータス更新
+  app.patch("/api/admin/drivers/:id", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, memo } = req.body;
+      await db.execute(sql`
+        UPDATE driver_registrations
+        SET status = ${status}, memo = ${memo || null}, updated_at = NOW()
+        WHERE id = ${parseInt(id)}
+      `);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[admin/drivers PATCH]", err);
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
   app.post("/api/admin/sales/crawl", requireAdmin, async (req, res) => {
     try {
       const { prefecture, keyword, limit = 20, useAI = true } = req.body;
