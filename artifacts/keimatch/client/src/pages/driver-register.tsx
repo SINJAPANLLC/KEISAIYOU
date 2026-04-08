@@ -120,8 +120,7 @@ export default function DriverRegister() {
             ご登録を受け付けました。
           </p>
           <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-            担当者よりご連絡させていただく場合がございます。<br />
-            しばらくお待ちください。
+            担当者よりご連絡をお待ちください。
           </p>
           <div className="p-4 rounded-xl bg-orange-50 border border-orange-100 text-sm text-orange-700 text-left leading-relaxed">
             <p className="font-semibold mb-1">次のステップ</p>
