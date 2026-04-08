@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
+import DashboardLayout from "@/components/dashboard-layout";
 import {
   Car, Phone, Mail, MapPin, Calendar, ChevronLeft, ChevronRight,
-  Users, Search, ExternalLink, Copy, CheckCircle2, Loader2, X,
+  Users, Search, ExternalLink, Copy, CheckCircle2, Loader2,
 } from "lucide-react";
 
 type Driver = {
@@ -97,7 +98,7 @@ export default function AdminDrivers() {
     STATUS_LABELS[status] ?? { label: status, color: "bg-gray-100 text-gray-500 border-gray-200" };
 
   return (
-    <div className="flex flex-col h-full">
+    <DashboardLayout>
       <div className="p-4 md:p-6 max-w-6xl mx-auto w-full flex-1">
 
         {/* Header */}
@@ -375,6 +376,6 @@ export default function AdminDrivers() {
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </DashboardLayout>
   );
 }
