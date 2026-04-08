@@ -142,8 +142,8 @@ export default function DriverRegister() {
             <Car className="w-5 h-5 text-white" />
           </div>
           <div>
-            <div className="text-xs text-muted-foreground leading-none">KEI SAIYOU</div>
-            <div className="text-sm font-bold text-gray-900 leading-tight">ドライバー求職者登録</div>
+            <div className="text-xs text-muted-foreground leading-none">SIN JAPAN LLC</div>
+            <div className="text-sm font-bold text-gray-900 leading-tight">ドライバー登録フォーム</div>
           </div>
         </div>
       </div>
