@@ -149,20 +149,6 @@ export default function DriverRegister() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Hero */}
-        <div className="bg-gradient-to-r from-[#d05a2a] to-orange-400 rounded-2xl p-6 mb-8 text-white">
-          <h1 className="text-xl font-bold mb-2">軽貨物ドライバーのお仕事を探していますか？</h1>
-          <p className="text-sm text-orange-100 leading-relaxed">
-            情報を登録するだけ。ログイン不要・無料で利用できます。<br />
-            あなたの条件に合った企業からご連絡をお送りします。
-          </p>
-          <div className="flex gap-3 mt-4">
-            {["登録無料","ログイン不要","全国対応"].map((t) => (
-              <span key={t} className="text-xs bg-white/20 rounded-full px-3 py-1 font-medium">{t}</span>
-            ))}
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 基本情報 */}
           <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
