@@ -1095,18 +1095,24 @@ ${jobXml}
     return m[s] ?? "new";
   }
 
+  function atVal(v: any): string | null {
+    if (v === undefined || v === null || v === "?" || v === "") return null;
+    if (Array.isArray(v)) return null;
+    return String(v);
+  }
+
   async function upsertAirtableDriver(rec: any) {
     const f = rec.fields;
     const airtableId = rec.id;
     const name = f["名前"] || "（名前なし）";
-    const phone = f["電話番号"] || "";
-    const area = f["エリア"] || null;
+    const phone = atVal(f["電話番号"]) || "不明";
+    const area = atVal(f["エリア"]);
     const age = f["年齢"] && !isNaN(parseInt(f["年齢"])) ? parseInt(f["年齢"]) : null;
     const ownsVehicle = f["車両有無"] ? true : false;
-    const experience = [f["現職"], f["配送経験"]].filter(Boolean).join(" / ") || null;
-    const experienceYears = f["配送経験（期間）"] || null;
-    const availableFrom = f["最短稼働可能日"] || null;
-    const prMessage = f["トスアップ"] || null;
+    const experience = [atVal(f["現職"]), atVal(f["配送経験"])].filter(Boolean).join(" / ") || null;
+    const experienceYears = atVal(f["配送経験（期間）"]);
+    const availableFrom = atVal(f["最短稼働可能日"]);
+    const prMessage = atVal(f["トスアップ"]);
     const status = mapAirtableStatus(f["ステータス"] || "");
 
     const memoLines: string[] = [];
