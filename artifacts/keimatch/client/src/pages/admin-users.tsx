@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Search, FileText, CheckCircle, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote } from "lucide-react";
+import { Trash2, Search, FileText, CheckCircle, Users, Building2, Phone, Mail, MapPin, Truck, User, UserPlus, Shield, X, ExternalLink, ChevronDown, ChevronUp, Globe, Hash, Briefcase, Clock, Pencil, Save, Plus, ShieldCheck, ShieldOff, Eye, EyeOff, StickyNote, RefreshCw, Loader2 } from "lucide-react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -215,6 +215,15 @@ export default function AdminUsers() {
     },
   });
 
+  const syncKeiMatch = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/keimatch/sync-users").then(r => r.json()),
+    onSuccess: (data: any) => {
+      toast({ title: "KEI MATCH同期完了", description: `${data.count}社を同期しました` });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+    onError: () => toast({ title: "同期失敗", variant: "destructive" }),
+  });
+
   const formatDate = (user: SafeUser) => {
     if (user.registrationDate) return user.registrationDate;
     if (user.createdAt) return new Date(user.createdAt).toLocaleDateString("ja-JP");
@@ -235,7 +244,18 @@ export default function AdminUsers() {
               </div>
             </div>
 
-            <div className="flex justify-end mb-3">
+            <div className="flex justify-end gap-2 mb-3">
+              <Button
+                variant="outline"
+                className="gap-1.5 border-blue-300 text-blue-700 hover:bg-blue-50"
+                onClick={() => syncKeiMatch.mutate()}
+                disabled={syncKeiMatch.isPending}
+              >
+                {syncKeiMatch.isPending
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <RefreshCw className="w-4 h-4" />}
+                KEI MATCH同期
+              </Button>
               <Button
                 onClick={() => setShowAddForm(!showAddForm)}
                 data-testid="button-add-user"
