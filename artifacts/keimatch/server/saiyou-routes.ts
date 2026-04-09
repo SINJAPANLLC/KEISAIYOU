@@ -1076,9 +1076,9 @@ ${jobXml}
   // ─────────────────────────────────────────────
   // Airtable連携：自社応募者管理
   // ─────────────────────────────────────────────
-  const AIRTABLE_PAT   = "patAAYblNQWhu73JZ.2dea47671e7f27b5e7f757ff7d9cc8b60816e4e7b45f01f8a541bf30d1304fc0";
-  const AIRTABLE_BASE  = "appOhazfap5Gm4jNi";
-  const AIRTABLE_TABLE = "tblYxvJE30QBQuxNK";
+  const AIRTABLE_PAT   = process.env.AIRTABLE_PAT || "";
+  const AIRTABLE_BASE  = process.env.AIRTABLE_BASE  || "appOhazfap5Gm4jNi";
+  const AIRTABLE_TABLE = process.env.AIRTABLE_TABLE || "tblYxvJE30QBQuxNK";
 
   function mapAirtableStatus(s: string): string {
     const m: Record<string, string> = {
