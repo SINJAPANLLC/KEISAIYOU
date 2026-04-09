@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import DashboardLayout from "@/components/dashboard-layout";
 import {
   Car, Phone, Mail, MapPin, Calendar, ChevronLeft, ChevronRight,
-  Users, Search, ExternalLink, Copy, CheckCircle2, Loader2,
+  Users, Search, ExternalLink, Copy, CheckCircle2, Loader2, RefreshCw,
 } from "lucide-react";
 
 type Driver = {
@@ -59,6 +59,15 @@ export default function AdminDrivers() {
   const [memo, setMemo] = useState("");
   const [copied, setCopied] = useState(false);
   const limit = 20;
+
+  const syncMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/airtable/sync-drivers"),
+    onSuccess: (data: any) => {
+      toast({ title: `Airtable同期完了`, description: `${data.count}件のデータを同期しました` });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/drivers"] });
+    },
+    onError: () => toast({ title: "同期失敗", variant: "destructive" }),
+  });
 
   const { data, isLoading } = useQuery<{ drivers: Driver[]; total: number }>({
     queryKey: ["/api/admin/drivers", page, search, statusFilter],
@@ -131,6 +140,18 @@ export default function AdminDrivers() {
                 フォームを開く
               </Button>
             </a>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-sm border-green-300 text-green-700 hover:bg-green-50"
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+            >
+              {syncMutation.isPending
+                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                : <RefreshCw className="w-3.5 h-3.5" />}
+              Airtable同期
+            </Button>
           </div>
         </div>
 

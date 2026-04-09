@@ -1073,6 +1073,115 @@ ${jobXml}
     }
   });
 
+  // ─────────────────────────────────────────────
+  // Airtable連携：自社応募者管理
+  // ─────────────────────────────────────────────
+  const AIRTABLE_PAT   = "patAAYblNQWhu73JZ.2dea47671e7f27b5e7f757ff7d9cc8b60816e4e7b45f01f8a541bf30d1304fc0";
+  const AIRTABLE_BASE  = "appOhazfap5Gm4jNi";
+  const AIRTABLE_TABLE = "tblYxvJE30QBQuxNK";
+
+  function mapAirtableStatus(s: string): string {
+    const m: Record<string, string> = {
+      "⓪架電後検討": "contacted",
+      "①弊社待ち":   "contacted",
+      "②トス":       "interested",
+      "③トス後検討": "interested",
+      "④研修":       "hired",
+      "⑤成約":       "hired",
+      "見送り":       "rejected",
+      "辞退":        "rejected",
+      "不通":        "new",
+    };
+    return m[s] ?? "new";
+  }
+
+  async function upsertAirtableDriver(rec: any) {
+    const f = rec.fields;
+    const airtableId = rec.id;
+    const name = f["名前"] || "（名前なし）";
+    const phone = f["電話番号"] || "";
+    const area = f["エリア"] || null;
+    const age = f["年齢"] && !isNaN(parseInt(f["年齢"])) ? parseInt(f["年齢"]) : null;
+    const ownsVehicle = f["車両有無"] ? true : false;
+    const experience = [f["現職"], f["配送経験"]].filter(Boolean).join(" / ") || null;
+    const experienceYears = f["配送経験（期間）"] || null;
+    const availableFrom = f["最短稼働可能日"] || null;
+    const prMessage = f["トスアップ"] || null;
+    const status = mapAirtableStatus(f["ステータス"] || "");
+
+    const memoLines: string[] = [];
+    if (f["ステータスメモ"])   memoLines.push(`メモ: ${f["ステータスメモ"]}`);
+    if (f["希望休日"])        memoLines.push(`希望休日: ${f["希望休日"]}`);
+    if (f["稼働可能日数"])    memoLines.push(`稼働日数: ${f["稼働可能日数"]}`);
+    if (f["グループLINE名"]) memoLines.push(`LINE: ${f["グループLINE名"]}`);
+    if (f["取引先"])          memoLines.push(`取引先: ${f["取引先"]}`);
+    const memo = memoLines.length ? memoLines.join("\n") : null;
+
+    await db.execute(sql`
+      INSERT INTO driver_registrations
+        (name, phone, prefecture, age, owns_vehicle, experience, experience_years,
+         available_from, pr_message, source, status, memo, airtable_record_id, created_at, updated_at)
+      VALUES
+        (${name}, ${phone}, ${area}, ${age}, ${ownsVehicle}, ${experience}, ${experienceYears},
+         ${availableFrom}, ${prMessage}, 'airtable', ${status}, ${memo}, ${airtableId},
+         ${rec.createdTime}, NOW())
+      ON CONFLICT (airtable_record_id) DO UPDATE SET
+        name             = EXCLUDED.name,
+        phone            = EXCLUDED.phone,
+        prefecture       = EXCLUDED.prefecture,
+        age              = EXCLUDED.age,
+        owns_vehicle     = EXCLUDED.owns_vehicle,
+        experience       = EXCLUDED.experience,
+        experience_years = EXCLUDED.experience_years,
+        available_from   = EXCLUDED.available_from,
+        pr_message       = EXCLUDED.pr_message,
+        status           = EXCLUDED.status,
+        memo             = EXCLUDED.memo,
+        updated_at       = NOW()
+    `);
+  }
+
+  // Airtable Automation から呼ばれるウェブフック（認証不要）
+  app.post("/api/webhooks/airtable-driver", async (req, res) => {
+    try {
+      const rec = req.body;
+      if (!rec?.id) return res.status(400).json({ message: "invalid payload" });
+      await upsertAirtableDriver(rec);
+      console.log(`[Airtable] Upserted driver: ${rec.fields?.["名前"]} (${rec.id})`);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[Airtable webhook]", err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
+  // 管理者：Airtable全件インポート
+  app.post("/api/admin/airtable/sync-drivers", requireAdmin, async (req, res) => {
+    try {
+      let allRecords: any[] = [];
+      let offset: string | null = null;
+      do {
+        const url = `https://api.airtable.com/v0/${AIRTABLE_BASE}/${AIRTABLE_TABLE}?pageSize=100${offset ? `&offset=${offset}` : ""}`;
+        const r = await fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_PAT}` } });
+        const data = await r.json() as any;
+        if (data.error) throw new Error(data.error.message);
+        allRecords = allRecords.concat(data.records || []);
+        offset = data.offset || null;
+      } while (offset);
+
+      let upserted = 0;
+      for (const rec of allRecords) {
+        await upsertAirtableDriver(rec);
+        upserted++;
+      }
+      console.log(`[Airtable] Synced ${upserted} driver records`);
+      res.json({ success: true, count: upserted });
+    } catch (err: any) {
+      console.error("[Airtable sync]", err.message);
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   app.post("/api/admin/sales/crawl", requireAdmin, async (req, res) => {
     try {
       const { prefecture, keyword, limit = 20, useAI = true } = req.body;
