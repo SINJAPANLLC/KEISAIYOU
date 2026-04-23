@@ -1635,11 +1635,11 @@ URL: https://keisaiyou-sinjapan.com
 }
 
 export function scheduleLeadCrawler() {
-  // 12時JST = クロール＋メール送信を同時実行（メインCron）
-  const CRAWL_HOURS = [5, 12, 19];       // 朝・昼・夜の3回
-  const SEND_HOURS  = [12, 15];           // 昼（クロール後）+ 午後
-  const RETRY_HOURS = [10];
-  const FOLLOWUP_HOURS = [13];
+  // クロール：3時間ごと（8回/日）、メール：2時間ごと（6回/日）
+  const CRAWL_HOURS    = [0, 3, 6, 9, 12, 15, 18, 21];      // 8回/日
+  const SEND_HOURS     = [8, 10, 12, 14, 16, 18];            // 6回/日
+  const RETRY_HOURS    = [7, 11, 15, 19];                    // 4回/日
+  const FOLLOWUP_HOURS = [9, 13, 17, 21];                    // 4回/日
 
   setInterval(async () => {
     const now = new Date();
