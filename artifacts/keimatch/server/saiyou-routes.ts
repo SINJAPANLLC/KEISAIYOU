@@ -933,7 +933,7 @@ ${jobXml}
     if (megaCrawlRunning) {
       return res.json({ status: "running", found: megaCrawlFound, total: megaCrawlTotal });
     }
-    const { target = 300 } = req.body;
+    const { target = 300 } = req.body || {};
     megaCrawlRunning = true;
     megaCrawlFound = 0;
 
