@@ -947,11 +947,12 @@ ${jobXml}
       "埼玉県","千葉県","茨城県","栃木県","群馬県","神奈川県","東京都",
     ];
 
-    const { generateCompanyUrlsWithOpenAI: genUrls, crawlLeadsFromUrl } = await import("./lead-crawler") as any;
+    const { generateCompanyUrlsWithOpenAI: genUrls, crawlLeadsFromUrl, sendDailyLeadEmails } = await import("./lead-crawler") as any;
 
     (async () => {
       try {
         let round = 0;
+        let prefsSinceLastEmail = 0;
         while (true) {
           const countRes = await storage.getEmailLeadCount().catch(() => 0);
           if (countRes >= target) break;
@@ -976,9 +977,31 @@ ${jobXml}
             } catch (e: any) {
               console.error(`[MegaCrawl] ${pref} error:`, e.message);
             }
+
+            // 5都道府県ごとにメール送信
+            prefsSinceLastEmail++;
+            if (prefsSinceLastEmail >= 5) {
+              prefsSinceLastEmail = 0;
+              try {
+                const emailResult = await sendDailyLeadEmails();
+                if (emailResult.sent > 0) {
+                  console.log(`[MegaCrawl] メール送信: ${emailResult.sent}件送信, ${emailResult.failed}件失敗`);
+                }
+              } catch (e: any) {
+                console.error(`[MegaCrawl] メール送信エラー:`, e.message);
+              }
+            }
+
             await new Promise(r => setTimeout(r, 1500));
           }
         }
+
+        // 完了後に残りのリードへメール送信
+        try {
+          const emailResult = await sendDailyLeadEmails();
+          console.log(`[MegaCrawl] 最終メール送信: ${emailResult.sent}件`);
+        } catch {}
+
         console.log(`[MegaCrawl] 完了! 今回+${megaCrawlFound}件追加`);
       } catch (e: any) {
         console.error("[MegaCrawl] Fatal:", e.message);
