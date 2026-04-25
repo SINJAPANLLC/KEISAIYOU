@@ -47,6 +47,13 @@ export default function Footer() {
                 <li><Link href="/privacy" className="hover:text-white transition-colors" data-testid="link-privacy">プライバシーポリシー</Link></li>
               </ul>
             </div>
+            <div>
+              <h3 className="text-xs font-bold text-white/60 tracking-widest uppercase mb-4">関連サービス</h3>
+              <ul className="space-y-2.5 text-sm text-white/75">
+                <li><a href="https://keimatch-sinjapan.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">KEI MATCH</a></li>
+                <li><a href="https://tramatch-sinjapan.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">TRA MATCH</a></li>
+              </ul>
+            </div>
           </div>
         </div>
 
