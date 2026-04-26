@@ -76,6 +76,7 @@ type SafeUser = {
   lastLoginIp?: string | null;
   lastLoginLocation?: string | null;
   addedByUserId?: string | null;
+  keimatchUserId?: string | null;
 };
 
 function isImageFile(path: string): boolean {
@@ -493,6 +494,12 @@ export default function AdminUsers() {
                                 )}
                               </div>
                               {u.companyNameKana && <div className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[140px]">{u.companyNameKana}</div>}
+                              <div className="mt-0.5">
+                                {u.keimatchUserId
+                                  ? <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-blue-100 text-blue-700 border border-blue-200">KEI MATCH</span>
+                                  : <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-orange-100 text-orange-700 border border-orange-200">KEI SAIYOU</span>
+                                }
+                              </div>
                               {u.addedByUserId && (() => {
                                 const parent = users?.find(p => p.id === u.addedByUserId);
                                 return parent ? (
@@ -804,6 +811,10 @@ function UserDetailPanel({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              {user.keimatchUserId
+                ? <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 border border-blue-200">KEI MATCH</span>
+                : <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">KEI SAIYOU</span>
+              }
               {isAdmin ? (
                 <Badge variant="default" className="text-xs">管理者</Badge>
               ) : (
