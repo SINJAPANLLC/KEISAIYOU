@@ -196,6 +196,17 @@ export function registerSaiyouRoutes(app: Express) {
           relatedId: job.id,
         });
       }
+      // 管理者メール通知（求人掲載申請）
+      setImmediate(async () => {
+        try {
+          const poster = await db.select().from(users).where(eq(users.id, req.session!.userId!)).then(r => r[0]);
+          await sendEmail(
+            "info@sinjapan.jp",
+            `【KEI SAIYOU】求人掲載申請：${title}`,
+            `新しい求人の掲載申請が届きました。\n\n会社名：${poster?.companyName || "不明"}\nメール：${poster?.email || "不明"}\n求人タイトル：${title}\nエリア：${area}\n\n管理画面で確認・承認してください。\nhttps://keisaiyou-sinjapan.com/admin/jobs`
+          );
+        } catch (e) { console.error("[admin-notify] job post:", e); }
+      });
       res.status(201).json(job);
     } catch (err) {
       console.error("[jobs/create]", err);
@@ -704,6 +715,22 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
             `${company.contactName || company.companyName} 様\n\n「${job.title}」への応募がありましたが、決済処理に失敗しました。\n\nお手数ですが、ダッシュボードからカード情報をご更新ください。\n${appBaseUrl}/settings\n\n─\nKEI SAIYOU`
           ).catch((e) => console.error("[apply] email error:", e));
         }
+        // 管理者メール通知（応募・決済）
+        try {
+          if (viewable) {
+            await sendEmail(
+              "info@sinjapan.jp",
+              `【KEI SAIYOU】新規応募＋決済完了：${job.title}`,
+              `新しい応募と決済が完了しました。\n\n求人：${job.title}\n応募者：${name}\n電話：${phone}\nメール：${email || "未入力"}\n企業：${company?.companyName || "不明"}\n決済：¥3,300（成功）\n\n管理画面：${appBaseUrl}/admin/jobs`
+            );
+          } else {
+            await sendEmail(
+              "info@sinjapan.jp",
+              `【KEI SAIYOU】応募あり・決済失敗：${job.title}`,
+              `応募がありましたが決済に失敗しました。\n\n求人：${job.title}\n応募者：${name}\n電話：${phone}\n企業：${company?.companyName || "不明"}\n決済ステータス：失敗\n\n管理画面：${appBaseUrl}/admin/jobs`
+            );
+          }
+        } catch (e) { console.error("[admin-notify] apply:", e); }
       });
 
       res.json({
@@ -1040,6 +1067,16 @@ ${jobXml}
            ${prMessage || null}, ${source || "keisaiyou"}, 'new')
         RETURNING id
       `);
+      // 管理者メール通知（自社応募者フォーム送信）
+      setImmediate(async () => {
+        try {
+          await sendEmail(
+            "info@sinjapan.jp",
+            `【KEI SAIYOU】自社応募者フォーム送信：${name.trim()}`,
+            `ドライバー登録フォームに新しい応募が届きました。\n\n氏名：${name.trim()}\n電話：${phone.trim()}\nメール：${email || "未入力"}\n都道府県：${prefecture || "未入力"}\n黒ナンバー：${hasBlackNumber ? "あり" : "なし"}\n雇用形態：${employmentType || "未入力"}\n\n管理画面：https://keisaiyou-sinjapan.com/admin/drivers`
+          );
+        } catch (e) { console.error("[admin-notify] driver-register:", e); }
+      });
       res.json({ success: true, id: (result as any).rows?.[0]?.id });
     } catch (err: any) {
       console.error("[driver-register]", err);
