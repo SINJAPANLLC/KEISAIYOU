@@ -16,7 +16,7 @@ import {
   refundRequests,
   contactInquiries,
 } from "@shared/schema";
-import { sendEmail } from "./notification-service";
+import { sendEmail, sendAdminNotification } from "./notification-service";
 import { chargeSquareCard } from "./square";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
@@ -200,10 +200,21 @@ export function registerSaiyouRoutes(app: Express) {
       setImmediate(async () => {
         try {
           const poster = await db.select().from(users).where(eq(users.id, req.session!.userId!)).then(r => r[0]);
-          await sendEmail(
-            "info@sinjapan.jp",
-            `【KEI SAIYOU】求人掲載申請：${title}`,
-            `新しい求人の掲載申請が届きました。\n\n会社名：${poster?.companyName || "不明"}\nメール：${poster?.email || "不明"}\n求人タイトル：${title}\nエリア：${area}\n\n管理画面で確認・承認してください。\nhttps://keisaiyou-sinjapan.com/admin/jobs`
+          await sendAdminNotification(
+            `KEI SAIYOU - 求人掲載申請：${title}`,
+            {
+              title: "新しい求人掲載申請が届きました",
+              subtitle: "管理画面から内容を確認・承認してください",
+              badge: { text: "求人掲載申請", color: "#7c3aed" },
+              rows: [
+                { label: "会社名", value: poster?.companyName || "不明" },
+                { label: "メール", value: poster?.email || "不明" },
+                { label: "求人タイトル", value: title },
+                { label: "エリア", value: area || "未設定" },
+              ],
+              ctaText: "管理画面で承認する",
+              ctaUrl: "https://keisaiyou-sinjapan.com/admin/jobs",
+            }
           );
         } catch (e) { console.error("[admin-notify] job post:", e); }
       });
@@ -718,16 +729,42 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
         // 管理者メール通知（応募・決済）
         try {
           if (viewable) {
-            await sendEmail(
-              "info@sinjapan.jp",
-              `【KEI SAIYOU】新規応募＋決済完了：${job.title}`,
-              `新しい応募と決済が完了しました。\n\n求人：${job.title}\n応募者：${name}\n電話：${phone}\nメール：${email || "未入力"}\n企業：${company?.companyName || "不明"}\n決済：¥3,300（成功）\n\n管理画面：${appBaseUrl}/admin/jobs`
+            await sendAdminNotification(
+              `KEI SAIYOU - 新規応募・決済完了：${job.title}`,
+              {
+                title: "新規応募と決済が完了しました",
+                subtitle: "¥3,300（税込）の決済が正常に処理されました",
+                badge: { text: "決済完了", color: "#16a34a" },
+                rows: [
+                  { label: "求人タイトル", value: job.title },
+                  { label: "応募者氏名", value: name },
+                  { label: "電話番号", value: phone },
+                  { label: "メール", value: email || "未入力" },
+                  { label: "掲載企業", value: company?.companyName || "不明" },
+                  { label: "決済金額", value: "¥3,300（税込）" },
+                ],
+                ctaText: "管理画面で応募を確認する",
+                ctaUrl: `${appBaseUrl}/admin/jobs`,
+              }
             );
           } else {
-            await sendEmail(
-              "info@sinjapan.jp",
-              `【KEI SAIYOU】応募あり・決済失敗：${job.title}`,
-              `応募がありましたが決済に失敗しました。\n\n求人：${job.title}\n応募者：${name}\n電話：${phone}\n企業：${company?.companyName || "不明"}\n決済ステータス：失敗\n\n管理画面：${appBaseUrl}/admin/jobs`
+            await sendAdminNotification(
+              `KEI SAIYOU - 応募あり・決済失敗：${job.title}`,
+              {
+                title: "応募がありましたが決済に失敗しました",
+                subtitle: "企業のカード情報をご確認ください",
+                badge: { text: "決済失敗", color: "#dc2626" },
+                rows: [
+                  { label: "求人タイトル", value: job.title },
+                  { label: "応募者氏名", value: name },
+                  { label: "電話番号", value: phone },
+                  { label: "掲載企業", value: company?.companyName || "不明" },
+                  { label: "決済ステータス", value: "失敗" },
+                ],
+                ctaText: "管理画面で確認する",
+                ctaUrl: `${appBaseUrl}/admin/jobs`,
+                note: "企業に連絡してカード情報の更新を促してください。",
+              }
             );
           }
         } catch (e) { console.error("[admin-notify] apply:", e); }
@@ -1070,10 +1107,23 @@ ${jobXml}
       // 管理者メール通知（自社応募者フォーム送信）
       setImmediate(async () => {
         try {
-          await sendEmail(
-            "info@sinjapan.jp",
-            `【KEI SAIYOU】自社応募者フォーム送信：${name.trim()}`,
-            `ドライバー登録フォームに新しい応募が届きました。\n\n氏名：${name.trim()}\n電話：${phone.trim()}\nメール：${email || "未入力"}\n都道府県：${prefecture || "未入力"}\n黒ナンバー：${hasBlackNumber ? "あり" : "なし"}\n雇用形態：${employmentType || "未入力"}\n\n管理画面：https://keisaiyou-sinjapan.com/admin/drivers`
+          await sendAdminNotification(
+            `KEI SAIYOU - ドライバー登録フォーム新規応募：${name.trim()}`,
+            {
+              title: "ドライバー登録フォームに新規応募がありました",
+              subtitle: "求職者情報を管理画面でご確認ください",
+              badge: { text: "ドライバー登録", color: "#0369a1" },
+              rows: [
+                { label: "氏名", value: name.trim() },
+                { label: "電話番号", value: phone.trim() },
+                { label: "メール", value: email || "未入力" },
+                { label: "都道府県", value: prefecture || "未入力" },
+                { label: "黒ナンバー", value: hasBlackNumber ? "あり" : "なし" },
+                { label: "雇用形態", value: employmentType || "未入力" },
+              ],
+              ctaText: "管理画面で求職者を確認する",
+              ctaUrl: "https://keisaiyou-sinjapan.com/admin/drivers",
+            }
           );
         } catch (e) { console.error("[admin-notify] driver-register:", e); }
       });
