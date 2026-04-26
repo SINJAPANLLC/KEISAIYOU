@@ -72,6 +72,7 @@ export const users = pgTable("users", {
   lastLoginIp: text("last_login_ip"),
   lastLoginLocation: text("last_login_location"),
   addedByUserId: varchar("added_by_user_id"),
+  keimatchUserId: text("keimatch_user_id").unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
