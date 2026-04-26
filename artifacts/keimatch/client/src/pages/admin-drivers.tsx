@@ -215,7 +215,13 @@ export default function AdminDrivers() {
                         className={`hover:bg-orange-50/50 cursor-pointer transition-colors ${isSelected ? "bg-orange-50" : ""}`}
                         onClick={() => openDetail(d)}
                       >
-                        <td className="px-4 py-3 font-medium text-gray-900">{d.name}</td>
+                        <td className="px-4 py-3">
+                          <div className="font-medium text-gray-900">{d.name}</div>
+                          {d.source === "airtable"
+                            ? <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-700 border border-purple-200 mt-0.5">Airtable</span>
+                            : <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-100 text-orange-700 border border-orange-200 mt-0.5">KEI SAIYOU</span>
+                          }
+                        </td>
                         <td className="px-4 py-3 text-gray-600 font-mono text-xs">{d.phone}</td>
                         <td className="px-4 py-3 text-gray-600 hidden sm:table-cell">{d.prefecture || <span className="text-gray-300">—</span>}</td>
                         <td className="px-4 py-3 text-gray-600 hidden md:table-cell text-xs">{d.employment_type || <span className="text-gray-300">—</span>}</td>
@@ -332,13 +338,21 @@ export default function AdminDrivers() {
                       ["雇用形態", selected.employment_type],
                       ["希望エリア", selected.desired_area],
                       ["開始可能", selected.available_from],
-                      ["流入元", selected.source],
                     ] as [string, string | null][]).map(([k, v]) => (
                       <div key={k}>
                         <span className="text-xs text-gray-400">{k}</span>
                         <p className="text-sm font-medium text-gray-800">{v || "—"}</p>
                       </div>
                     ))}
+                    <div>
+                      <span className="text-xs text-gray-400">流入元</span>
+                      <div className="mt-0.5">
+                        {selected.source === "airtable"
+                          ? <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-700 border border-purple-200">Airtable</span>
+                          : <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-700 border border-orange-200">KEI SAIYOU</span>
+                        }
+                      </div>
+                    </div>
                   </div>
                 </div>
 
