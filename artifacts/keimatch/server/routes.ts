@@ -1722,56 +1722,74 @@ export async function registerRoutes(
         `SELECT * FROM users WHERE approved = true AND role != 'admin' ORDER BY created_at ASC`
       );
       let synced = 0;
+      let skipped = 0;
       for (const u of kmUsers) {
-        await db.execute(sql`
-          INSERT INTO users
-            (id, username, password, company_name, address, contact_name, phone, fax, email,
-             truck_count, user_type, role, approved, payment_terms, business_description,
-             company_name_kana, postal_code, website_url, invoice_registration_number,
-             registration_date, representative, established_date, capital, employee_count,
-             office_locations, annual_revenue, bank_info, major_clients, closing_day,
-             payment_month, business_area, auto_invoice_acceptance, member_organization,
-             transport_license_number, digital_tachograph_count, gps_count,
-             safety_excellence_cert, green_management_cert, iso9000, iso14000, iso39001,
-             cargo_insurance, plan, notify_system, notify_email, notify_line,
-             admin_memo, created_at, keimatch_user_id)
-          VALUES
-            (${u.id}, ${u.username}, ${u.password}, ${u.company_name}, ${u.address},
-             ${u.contact_name}, ${u.phone || ''}, ${u.fax}, ${u.email},
-             ${u.truck_count}, 'company', 'user', true, ${u.payment_terms},
-             ${u.business_description}, ${u.company_name_kana}, ${u.postal_code},
-             ${u.website_url}, ${u.invoice_registration_number}, ${u.registration_date},
-             ${u.representative}, ${u.established_date}, ${u.capital}, ${u.employee_count},
-             ${u.office_locations}, ${u.annual_revenue}, ${u.bank_info}, ${u.major_clients},
-             ${u.closing_day}, ${u.payment_month}, ${u.business_area},
-             ${u.auto_invoice_acceptance}, ${u.member_organization},
-             ${u.transport_license_number}, ${u.digital_tachograph_count}, ${u.gps_count},
-             ${u.safety_excellence_cert}, ${u.green_management_cert}, ${u.iso9000},
-             ${u.iso14000}, ${u.iso39001}, ${u.cargo_insurance},
-             ${u.plan || 'basic'}, ${u.notify_system ?? true}, ${u.notify_email ?? true},
-             ${u.notify_line ?? false}, ${'KEI MATCHから同期'}, ${u.created_at}, ${u.id})
-          ON CONFLICT (keimatch_user_id) DO UPDATE SET
-            username             = EXCLUDED.username,
-            password             = EXCLUDED.password,
-            company_name         = EXCLUDED.company_name,
-            address              = EXCLUDED.address,
-            contact_name         = EXCLUDED.contact_name,
-            phone                = EXCLUDED.phone,
-            email                = EXCLUDED.email,
-            truck_count          = EXCLUDED.truck_count,
-            business_description = EXCLUDED.business_description,
-            company_name_kana    = EXCLUDED.company_name_kana,
-            postal_code          = EXCLUDED.postal_code,
-            website_url          = EXCLUDED.website_url,
-            representative       = EXCLUDED.representative,
-            plan                 = EXCLUDED.plan,
-            approved             = true
-        `);
-        synced++;
+        try {
+          // username衝突時は "-km" サフィックスで回避
+          const { rows: existing } = await kmPool.query(
+            `SELECT id FROM users WHERE keimatch_user_id = $1 LIMIT 1`, [u.id]
+          ).catch(() => ({ rows: [] as any[] }));
+          const safeUsername = u.username;
+          // KEI SAIYOU DB内でusernameが既存かチェック（keimatch_user_idが異なる場合）
+          const { rows: conflictRows } = await db.execute(sql`
+            SELECT id FROM users WHERE username = ${safeUsername} AND (keimatch_user_id IS NULL OR keimatch_user_id != ${u.id}) LIMIT 1
+          `) as any;
+          const resolvedUsername = conflictRows?.length > 0 ? `${safeUsername}-km` : safeUsername;
+
+          await db.execute(sql`
+            INSERT INTO users
+              (id, username, password, company_name, address, contact_name, phone, fax, email,
+               truck_count, user_type, role, approved, payment_terms, business_description,
+               company_name_kana, postal_code, website_url, invoice_registration_number,
+               registration_date, representative, established_date, capital, employee_count,
+               office_locations, annual_revenue, bank_info, major_clients, closing_day,
+               payment_month, business_area, auto_invoice_acceptance, member_organization,
+               transport_license_number, digital_tachograph_count, gps_count,
+               safety_excellence_cert, green_management_cert, iso9000, iso14000, iso39001,
+               cargo_insurance, plan, notify_system, notify_email, notify_line,
+               admin_memo, created_at, keimatch_user_id)
+            VALUES
+              (${u.id}, ${resolvedUsername}, ${u.password}, ${u.company_name}, ${u.address},
+               ${u.contact_name}, ${u.phone || ''}, ${u.fax}, ${u.email},
+               ${u.truck_count}, 'company', 'user', true, ${u.payment_terms},
+               ${u.business_description}, ${u.company_name_kana}, ${u.postal_code},
+               ${u.website_url}, ${u.invoice_registration_number}, ${u.registration_date},
+               ${u.representative}, ${u.established_date}, ${u.capital}, ${u.employee_count},
+               ${u.office_locations}, ${u.annual_revenue}, ${u.bank_info}, ${u.major_clients},
+               ${u.closing_day}, ${u.payment_month}, ${u.business_area},
+               ${u.auto_invoice_acceptance}, ${u.member_organization},
+               ${u.transport_license_number}, ${u.digital_tachograph_count}, ${u.gps_count},
+               ${u.safety_excellence_cert}, ${u.green_management_cert}, ${u.iso9000},
+               ${u.iso14000}, ${u.iso39001}, ${u.cargo_insurance},
+               ${u.plan || 'basic'}, ${u.notify_system ?? true}, ${u.notify_email ?? true},
+               ${u.notify_line ?? false}, ${'KEI MATCHから同期'}, ${u.created_at}, ${u.id})
+            ON CONFLICT (id) DO UPDATE SET
+              username             = EXCLUDED.username,
+              password             = EXCLUDED.password,
+              company_name         = EXCLUDED.company_name,
+              address              = EXCLUDED.address,
+              contact_name         = EXCLUDED.contact_name,
+              phone                = EXCLUDED.phone,
+              email                = EXCLUDED.email,
+              truck_count          = EXCLUDED.truck_count,
+              business_description = EXCLUDED.business_description,
+              company_name_kana    = EXCLUDED.company_name_kana,
+              postal_code          = EXCLUDED.postal_code,
+              website_url          = EXCLUDED.website_url,
+              representative       = EXCLUDED.representative,
+              plan                 = EXCLUDED.plan,
+              keimatch_user_id     = EXCLUDED.keimatch_user_id,
+              approved             = true
+          `);
+          synced++;
+        } catch (userErr: any) {
+          console.error(`[KEI MATCH Sync] Skip user ${u.email}: ${userErr.message}`);
+          skipped++;
+        }
       }
       await kmPool.end();
-      console.log(`[KEI MATCH Sync] Synced ${synced} users`);
-      res.json({ success: true, count: synced });
+      console.log(`[KEI MATCH Sync] Synced ${synced} users, skipped ${skipped}`);
+      res.json({ success: true, count: synced, skipped });
     } catch (err: any) {
       if (kmPool) await kmPool.end().catch(() => {});
       console.error("[KEI MATCH Sync]", err.message);
