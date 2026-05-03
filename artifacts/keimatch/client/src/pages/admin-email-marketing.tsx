@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Users, Send, Trash2, Search, Plus, Clock, Globe, RefreshCw, Eye, Mail } from "lucide-react";
+import { Upload, Users, Send, Trash2, Search, Plus, Clock, Globe, RefreshCw, Eye, Mail, Zap, SendHorizonal } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -218,18 +218,45 @@ export default function AdminEmailMarketing() {
   const [scrapeKw, setScrapeKw] = useState(KEYWORDS[0]);
   const [crawling, setCrawling] = useState(false);
 
+  // Mega crawl
+  const [megaCrawlStatus, setMegaCrawlStatus] = useState<{ running: boolean; found: number; total: number } | null>(null);
+  const megaPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Add single
   const [singleForm, setSingleForm] = useState({ companyName: "", email: "", phone: "", prefecture: "" });
 
   // Email compose
   const [emailForm, setEmailForm] = useState({ subject: "", body: "" });
   const [sending, setSending] = useState(false);
+  const [sendingAll, setSendingAll] = useState(false);
   const [activeTab, setActiveTab] = useState<"compose" | "preview">("compose");
 
   const { data: leads = [], isLoading } = useQuery<Lead[]>({
     queryKey: ["/api/admin/sales/leads"],
     queryFn: () => apiRequest("GET", "/api/admin/sales/leads").then((r) => r.json()),
+    refetchInterval: megaCrawlStatus?.running ? 8000 : false,
   });
+
+  // Poll mega-crawl status
+  useEffect(() => {
+    if (megaCrawlStatus?.running) {
+      megaPollRef.current = setInterval(async () => {
+        try {
+          const r = await apiRequest("GET", "/api/admin/sales/mega-crawl/status");
+          const s = await r.json();
+          setMegaCrawlStatus(s);
+          if (!s.running) {
+            clearInterval(megaPollRef.current!);
+            queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] });
+            toast({ title: `メガクロール完了！今回 +${s.found}件取得` });
+          }
+        } catch {}
+      }, 5000);
+    } else {
+      if (megaPollRef.current) clearInterval(megaPollRef.current);
+    }
+    return () => { if (megaPollRef.current) clearInterval(megaPollRef.current); };
+  }, [megaCrawlStatus?.running]);
 
   const importMutation = useMutation({
     mutationFn: (rows: any[]) => apiRequest("POST", "/api/admin/sales/leads", rows).then((r) => r.json()),
@@ -286,6 +313,35 @@ export default function AdminEmailMarketing() {
     if (!rows.length) return toast({ variant: "destructive", title: "有効データがありません" });
     importMutation.mutate(rows);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleMegaCrawl = async () => {
+    try {
+      const res = await apiRequest("POST", "/api/admin/sales/mega-crawl", { target: 1000 });
+      const data = await res.json();
+      setMegaCrawlStatus({ running: true, found: 0, total: 0 });
+      toast({ title: data.message || "メガクロール開始しました" });
+    } catch {
+      toast({ variant: "destructive", title: "メガクロールの開始に失敗しました" });
+    }
+  };
+
+  const handleSendAll = async () => {
+    if (!emailForm.subject || !emailForm.body) return toast({ variant: "destructive", title: "件名・本文を入力してください" });
+    const newLeads = leads.filter((l) => l.status === "new" && l.email);
+    if (!newLeads.length) return toast({ variant: "destructive", title: "送信可能な未送信リードがありません" });
+    setSendingAll(true);
+    try {
+      const res = await apiRequest("POST", "/api/admin/sales/send", {
+        leadIds: newLeads.map((l) => l.id),
+        subject: emailForm.subject,
+        body: emailForm.body,
+      });
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] });
+      toast({ title: `全送信完了: ${data.sentCount}件送信、${data.failedCount}件失敗` });
+    } catch { toast({ variant: "destructive", title: "送信に失敗しました" }); }
+    finally { setSendingAll(false); }
   };
 
   const handleSend = async () => {
@@ -348,10 +404,32 @@ export default function AdminEmailMarketing() {
           {/* ── LEFT PANEL: Lead list ── */}
           <div className="w-[42%] border-r border-border flex flex-col overflow-hidden">
 
+            {/* Mega crawl */}
+            <div className="p-3 border-b border-border bg-orange-50/50 dark:bg-orange-950/20 shrink-0">
+              <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5 text-orange-500" />全国メガクロール（47都道府県 → 最大1,000件）
+              </p>
+              {megaCrawlStatus?.running ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 text-xs text-orange-600 font-medium">
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    クロール実行中… 今回 +{megaCrawlStatus.found}件取得 / 累計 {megaCrawlStatus.total}件
+                  </div>
+                  <div className="w-full bg-orange-100 rounded-full h-1.5">
+                    <div className="bg-orange-500 h-1.5 rounded-full transition-all" style={{ width: `${Math.min((megaCrawlStatus.total / 1000) * 100, 100)}%` }} />
+                  </div>
+                </div>
+              ) : (
+                <Button size="sm" className="w-full h-8 text-xs bg-orange-500 hover:bg-orange-600 text-white" onClick={handleMegaCrawl}>
+                  <Zap className="w-3 h-3 mr-1.5" />メガクロール開始（全都道府県×AIで一括収集）
+                </Button>
+              )}
+            </div>
+
             {/* Scrape controls */}
             <div className="p-3 border-b border-border bg-muted/30 shrink-0">
               <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-                <Globe className="w-3.5 h-3.5" />DuckDuckGoでリスト取得
+                <Globe className="w-3.5 h-3.5" />個別クロール（都道府県指定）
               </p>
               <div className="flex gap-1.5 mb-1.5">
                 <Select value={scrapePref} onValueChange={setScrapePref}>
@@ -512,21 +590,40 @@ export default function AdminEmailMarketing() {
             </div>
 
             {/* Send bar */}
-            <div className="p-3 border-t border-border shrink-0 flex items-center gap-3">
-              <div className="text-xs text-muted-foreground">
-                送信先: <span className={`font-semibold ${selectedIds.length > 0 ? "text-primary" : "text-muted-foreground"}`}>{selectedIds.length}件</span>
-                {selectedIds.length === 0 && <span className="ml-1">（左のリストから選択）</span>}
+            <div className="p-3 border-t border-border shrink-0 space-y-2">
+              {/* Send all new leads */}
+              {(() => {
+                const newLeadsCount = leads.filter((l) => l.status === "new" && l.email).length;
+                return newLeadsCount > 0 ? (
+                  <Button
+                    onClick={handleSendAll}
+                    disabled={sendingAll || !emailForm.subject || !emailForm.body}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                    size="sm"
+                  >
+                    {sendingAll
+                      ? <><RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />送信中...</>
+                      : <><SendHorizonal className="w-3.5 h-3.5 mr-1.5" />未送信 {newLeadsCount}件に一括送信</>}
+                  </Button>
+                ) : null;
+              })()}
+              {/* Send selected */}
+              <div className="flex items-center gap-3">
+                <div className="text-xs text-muted-foreground">
+                  選択: <span className={`font-semibold ${selectedIds.length > 0 ? "text-primary" : "text-muted-foreground"}`}>{selectedIds.length}件</span>
+                </div>
+                <Button
+                  onClick={handleSend}
+                  disabled={sending || !selectedIds.length || !emailForm.subject || !emailForm.body}
+                  className="ml-auto"
+                  size="sm"
+                  data-testid="button-send-email"
+                >
+                  {sending
+                    ? <><RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />送信中...</>
+                    : <><Send className="w-3.5 h-3.5 mr-1.5" />{selectedIds.length}件に送信</>}
+                </Button>
               </div>
-              <Button
-                onClick={handleSend}
-                disabled={sending || !selectedIds.length || !emailForm.subject || !emailForm.body}
-                className="ml-auto"
-                data-testid="button-send-email"
-              >
-                {sending
-                  ? <><RefreshCw className="w-4 h-4 mr-2 animate-spin" />送信中...</>
-                  : <><Send className="w-4 h-4 mr-2" />{selectedIds.length}件に送信</>}
-              </Button>
             </div>
           </div>
         </div>
