@@ -55,9 +55,10 @@ export default function AdminApplications() {
   });
 
   const totalCount = apps.length;
-  const paidCount = apps.filter((a: any) => a.paymentStatus === "paid").length;
+  const paidCount = apps.filter((a: any) => a.paymentStatus === "paid" || a.paymentStatus === "success").length;
+  const invoiceCount = apps.filter((a: any) => a.paymentStatus === "invoice_pending").length;
   const failedCount = apps.filter((a: any) => a.paymentStatus === "failed").length;
-  const totalRevenue = apps.filter((a: any) => a.paymentStatus === "paid").length * 3300;
+  const totalRevenue = paidCount * 3300;
 
   const formatDate = (s: string) =>
     new Date(s).toLocaleDateString("ja-JP", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -72,8 +73,8 @@ export default function AdminApplications() {
         a.phone,
         a.jobTitle,
         a.companyName,
-        a.paymentStatus === "paid" ? "成功" : a.paymentStatus === "failed" ? "失敗" : "未処理",
-        a.paymentStatus === "paid" ? 3300 : 0,
+        (a.paymentStatus === "paid" || a.paymentStatus === "success") ? "課金成功" : a.paymentStatus === "invoice_pending" ? "請求書払い待ち" : a.paymentStatus === "failed" ? "決済失敗" : "未処理",
+        (a.paymentStatus === "paid" || a.paymentStatus === "success") ? 3300 : 0,
       ]),
     ];
     const csv = rows.map((r) => r.join(",")).join("\n");
@@ -111,6 +112,7 @@ export default function AdminApplications() {
           {[
             { label: "総応募数", value: totalCount, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
             { label: "課金成功", value: paidCount, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50" },
+            { label: "請求書払い待ち", value: invoiceCount, icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50", highlight: invoiceCount > 0 },
             { label: "決済失敗", value: failedCount, icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10", highlight: failedCount > 0 },
             { label: "売上合計", value: `¥${totalRevenue.toLocaleString()}`, icon: CreditCard, color: "text-violet-600", bg: "bg-violet-50" },
           ].map((s) => (
@@ -138,10 +140,11 @@ export default function AdminApplications() {
             />
           </div>
           <Select value={filterPayment} onValueChange={setFilterPayment}>
-            <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">全ステータス</SelectItem>
-              <SelectItem value="paid">課金成功</SelectItem>
+              <SelectItem value="success">課金成功</SelectItem>
+              <SelectItem value="invoice_pending">請求書払い待ち</SelectItem>
               <SelectItem value="failed">決済失敗</SelectItem>
               <SelectItem value="pending">未処理</SelectItem>
             </SelectContent>
@@ -195,8 +198,10 @@ export default function AdminApplications() {
                         <td className="py-3 px-4 text-xs text-muted-foreground truncate max-w-[120px]">{a.companyName}</td>
                         <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">{formatDate(a.createdAt)}</td>
                         <td className="py-3 px-4 text-center">
-                          {a.paymentStatus === "paid" ? (
-                            <Badge className="text-[10px] bg-emerald-100 text-emerald-800 border-emerald-300 border">¥3,000税別</Badge>
+                          {(a.paymentStatus === "paid" || a.paymentStatus === "success") ? (
+                            <Badge className="text-[10px] bg-emerald-100 text-emerald-800 border-emerald-300 border">¥3,300税込</Badge>
+                          ) : a.paymentStatus === "invoice_pending" ? (
+                            <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-300 border">請求書払い待ち</Badge>
                           ) : a.paymentStatus === "failed" ? (
                             <Badge className="text-[10px] bg-destructive/10 text-destructive border-destructive/30 border">失敗</Badge>
                           ) : (
@@ -327,8 +332,15 @@ export default function AdminApplications() {
               <hr className="border-border" />
               <div className="flex items-center justify-between">
                 <p className="text-xs text-muted-foreground">課金ステータス</p>
-                {selectedApp.paymentStatus === "paid" ? (
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 border">課金済 ¥3,000税別</Badge>
+                {(selectedApp.paymentStatus === "paid" || selectedApp.paymentStatus === "success") ? (
+                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 border">課金済 ¥3,300税込</Badge>
+                ) : selectedApp.paymentStatus === "invoice_pending" ? (
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-amber-100 text-amber-800 border-amber-300 border">請求書払い待ち</Badge>
+                    <Button size="sm" variant="outline" className="h-6 text-xs px-2" onClick={() => retryPayment.mutate(selectedApp.id)}>
+                      <RefreshCw className="w-3 h-3 mr-1" />カード請求
+                    </Button>
+                  </div>
                 ) : selectedApp.paymentStatus === "failed" ? (
                   <div className="flex items-center gap-2">
                     <Badge className="bg-destructive/10 text-destructive border-destructive/30 border">決済失敗</Badge>
