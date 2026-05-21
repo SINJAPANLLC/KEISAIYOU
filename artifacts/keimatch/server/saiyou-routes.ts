@@ -657,16 +657,16 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
           paymentId = result.paymentId;
           paymentStatus = result.status === "COMPLETED" ? "success" : "failed";
         } else {
-          // No card on file – still save application, mark payment as failed
-          console.log("[apply] No Square card on file for company", company?.id);
-          paymentStatus = "failed";
+          // カード未登録 → 後払い請求（請求書払い）として応募は閲覧可能にする
+          console.log("[apply] No Square card on file for company", company?.id, "– marking as invoice_pending");
+          paymentStatus = "invoice_pending";
         }
       } catch (payErr: any) {
         console.error("[apply] Payment error:", payErr.message);
         paymentStatus = "failed";
       }
 
-      const viewable = paymentStatus === "success";
+      const viewable = paymentStatus === "success" || paymentStatus === "invoice_pending";
       await db.update(applications).set({
         paymentStatus,
         squarePaymentId: paymentId || null,
@@ -703,32 +703,44 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
       await db.insert(notifications).values({
         userId: company.id,
         type: "application",
-        title: viewable ? "新しい応募があります" : "応募がありましたが決済に失敗しました",
-        message: viewable
+        title: paymentStatus === "success"
+          ? "新しい応募があります"
+          : paymentStatus === "invoice_pending"
+            ? "新しい応募があります（カード登録をお願いします）"
+            : "応募がありましたが決済に失敗しました",
+        message: paymentStatus === "success"
           ? `「${job.title}」に${name}様から応募がありました。ダッシュボードでご確認ください。`
-          : `「${job.title}」に応募がありましたが、決済処理に失敗しました。カード情報をご確認ください。`,
+          : paymentStatus === "invoice_pending"
+            ? `「${job.title}」に${name}様から応募がありました。ダッシュボードで内容をご確認いただき、お支払い情報のご登録をお願いします。`
+            : `「${job.title}」に応募がありましたが、決済処理に失敗しました。カード情報をご確認ください。`,
         relatedId: app_.id,
       });
 
       // Send emails (background)
       setImmediate(async () => {
         const appBaseUrl = process.env.APP_BASE_URL || "https://keisaiyou-sinjapan.com";
-        if (viewable && company?.email) {
+        if (paymentStatus === "success" && company?.email) {
           await sendEmail(
             company.email,
             `【KEI SAIYOU】「${job.title}」に新しい応募が届きました`,
             `${company.contactName || company.companyName} 様\n\n「${job.title}」に新しい応募がありました。\n\nダッシュボードから応募者の詳細をご確認ください。\n${appBaseUrl}/home\n\n─\nKEI SAIYOU`
           ).catch((e) => console.error("[apply] email error:", e));
-        } else if (!viewable && company?.email) {
+        } else if (paymentStatus === "invoice_pending" && company?.email) {
+          await sendEmail(
+            company.email,
+            `【KEI SAIYOU】「${job.title}」に応募がありました（お支払い情報のご登録をお願いします）`,
+            `${company.contactName || company.companyName} 様\n\n「${job.title}」に新しい応募がありました。\n\nダッシュボードから応募者の詳細をご確認いただけます。\n${appBaseUrl}/home\n\n引き続きサービスをご利用いただくため、お支払い情報のご登録をお願いします。\n${appBaseUrl}/payment\n\n─\nKEI SAIYOU`
+          ).catch((e) => console.error("[apply] email error:", e));
+        } else if (paymentStatus === "failed" && company?.email) {
           await sendEmail(
             company.email,
             `【KEI SAIYOU】決済失敗のお知らせ`,
-            `${company.contactName || company.companyName} 様\n\n「${job.title}」への応募がありましたが、決済処理に失敗しました。\n\nお手数ですが、ダッシュボードからカード情報をご更新ください。\n${appBaseUrl}/settings\n\n─\nKEI SAIYOU`
+            `${company.contactName || company.companyName} 様\n\n「${job.title}」への応募がありましたが、決済処理に失敗しました。\n\nお手数ですが、ダッシュボードからカード情報をご更新ください。\n${appBaseUrl}/payment\n\n─\nKEI SAIYOU`
           ).catch((e) => console.error("[apply] email error:", e));
         }
         // 管理者メール通知（応募・決済）
         try {
-          if (viewable) {
+          if (paymentStatus === "success") {
             await sendAdminNotification(
               `KEI SAIYOU - 新規応募・決済完了：${job.title}`,
               {
@@ -744,7 +756,27 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
                   { label: "決済金額", value: "¥3,300（税込）" },
                 ],
                 ctaText: "管理画面で応募を確認する",
-                ctaUrl: `${appBaseUrl}/admin/jobs`,
+                ctaUrl: `${appBaseUrl}/admin/applications`,
+              }
+            );
+          } else if (paymentStatus === "invoice_pending") {
+            await sendAdminNotification(
+              `KEI SAIYOU - 新規応募・請求書払い待ち：${job.title}`,
+              {
+                title: "新規応募がありました（カード未登録・後払い）",
+                subtitle: "企業がカードを未登録のため請求書払い扱いになっています",
+                badge: { text: "請求書払い待ち", color: "#d97706" },
+                rows: [
+                  { label: "求人タイトル", value: job.title },
+                  { label: "応募者氏名", value: name },
+                  { label: "電話番号", value: phone },
+                  { label: "メール", value: email || "未入力" },
+                  { label: "掲載企業", value: company?.companyName || "不明" },
+                  { label: "請求金額", value: "¥3,300（税込）" },
+                ],
+                ctaText: "管理画面で応募を確認する",
+                ctaUrl: `${appBaseUrl}/admin/applications`,
+                note: "企業に連絡してカード情報の登録を促し、¥3,300を手動請求してください。",
               }
             );
           } else {
@@ -762,7 +794,7 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
                   { label: "決済ステータス", value: "失敗" },
                 ],
                 ctaText: "管理画面で確認する",
-                ctaUrl: `${appBaseUrl}/admin/jobs`,
+                ctaUrl: `${appBaseUrl}/admin/applications`,
                 note: "企業に連絡してカード情報の更新を促してください。",
               }
             );
