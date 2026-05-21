@@ -1539,7 +1539,13 @@ ${jobXml}
       if (!job) return res.status(404).json({ message: "求人が見つかりません" });
       const [company] = await db.select().from(users).where(eq(users.id, job.userId)).limit(1);
       if (!company?.squareCustomerId || !company?.squareCardId) {
-        return res.status(400).json({ message: "カード情報が登録されていません" });
+        // カード未登録 → invoice_pending + viewable=true にする
+        await db.update(applications).set({
+          paymentStatus: "invoice_pending",
+          viewable: true,
+          updatedAt: new Date(),
+        }).where(eq(applications.id, req.params.id));
+        return res.json({ success: true, message: "カード未登録のため請求書払いに変更しました" });
       }
       const result = await chargeSquareCard({
         customerId: company.squareCustomerId,
@@ -1549,11 +1555,35 @@ ${jobXml}
       });
       const success = result.status === "COMPLETED";
       if (success) {
-        await db.update(applications).set({ paymentStatus: "paid", updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+        await db.update(applications).set({ paymentStatus: "paid", viewable: true, updatedAt: new Date() }).where(eq(applications.id, req.params.id));
       }
       res.json({ success });
     } catch {
       res.status(500).json({ message: "再試行に失敗しました" });
+    }
+  });
+
+  // Admin: Fix all failed applications for card-less companies → invoice_pending + viewable
+  app.post("/api/admin/applications/fix-no-card", requireAdmin, async (req, res) => {
+    try {
+      const allApps = await db.select().from(applications).where(eq(applications.paymentStatus, "failed"));
+      let fixed = 0;
+      for (const app_ of allApps) {
+        const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId)).limit(1);
+        if (!job) continue;
+        const [company] = await db.select().from(users).where(eq(users.id, job.userId)).limit(1);
+        if (!company?.squareCustomerId || !company?.squareCardId) {
+          await db.update(applications).set({
+            paymentStatus: "invoice_pending",
+            viewable: true,
+            updatedAt: new Date(),
+          }).where(eq(applications.id, app_.id));
+          fixed++;
+        }
+      }
+      res.json({ fixed, total: allApps.length });
+    } catch (err) {
+      res.status(500).json({ message: "修正に失敗しました" });
     }
   });
 
