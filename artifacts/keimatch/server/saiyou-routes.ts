@@ -645,6 +645,7 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
       // Charge ¥3,300（¥3,000税別）via Square
       let paymentStatus = "failed";
       let paymentId: string | undefined;
+      let paymentError: string | undefined;
 
       try {
         if (company?.squareCustomerId && company?.squareCardId) {
@@ -656,6 +657,7 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
           });
           paymentId = result.paymentId;
           paymentStatus = result.status === "COMPLETED" ? "success" : "failed";
+          if (paymentStatus === "failed") paymentError = `Square status: ${result.status}`;
         } else {
           // カード未登録 → 後払い請求（請求書払い）として応募は閲覧可能にする
           console.log("[apply] No Square card on file for company", company?.id, "– marking as invoice_pending");
@@ -664,19 +666,22 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
       } catch (payErr: any) {
         console.error("[apply] Payment error:", payErr.message);
         paymentStatus = "failed";
+        paymentError = payErr.message || "Unknown Square error";
       }
 
-      const viewable = paymentStatus === "success" || paymentStatus === "invoice_pending";
+      // カードがあっても決済が失敗した場合も、応募自体は見られるようにする（請求は後日再試行）
+      const viewable = paymentStatus === "success" || paymentStatus === "invoice_pending" || paymentStatus === "failed";
       await db.update(applications).set({
         paymentStatus,
         squarePaymentId: paymentId || null,
+        paymentError: paymentError || null,
         viewable,
       }).where(eq(applications.id, app_.id));
 
       // Update job monthly spend (追跡用) + 会社単位の上限到達でアクティブ求人を全停止
       if (viewable) {
         await db.update(jobListings).set({
-          monthlySpent: job.monthlySpent + 3300,
+          ...(paymentStatus === "success" ? { monthlySpent: job.monthlySpent + 3300 } : {}),
           lastApplicationAt: new Date(),
           updatedAt: new Date(),
         }).where(eq(jobListings.id, jobId));
