@@ -626,6 +626,7 @@ export const applications = pgTable("applications", {
   memo: text("memo"),
   paymentStatus: text("payment_status").notNull().default("pending"),
   squarePaymentId: text("square_payment_id"),
+  paymentError: text("payment_error"),
   viewable: boolean("viewable").notNull().default(false),
   reviewStatus: text("review_status").notNull().default("new"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
