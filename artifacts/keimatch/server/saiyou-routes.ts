@@ -1674,29 +1674,30 @@ ${jobXml}
         )
       );
 
-      // 3. Auto-pause jobs with 0 applications in 14 days
+      // 3. Notify admin about jobs with 0 applications in 14 days (auto-pause disabled — admin decides manually)
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
       const staleJobs = await db.select().from(jobListings).where(
         and(
           eq(jobListings.status, "active"),
           lt(jobListings.publishedAt, twoWeeksAgo),
-          sql`(${jobListings.lastApplicationAt} IS NULL OR ${jobListings.lastApplicationAt} < ${twoWeeksAgo})`
+          sql`(${jobListings.lastApplicationAt} IS NULL OR ${jobListings.lastApplicationAt} < ${twoWeeksAgo})`,
+          sql`(${jobListings.staleNotifiedAt} IS NULL OR ${jobListings.staleNotifiedAt} < ${twoWeeksAgo})`
         )
       );
       for (const job of staleJobs) {
-        await db.update(jobListings).set({ status: "paused", updatedAt: new Date() }).where(eq(jobListings.id, job.id));
+        await db.update(jobListings).set({ staleNotifiedAt: new Date() }).where(eq(jobListings.id, job.id));
         const admins = await db.select().from(users).where(eq(users.role, "admin"));
         for (const admin of admins) {
           await db.insert(notifications).values({
             userId: admin.id,
             type: "job_stale",
             title: "2週間応募ゼロ",
-            message: `「${job.title}」が2週間応募ゼロのため自動停止しました。原稿を見直してください。`,
+            message: `「${job.title}」が2週間応募ゼロです。必要に応じて手動で停止・原稿見直しをしてください。`,
             relatedId: job.id,
           });
         }
       }
-      if (staleJobs.length) console.log(`[schedule] Paused ${staleJobs.length} stale jobs`);
+      if (staleJobs.length) console.log(`[schedule] Notified about ${staleJobs.length} stale jobs (auto-pause disabled)`);
     } catch (err) {
       console.error("[schedule] Error:", err);
     }
