@@ -598,12 +598,13 @@ export const jobListings = pgTable("job_listings", {
   monthlyLimit: integer("monthly_limit").notNull().default(30000),
   monthlySpent: integer("monthly_spent").notNull().default(0),
   lastApplicationAt: timestamp("last_application_at"),
+  staleNotifiedAt: timestamp("stale_notified_at"),
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const insertJobListingSchema = createInsertSchema(jobListings).omit({ id: true, status: true, monthlySpent: true, lastApplicationAt: true, publishedAt: true, createdAt: true, updatedAt: true });
+export const insertJobListingSchema = createInsertSchema(jobListings).omit({ id: true, status: true, monthlySpent: true, lastApplicationAt: true, staleNotifiedAt: true, publishedAt: true, createdAt: true, updatedAt: true });
 export type InsertJobListing = z.infer<typeof insertJobListingSchema>;
 export type JobListing = typeof jobListings.$inferSelect;
 
