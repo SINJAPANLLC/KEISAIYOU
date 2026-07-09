@@ -669,8 +669,8 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
         paymentError = payErr.message || "Unknown Square error";
       }
 
-      // カードがあっても決済が失敗した場合も、応募自体は見られるようにする（請求は後日再試行）
-      const viewable = paymentStatus === "success" || paymentStatus === "invoice_pending" || paymentStatus === "failed";
+      // カードがあっても決済が失敗した場合は非表示のまま（カード情報の見直し・再試行が必要）
+      const viewable = paymentStatus === "success" || paymentStatus === "invoice_pending";
       await db.update(applications).set({
         paymentStatus,
         squarePaymentId: paymentId || null,
