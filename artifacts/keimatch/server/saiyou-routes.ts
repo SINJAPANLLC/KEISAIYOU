@@ -1552,19 +1552,27 @@ ${jobXml}
         }).where(eq(applications.id, req.params.id));
         return res.json({ success: true, message: "カード未登録のため請求書払いに変更しました" });
       }
-      const result = await chargeSquareCard({
-        customerId: company.squareCustomerId,
-        cardId: company.squareCardId,
-        amountYen: 3300,
-        note: `KEI SAIYOU 応募通知（再試行） - ${job.title}`,
-      });
-      const success = result.status === "COMPLETED";
+      let chargeResult: { paymentId: string; status: string } | null = null;
+      let chargeError: string | null = null;
+      try {
+        chargeResult = await chargeSquareCard({
+          customerId: company.squareCustomerId,
+          cardId: company.squareCardId,
+          amountYen: 3300,
+          note: `KEI SAIYOU 再試行 - ${job.title.slice(0, 20)}`,
+        });
+      } catch (e: any) {
+        chargeError = e?.message || "Square error";
+      }
+      const success = chargeResult?.status === "COMPLETED";
       if (success) {
         await db.update(applications).set({ paymentStatus: "paid", viewable: true, updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+      } else {
+        await db.update(applications).set({ paymentError: chargeError || `status:${chargeResult?.status}`, updatedAt: new Date() }).where(eq(applications.id, req.params.id));
       }
-      res.json({ success });
-    } catch {
-      res.status(500).json({ message: "再試行に失敗しました" });
+      res.json({ success, error: chargeError });
+    } catch (e: any) {
+      res.status(500).json({ message: "再試行に失敗しました", error: e?.message });
     }
   });
 
