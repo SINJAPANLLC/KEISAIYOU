@@ -109,6 +109,18 @@ export default function Applications() {
     onError: (e: any) => toast({ title: "申請に失敗しました", description: e.message, variant: "destructive" }),
   });
 
+  const requestInvoiceMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/my/applications/${id}/request-invoice`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/my/applications"] });
+      toast({ title: "請求書払いを申請しました", description: "管理者が承認次第、応募者情報を閲覧できます。" });
+    },
+    onError: () => toast({ title: "申請に失敗しました", variant: "destructive" }),
+  });
+
   const filtered = applications.filter((a) => {
     const q = search.toLowerCase();
     const matchSearch = !search || (
@@ -264,19 +276,37 @@ export default function Applications() {
                   </p>
                 </SheetHeader>
 
-                {isLocked ? (
+                {selected.paymentStatus === "invoice_requested" ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
+                    <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center">
+                      <Lock className="w-8 h-8 text-amber-500" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">請求書払いを申請済みです</p>
+                    <p className="text-xs text-muted-foreground">
+                      管理者が承認次第、応募者情報を閲覧できます。<br />
+                      しばらくお待ちください。
+                    </p>
+                  </div>
+                ) : isLocked ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
                     <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
                       <Lock className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <p className="text-sm font-semibold text-foreground">決済に失敗しました</p>
                     <p className="text-xs text-muted-foreground">
-                      この応募者の情報は決済完了後に閲覧できます。<br />
-                      カード情報を更新してください。
+                      この応募者の情報は決済完了後に閲覧できます。
                     </p>
-                    <Button variant="outline" onClick={() => { setSelected(null); window.location.href = "/payment"; }}>
-                      決済設定へ
-                    </Button>
+                    <div className="flex flex-col gap-2 w-full max-w-[200px]">
+                      <Button
+                        onClick={() => requestInvoiceMutation.mutate(selected.id)}
+                        disabled={requestInvoiceMutation.isPending}
+                      >
+                        請求書払いを申請する
+                      </Button>
+                      <Button variant="outline" onClick={() => { setSelected(null); window.location.href = "/payment"; }}>
+                        決済設定へ
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
