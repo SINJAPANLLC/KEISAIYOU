@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   ClipboardList, Search, Users, CheckCircle, AlertCircle, RefreshCw,
-  Building2, Phone, Mail, MapPin, Briefcase, Calendar, CreditCard, Download,
+  Building2, Phone, Mail, MapPin, Briefcase, Calendar, CreditCard, Download, FileText,
 } from "lucide-react";
 
 export default function AdminApplications() {
@@ -39,6 +39,19 @@ export default function AdminApplications() {
     onError: () => toast({ title: "再試行に失敗しました", variant: "destructive" }),
   });
 
+  const approveInvoice = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/admin/applications/${id}/approve-invoice`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/applications"] });
+      setSelectedApp(null);
+      toast({ title: "請求書払いを承認しました", description: "企業側から応募者情報が閲覧可能になりました。" });
+    },
+    onError: () => toast({ title: "承認に失敗しました", variant: "destructive" }),
+  });
+
   const filtered = apps.filter((a: any) => {
     if (filterStatus !== "all" && a.reviewStatus !== filterStatus) return false;
     if (filterPayment !== "all" && a.paymentStatus !== filterPayment) return false;
@@ -57,6 +70,7 @@ export default function AdminApplications() {
   const totalCount = apps.length;
   const paidCount = apps.filter((a: any) => a.paymentStatus === "paid" || a.paymentStatus === "success").length;
   const invoiceCount = apps.filter((a: any) => a.paymentStatus === "invoice_pending").length;
+  const invoiceRequestedCount = apps.filter((a: any) => a.paymentStatus === "invoice_requested").length;
   const failedCount = apps.filter((a: any) => a.paymentStatus === "failed").length;
   const totalRevenue = paidCount * 3300;
 
@@ -112,7 +126,8 @@ export default function AdminApplications() {
           {[
             { label: "総応募数", value: totalCount, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
             { label: "課金成功", value: paidCount, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50" },
-            { label: "請求書払い待ち", value: invoiceCount, icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50", highlight: invoiceCount > 0 },
+            { label: "請求書払い申請中", value: invoiceRequestedCount, icon: FileText, color: "text-orange-600", bg: "bg-orange-50", highlight: invoiceRequestedCount > 0 },
+            { label: "請求書払い待ち", value: invoiceCount, icon: AlertCircle, color: "text-amber-600", bg: "bg-amber-50" },
             { label: "決済失敗", value: failedCount, icon: AlertCircle, color: "text-destructive", bg: "bg-destructive/10", highlight: failedCount > 0 },
             { label: "売上合計", value: `¥${totalRevenue.toLocaleString()}`, icon: CreditCard, color: "text-violet-600", bg: "bg-violet-50" },
           ].map((s) => (
@@ -144,6 +159,7 @@ export default function AdminApplications() {
             <SelectContent>
               <SelectItem value="all">全ステータス</SelectItem>
               <SelectItem value="success">課金成功</SelectItem>
+              <SelectItem value="invoice_requested">請求書払い申請中</SelectItem>
               <SelectItem value="invoice_pending">請求書払い待ち</SelectItem>
               <SelectItem value="failed">決済失敗</SelectItem>
               <SelectItem value="pending">未処理</SelectItem>
@@ -200,6 +216,8 @@ export default function AdminApplications() {
                         <td className="py-3 px-4 text-center">
                           {(a.paymentStatus === "paid" || a.paymentStatus === "success") ? (
                             <Badge className="text-[10px] bg-emerald-100 text-emerald-800 border-emerald-300 border">¥3,300税込</Badge>
+                          ) : a.paymentStatus === "invoice_requested" ? (
+                            <Badge className="text-[10px] bg-orange-100 text-orange-800 border-orange-300 border">請求書払い申請中</Badge>
                           ) : a.paymentStatus === "invoice_pending" ? (
                             <Badge className="text-[10px] bg-amber-100 text-amber-800 border-amber-300 border">請求書払い待ち</Badge>
                           ) : a.paymentStatus === "failed" ? (
@@ -222,6 +240,15 @@ export default function AdminApplications() {
                           })()}
                         </td>
                         <td className="py-3 px-4">
+                          {a.paymentStatus === "invoice_requested" && (
+                            <Button
+                              size="sm"
+                              className="h-6 text-[10px] px-2 bg-orange-500 hover:bg-orange-600 text-white"
+                              onClick={(e) => { e.stopPropagation(); approveInvoice.mutate(a.id); }}
+                            >
+                              <CheckCircle className="w-3 h-3 mr-1" />承認
+                            </Button>
+                          )}
                           {a.paymentStatus === "failed" && (
                             <Button
                               size="sm"
@@ -334,6 +361,13 @@ export default function AdminApplications() {
                 <p className="text-xs text-muted-foreground">課金ステータス</p>
                 {(selectedApp.paymentStatus === "paid" || selectedApp.paymentStatus === "success") ? (
                   <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 border">課金済 ¥3,300税込</Badge>
+                ) : selectedApp.paymentStatus === "invoice_requested" ? (
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-orange-100 text-orange-800 border-orange-300 border">請求書払い申請中</Badge>
+                    <Button size="sm" className="h-6 text-xs px-2 bg-orange-500 hover:bg-orange-600 text-white" onClick={() => approveInvoice.mutate(selectedApp.id)} disabled={approveInvoice.isPending}>
+                      <CheckCircle className="w-3 h-3 mr-1" />承認する
+                    </Button>
+                  </div>
                 ) : selectedApp.paymentStatus === "invoice_pending" ? (
                   <div className="flex items-center gap-2">
                     <Badge className="bg-amber-100 text-amber-800 border-amber-300 border">請求書払い待ち</Badge>
