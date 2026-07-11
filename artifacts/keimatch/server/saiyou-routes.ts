@@ -1535,6 +1535,33 @@ ${jobXml}
     }
   });
 
+  // Company: Request invoice payment for failed application
+  app.post("/api/my/applications/:id/request-invoice", requireAuth, async (req, res) => {
+    try {
+      const [application] = await db.select().from(applications).where(eq(applications.id, req.params.id)).limit(1);
+      if (!application) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, application.jobId)).limit(1);
+      if (!job || job.userId !== req.session!.userId!) return res.status(403).json({ message: "権限がありません" });
+      if (application.paymentStatus !== "failed") return res.status(400).json({ message: "決済失敗の応募のみ申請できます" });
+      await db.update(applications).set({ paymentStatus: "invoice_requested", updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "申請に失敗しました" });
+    }
+  });
+
+  // Admin: Approve invoice payment request
+  app.post("/api/admin/applications/:id/approve-invoice", requireAdmin, async (req, res) => {
+    try {
+      const [application] = await db.select().from(applications).where(eq(applications.id, req.params.id)).limit(1);
+      if (!application) return res.status(404).json({ message: "応募が見つかりません" });
+      await db.update(applications).set({ paymentStatus: "invoice_pending", viewable: true, updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "承認に失敗しました" });
+    }
+  });
+
   // Admin: Retry payment for failed application
   app.post("/api/admin/applications/:id/retry-payment", requireAdmin, async (req, res) => {
     try {
