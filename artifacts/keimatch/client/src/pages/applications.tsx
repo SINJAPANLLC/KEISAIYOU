@@ -205,7 +205,8 @@ export default function Applications() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm font-semibold text-foreground">
-                          {isLocked ? "※ 決済失敗 — 閲覧ロック中" : app.name}
+                          {app.name}
+                          {isLocked && <span className="text-xs font-normal text-destructive ml-1">（閲覧ロック中）</span>}
                         </p>
                         <Badge variant="outline" className={`text-[10px] shrink-0 ${rs.className}`}>
                           {rs.label}
@@ -257,7 +258,7 @@ export default function Applications() {
             return (
               <>
                 <SheetHeader className="mb-6">
-                  <SheetTitle className="text-lg">{isLocked ? "閲覧ロック中" : selected.name}</SheetTitle>
+                  <SheetTitle className="text-lg">{selected.name}{isLocked && <span className="text-sm font-normal text-destructive ml-2">（閲覧ロック中）</span>}</SheetTitle>
                   <p className="text-xs text-muted-foreground">
                     <Calendar className="inline w-3 h-3 mr-1" />{formatDate(selected.createdAt)} 応募
                   </p>
