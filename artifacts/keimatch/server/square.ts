@@ -36,7 +36,7 @@ export async function createSquareCustomer(params: {
       company_name: params.companyName,
       given_name: params.contactName || params.companyName,
       phone_number: params.phone,
-      idempotency_key: `customer-${params.email}-${Date.now()}`,
+      idempotency_key: `cust-${params.email.slice(0, 20)}-${Date.now().toString().slice(-8)}`,
     }),
   });
   const data = await res.json() as any;
@@ -59,7 +59,7 @@ export async function saveSquareCard(params: {
     method: "POST",
     headers: squareHeaders(),
     body: JSON.stringify({
-      idempotency_key: `card-${params.customerId}-${Date.now()}`,
+      idempotency_key: `card-${params.customerId.slice(-12)}-${Date.now().toString().slice(-8)}`,
       source_id: params.sourceId,
       card: { customer_id: params.customerId },
     }),
@@ -86,7 +86,7 @@ export async function chargeSquareCard(params: {
     method: "POST",
     headers: squareHeaders(),
     body: JSON.stringify({
-      idempotency_key: `pay-${params.cardId}-${Date.now()}`,
+      idempotency_key: `pay-${params.cardId.slice(-12)}-${Date.now().toString().slice(-8)}`,
       source_id: params.cardId,
       customer_id: params.customerId,
       amount_money: { amount: params.amountYen, currency: "JPY" },
