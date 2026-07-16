@@ -1603,6 +1603,29 @@ ${jobXml}
     }
   });
 
+  // Admin: Manual charge — charge a company's stored card for a custom amount
+  app.post("/api/admin/manual-charge", requireAdmin, async (req, res) => {
+    try {
+      const { userId, amountYen, note } = req.body;
+      if (!userId || !amountYen) return res.status(400).json({ message: "userId と amountYen が必要です" });
+      const [company] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!company) return res.status(404).json({ message: "ユーザーが見つかりません" });
+      if (!company.squareCustomerId || !company.squareCardId) {
+        return res.status(400).json({ message: "カードが登録されていません" });
+      }
+      const chargeResult = await chargeSquareCard({
+        customerId: company.squareCustomerId,
+        cardId: company.squareCardId,
+        amountYen,
+        note: note || `KEI SAIYOU 手動課金 ¥${amountYen}`,
+      });
+      const success = chargeResult?.status === "COMPLETED";
+      res.json({ success, paymentId: chargeResult?.paymentId, status: chargeResult?.status });
+    } catch (e: any) {
+      res.status(500).json({ message: "課金に失敗しました", error: e?.message });
+    }
+  });
+
   // Admin: Fix all failed applications for card-less companies → invoice_pending + viewable
   app.post("/api/admin/applications/fix-no-card", requireAdmin, async (req, res) => {
     try {
