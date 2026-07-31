@@ -157,9 +157,6 @@ export default function DriverJobs() {
       {/* Header */}
       <header className="border-b bg-white sticky top-0 z-30 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link href="/">
-            <img src={logoImg} alt="KEI SAIYOU" className="h-8 w-auto" />
-          </Link>
           <div />
         </div>
       </header>
