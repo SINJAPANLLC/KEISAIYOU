@@ -160,11 +160,7 @@ export default function DriverJobs() {
           <Link href="/">
             <img src={logoImg} alt="KEI SAIYOU" className="h-8 w-auto" />
           </Link>
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/driver-register">
-              <Button variant="outline" size="sm">ドライバー登録</Button>
-            </Link>
-          </div>
+          <div />
         </div>
       </header>
 
