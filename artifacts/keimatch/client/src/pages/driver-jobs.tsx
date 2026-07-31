@@ -253,14 +253,6 @@ export default function DriverJobs() {
           </div>
         )}
 
-        {/* CTA: driver registration */}
-        <div className="mt-12 rounded-xl bg-orange-50 border border-orange-200 p-6 text-center">
-          <h2 className="text-base font-bold text-orange-900 mb-1">まずはドライバー登録しませんか？</h2>
-          <p className="text-sm text-orange-700 mb-4">登録無料・企業からのスカウトもあります</p>
-          <Link href="/driver-register">
-            <Button className="bg-orange-500 hover:bg-orange-600 text-white">無料でドライバー登録する</Button>
-          </Link>
-        </div>
       </div>
 
     </div>
