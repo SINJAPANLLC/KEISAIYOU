@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { db } from "./db";
-import { eq, desc, and, sql, lt } from "drizzle-orm";
+import { eq, desc, and, sql, lt, inArray } from "drizzle-orm";
 import OpenAI from "openai";
 import multer from "multer";
 import path from "path";
@@ -530,6 +530,52 @@ export function registerSaiyouRoutes(app: Express) {
   });
 
   // ─── Public: Application form ───────────────────────────────────────────
+  // Public: list all active jobs for driver-facing job board
+  app.get("/api/public/jobs", async (req, res) => {
+    try {
+      const { area, category, employment } = req.query as Record<string, string>;
+      const conditions = [eq(jobListings.status, "active")];
+      if (area) conditions.push(sql`${jobListings.area} ILIKE ${"%" + area + "%"}`);
+      if (category) conditions.push(eq(jobListings.jobCategory, category));
+      if (employment) conditions.push(eq(jobListings.employmentType, employment));
+
+      const rows = await db.select({
+        id: jobListings.id,
+        title: jobListings.title,
+        jobCategory: jobListings.jobCategory,
+        employmentType: jobListings.employmentType,
+        salary: jobListings.salary,
+        area: jobListings.area,
+        workHours: jobListings.workHours,
+        holidays: jobListings.holidays,
+        benefits: jobListings.benefits,
+        requiresLicense: jobListings.requiresLicense,
+        requiresBlackNumber: jobListings.requiresBlackNumber,
+        requiresVehicle: jobListings.requiresVehicle,
+        requiresExperience: jobListings.requiresExperience,
+        publishedAt: jobListings.publishedAt,
+        userId: jobListings.userId,
+      }).from(jobListings).where(and(...conditions)).orderBy(desc(jobListings.publishedAt));
+
+      // Join company names
+      const userIds = [...new Set(rows.map((r) => r.userId))];
+      let companyMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const companies = await db.select({ id: users.id, companyName: users.companyName }).from(users).where(inArray(users.id, userIds));
+        companies.forEach((c) => { if (c.companyName) companyMap[c.id] = c.companyName; });
+      }
+
+      const result = rows.map(({ userId, ...job }) => ({
+        ...job,
+        companyName: companyMap[userId] || null,
+      }));
+      res.json(result);
+    } catch (err) {
+      console.error("[public/jobs]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
   app.get("/api/public/jobs/:id", async (req, res) => {
     try {
       const [row] = await db.select({

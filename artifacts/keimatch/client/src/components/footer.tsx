@@ -40,6 +40,13 @@ export default function Footer() {
               </ul>
             </div>
             <div>
+              <h3 className="text-xs font-bold text-white/60 tracking-widest uppercase mb-4">ドライバーの方</h3>
+              <ul className="space-y-2.5 text-sm text-white/75">
+                <li><Link href="/driver/jobs" className="hover:text-white transition-colors">求人一覧</Link></li>
+                <li><Link href="/driver-register" className="hover:text-white transition-colors">ドライバー登録</Link></li>
+              </ul>
+            </div>
+            <div>
               <h3 className="text-xs font-bold text-white/60 tracking-widest uppercase mb-4">会社情報</h3>
               <ul className="space-y-2.5 text-sm text-white/75">
                 <li><Link href="/company-info" className="hover:text-white transition-colors" data-testid="link-company-info">会社情報</Link></li>

@@ -36,6 +36,7 @@ const pageImports = {
   adminSettings:          () => import("@/pages/admin-settings"),
   adminDrivers:           () => import("@/pages/admin-drivers"),
   driverRegister:         () => import("@/pages/driver-register"),
+  driverJobs:             () => import("@/pages/driver-jobs"),
   guide:                  () => import("@/pages/guide"),
   faq:                    () => import("@/pages/faq"),
   contact:                () => import("@/pages/contact"),
@@ -69,6 +70,7 @@ const AdminAuditLogs      = lazy(pageImports.adminAuditLogs);
 const AdminSettings       = lazy(pageImports.adminSettings);
 const AdminDrivers        = lazy(pageImports.adminDrivers);
 const DriverRegister      = lazy(pageImports.driverRegister);
+const DriverJobs          = lazy(pageImports.driverJobs);
 const Guide               = lazy(pageImports.guide);
 const Faq                 = lazy(pageImports.faq);
 const Contact             = lazy(pageImports.contact);
@@ -135,6 +137,7 @@ function Router() {
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/driver-register" component={DriverRegister} />
+        <Route path="/driver/jobs" component={DriverJobs} />
 
         {/* User (protected) */}
         <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
