@@ -98,9 +98,9 @@ info@keisaiyou-sinjapan.com`,
   },
 ];
 
-const PROMO_IMAGE_URL = "https://keisaiyou-sinjapan.com/promo-banner.jpg";
+const PROMO_IMAGE_PROD_URL = "https://keisaiyou-sinjapan.com/promo-banner.jpg";
 
-function buildEmailHtml(subject: string, body: string, previewCompany = "サンプル株式会社"): string {
+function buildEmailHtml(subject: string, body: string, previewCompany = "サンプル株式会社", imageUrl = PROMO_IMAGE_PROD_URL): string {
   const personalized = body
     .replace(/\{\{companyName\}\}/g, previewCompany)
     .replace(/\{\{company_name\}\}/g, previewCompany);
@@ -180,7 +180,7 @@ function buildEmailHtml(subject: string, body: string, previewCompany = "サン�
       </td></tr>
 
       <!-- Promo image -->
-      <tr><td style="padding:0;"><img src="${PROMO_IMAGE_URL}" alt="KEI SAIYOU 軽貨物採用これだけ" width="600" style="display:block;width:100%;height:auto;" /></td></tr>
+      <tr><td style="padding:0;"><img src="${imageUrl}" alt="KEI SAIYOU 軽貨物採用これだけ" width="600" style="display:block;width:100%;height:auto;" /></td></tr>
 
       <!-- Body -->
       <tr><td style="background:#fff;padding:32px 36px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
@@ -418,7 +418,21 @@ export default function AdminEmailMarketing() {
     setSelectedIds(allSelected ? selectedIds.filter((id) => !ids.includes(id)) : [...new Set([...selectedIds, ...ids])]);
   };
 
-  const previewHtml = useMemo(() => buildEmailHtml(emailForm.subject, emailForm.body), [emailForm.subject, emailForm.body]);
+  const [promoBannerUri, setPromoBannerUri] = useState(PROMO_IMAGE_PROD_URL);
+  useEffect(() => {
+    fetch("/promo-banner.jpg")
+      .then((r) => r.ok ? r.blob() : Promise.reject())
+      .then((blob) => new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      }))
+      .then(setPromoBannerUri)
+      .catch(() => {/* 本番URLをフォールバックとして使用 */});
+  }, []);
+
+  const previewHtml = useMemo(() => buildEmailHtml(emailForm.subject, emailForm.body, "サンプル株式会社", promoBannerUri), [emailForm.subject, emailForm.body, promoBannerUri]);
 
   return (
     <DashboardLayout>
