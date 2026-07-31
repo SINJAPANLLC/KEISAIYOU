@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Banknote, Clock, Calendar, Briefcase, Search, ChevronRight, Car, FileText } from "lucide-react";
 import logoImg from "@/assets/logo-keisaiyou.png";
-import Footer from "@/components/footer";
 
 type PublicJob = {
   id: string;
@@ -271,7 +270,6 @@ export default function DriverJobs() {
         </div>
       </div>
 
-      <Footer />
     </div>
   );
 }
