@@ -8,6 +8,8 @@ import logoWhite from "@assets/logo-white.png";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import type { Announcement } from "@shared/schema";
+import SeoHead from "@/components/seo/seo-head";
+import StructuredData from "@/components/seo/structured-data";
 
 const CATEGORY_BADGE: Record<string, { label: string; variant: "default" | "secondary" }> = {
   important: { label: "重要", variant: "default" },
@@ -116,6 +118,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
+      <SeoHead
+        title="KEI SAIYOU｜軽貨物ドライバー採用に特化したプラットフォーム"
+        description="KEI SAIYOUは軽貨物・運送会社のドライバー採用に特化したプラットフォームです。初期費用・月額費用ゼロ。応募が来たら即通知、3,300円／応募のシンプルな料金プラン。"
+        canonical="https://keisaiyou-sinjapan.com/"
+      />
+      <StructuredData type="Organization" />
+      <StructuredData type="LocalBusiness" />
+      <StructuredData type="WebSite" />
 
       {/* ─── HERO ─── */}
       <section className="hero-gradient relative overflow-hidden">

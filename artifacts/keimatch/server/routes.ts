@@ -4600,13 +4600,15 @@ JSON形式で以下を返してください（日本語で）:
     const now = new Date().toISOString().split("T")[0];
 
     const staticPages = [
-      { loc: "/",             changefreq: "weekly",  priority: "1.0" },
-      { loc: "/guide",        changefreq: "monthly", priority: "0.8" },
-      { loc: "/faq",          changefreq: "monthly", priority: "0.8" },
-      { loc: "/contact",      changefreq: "monthly", priority: "0.7" },
-      { loc: "/company-info", changefreq: "monthly", priority: "0.6" },
-      { loc: "/terms",        changefreq: "yearly",  priority: "0.4" },
-      { loc: "/privacy",      changefreq: "yearly",  priority: "0.4" },
+      { loc: "/",                changefreq: "weekly",  priority: "1.0" },
+      { loc: "/driver/jobs",     changefreq: "daily",   priority: "0.9" },
+      { loc: "/driver-register", changefreq: "monthly", priority: "0.8" },
+      { loc: "/guide",           changefreq: "monthly", priority: "0.8" },
+      { loc: "/faq",             changefreq: "monthly", priority: "0.8" },
+      { loc: "/contact",         changefreq: "monthly", priority: "0.7" },
+      { loc: "/company-info",    changefreq: "monthly", priority: "0.6" },
+      { loc: "/terms",           changefreq: "yearly",  priority: "0.4" },
+      { loc: "/privacy",         changefreq: "yearly",  priority: "0.4" },
     ];
 
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
@@ -4620,7 +4622,7 @@ JSON形式で以下を返してください（日本語で）:
       const { jobListings: jl } = await import("@shared/schema") as any;
       const { eq: eqFn } = await import("drizzle-orm");
       const publishedJobs = await dbConn.select({ id: jl.id, updatedAt: jl.updatedAt })
-        .from(jl).where(eqFn(jl.status, "published"));
+        .from(jl).where(eqFn(jl.status, "active"));
       for (const job of publishedJobs) {
         const lastmod = job.updatedAt ? new Date(job.updatedAt).toISOString().split("T")[0] : now;
         xml += `  <url>\n    <loc>${BASE}/apply/${job.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;

@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Banknote, Briefcase, CheckCircle2, Loader2, Building2, Paperclip, X } from "lucide-react";
 import logoImg from "@/assets/logo-keisaiyou.png";
+import SeoHead from "@/components/seo/seo-head";
+import StructuredData from "@/components/seo/structured-data";
 
 const LICENSE_TYPES = ["普通自動車（AT限定）", "普通自動車", "準中型", "中型", "大型", "けん引"];
 const GENDER_OPTIONS = ["男性", "女性", "その他", "回答しない"];
@@ -128,6 +130,44 @@ export default function Apply() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
+      {job && (
+        <>
+          <SeoHead
+            title={`${job.title}｜${job.companyName || "求人"}の応募フォーム - KEI SAIYOU`}
+            description={`${job.area}エリアの${job.title}。給与：${job.salary}。${job.employmentType}。軽貨物ドライバー専門のKEI SAIYOUから応募できます。`}
+            canonical={`https://keisaiyou-sinjapan.com/apply/${jobId}`}
+            ogType="article"
+          />
+          <StructuredData
+            type="JobPosting"
+            data={{
+              title: job.title,
+              description: job.description || job.title,
+              datePosted: new Date().toISOString().split("T")[0],
+              jobLocation: {
+                "@type": "Place",
+                address: {
+                  "@type": "PostalAddress",
+                  addressLocality: job.area,
+                  addressCountry: "JP",
+                },
+              },
+              baseSalary: {
+                "@type": "MonetaryAmount",
+                currency: "JPY",
+                value: { "@type": "QuantitativeValue", value: job.salary, unitText: "MONTH" },
+              },
+              employmentType: job.employmentType === "業務委託" ? "CONTRACTOR" : job.employmentType === "正社員" ? "FULL_TIME" : "PART_TIME",
+              hiringOrganization: {
+                "@type": "Organization",
+                name: job.companyName || "KEI SAIYOU掲載企業",
+                sameAs: "https://keisaiyou-sinjapan.com",
+              },
+              directApply: true,
+            }}
+          />
+        </>
+      )}
       {/* Header */}
       <div className="bg-white border-b border-orange-100 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3">

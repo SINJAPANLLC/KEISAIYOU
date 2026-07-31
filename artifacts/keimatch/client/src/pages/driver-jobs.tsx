@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Banknote, Clock, Calendar, Briefcase, Search, ChevronRight, Car, FileText } from "lucide-react";
+import SeoHead from "@/components/seo/seo-head";
 import logoImg from "@/assets/logo-keisaiyou.png";
 
 type PublicJob = {
@@ -154,6 +155,11 @@ export default function DriverJobs() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SeoHead
+        title="軽貨物ドライバー求人一覧｜KEI SAIYOU"
+        description="軽貨物ドライバーの求人を探すならKEI SAIYOU。業務委託・正社員・パートなど多数掲載。エリア・職種・雇用形態で絞り込み、そのまま応募できます。"
+        canonical="https://keisaiyou-sinjapan.com/driver/jobs"
+      />
       {/* Header */}
       <header className="border-b bg-white sticky top-0 z-30 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
