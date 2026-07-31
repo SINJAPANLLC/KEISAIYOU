@@ -1482,6 +1482,18 @@ ${jobXml}
     }
   });
 
+  // Admin: Get/Set auto-send enabled flag
+  app.get("/api/admin/sales/auto-send", requireAdmin, async (_req, res) => {
+    const val = await storage.getAdminSetting("lead_email_auto_send_enabled");
+    res.json({ enabled: val !== "false" }); // デフォルトON
+  });
+
+  app.post("/api/admin/sales/auto-send", requireAdmin, async (req, res) => {
+    const { enabled } = req.body;
+    await storage.setAdminSetting("lead_email_auto_send_enabled", enabled ? "true" : "false");
+    res.json({ enabled: !!enabled });
+  });
+
   // Admin: Manually trigger daily send
   app.post("/api/admin/sales/run-daily", requireAdmin, async (_req, res) => {
     try {

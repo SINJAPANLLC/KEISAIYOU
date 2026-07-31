@@ -1467,6 +1467,13 @@ function buildSalesEmailHtml(subject: string, body: string, companyName: string)
 }
 
 export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: number }> {
+  // 自動送信が無効化されている場合はスキップ
+  const autoSendEnabled = await storage.getAdminSetting("lead_email_auto_send_enabled");
+  if (autoSendEnabled === "false") {
+    console.log("[Lead Email] Auto-send is disabled, skipping.");
+    return { sent: 0, failed: 0 };
+  }
+
   const todaySent = await storage.getTodaySentLeadCount();
   const remaining = DAILY_SEND_LIMIT - todaySent;
   if (remaining <= 0) {

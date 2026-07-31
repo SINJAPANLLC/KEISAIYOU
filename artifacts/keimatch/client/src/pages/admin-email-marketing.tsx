@@ -249,6 +249,23 @@ export default function AdminEmailMarketing() {
     refetchInterval: 60000,
   });
 
+  const { data: autoSendData, refetch: refetchAutoSend } = useQuery<{ enabled: boolean }>({
+    queryKey: ["/api/admin/sales/auto-send"],
+    queryFn: () => apiRequest("GET", "/api/admin/sales/auto-send").then((r) => r.json()),
+  });
+  const autoSendEnabled = autoSendData?.enabled ?? true;
+
+  const [togglingAutoSend, setTogglingAutoSend] = useState(false);
+  const handleToggleAutoSend = async () => {
+    setTogglingAutoSend(true);
+    try {
+      await apiRequest("POST", "/api/admin/sales/auto-send", { enabled: !autoSendEnabled });
+      refetchAutoSend();
+      toast({ title: !autoSendEnabled ? "自動送信をONにしました" : "自動送信をOFFにしました" });
+    } catch { toast({ variant: "destructive", title: "切り替えに失敗しました" }); }
+    finally { setTogglingAutoSend(false); }
+  };
+
   const [runningDaily, setRunningDaily] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -447,9 +464,15 @@ export default function AdminEmailMarketing() {
                 <h1 className="text-xl font-bold text-white">営業メール管理</h1>
               </div>
               <div className="flex items-center gap-2">
+                {/* 自動送信 ON/OFF トグル */}
+                <button onClick={handleToggleAutoSend} disabled={togglingAutoSend}
+                  className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50 ${autoSendEnabled ? "bg-emerald-500/80 hover:bg-emerald-500 text-white" : "bg-white/10 hover:bg-white/20 text-white/60"}`}>
+                  {togglingAutoSend ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <span className={`w-2.5 h-2.5 rounded-full ${autoSendEnabled ? "bg-white" : "bg-white/30"}`} />}
+                  自動送信 {autoSendEnabled ? "ON" : "OFF"}
+                </button>
                 <button onClick={handleRunDaily} disabled={runningDaily}
                   className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
-                  {runningDaily ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}今すぐ自動送信
+                  {runningDaily ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}今すぐ送信
                 </button>
                 <button onClick={handleResetLeads} disabled={resetting}
                   className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white/90 text-xs px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
