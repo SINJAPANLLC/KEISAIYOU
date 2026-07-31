@@ -1438,7 +1438,7 @@ ${jobXml}
       if (!leadIds?.length || !subject || !body) {
         return res.status(400).json({ message: "送信対象・件名・本文を入力してください" });
       }
-      const leads = await db.select().from(emailLeads).where(sql`${emailLeads.id} = ANY(${sql.raw(`ARRAY['${leadIds.join("','")}']::varchar[]`)})`);
+      const leads = await db.select().from(emailLeads).where(inArray(emailLeads.id, leadIds));
       const withEmail = leads.filter((l) => l.email);
       let sentCount = 0;
       let failedCount = 0;

@@ -368,12 +368,12 @@ export default function AdminEmailMarketing() {
 
   const handleSendAll = async () => {
     if (!emailForm.subject || !emailForm.body) return toast({ variant: "destructive", title: "件名・本文を入力してください" });
-    const newLeads = leads.filter((l) => l.status === "new" && l.email);
-    if (!newLeads.length) return toast({ variant: "destructive", title: "送信可能な未送信リードがありません" });
+    const sendableLeads = leads.filter((l) => (l.status === "new" || l.status === "followed_up") && l.email);
+    if (!sendableLeads.length) return toast({ variant: "destructive", title: "送信可能なリードがありません" });
     setSendingAll(true);
     try {
       const res = await apiRequest("POST", "/api/admin/sales/send", {
-        leadIds: newLeads.map((l) => l.id),
+        leadIds: sendableLeads.map((l) => l.id),
         subject: emailForm.subject,
         body: emailForm.body,
       });
