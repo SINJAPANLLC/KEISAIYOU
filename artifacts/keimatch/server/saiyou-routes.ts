@@ -1461,6 +1461,56 @@ ${jobXml}
     }
   });
 
+  // ─── Admin: Sales stats ──────────────────────────────────────────────────
+  app.get("/api/admin/sales/stats", requireAdmin, async (_req, res) => {
+    try {
+      const today = new Date(); today.setHours(0, 0, 0, 0);
+      const [newC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "new"));
+      const [sentC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "sent"));
+      const [fuC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "followed_up"));
+      const [failC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "failed"));
+      const [totalC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads);
+      const [todayC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads)
+        .where(and(eq(emailLeads.status, "sent"), sql`${emailLeads.sentAt} >= ${today}`));
+      res.json({
+        total: totalC?.c || 0, new: newC?.c || 0, sent: sentC?.c || 0,
+        followedUp: fuC?.c || 0, failed: failC?.c || 0, todaySent: todayC?.c || 0,
+        sendHours: [8, 10, 12, 14, 16, 18],
+      });
+    } catch (err) {
+      res.status(500).json({ message: "取得失敗" });
+    }
+  });
+
+  // Admin: Manually trigger daily send
+  app.post("/api/admin/sales/run-daily", requireAdmin, async (_req, res) => {
+    try {
+      const { sendDailyLeadEmails } = await import("./lead-crawler") as any;
+      const result = await sendDailyLeadEmails();
+      res.json(result);
+    } catch (err) {
+      console.error("[run-daily]", err);
+      res.status(500).json({ message: "送信実行に失敗しました" });
+    }
+  });
+
+  // Admin: Reset followed_up leads → new
+  app.post("/api/admin/sales/leads/reset", requireAdmin, async (req, res) => {
+    try {
+      const { ids } = req.body;
+      if (ids?.length) {
+        await db.update(emailLeads).set({ status: "new", sentAt: null as any }).where(inArray(emailLeads.id, ids));
+      } else {
+        await db.update(emailLeads).set({ status: "new", sentAt: null as any }).where(eq(emailLeads.status, "followed_up"));
+      }
+      const [result] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "new"));
+      res.json({ reset: result?.c || 0 });
+    } catch (err) {
+      console.error("[reset-leads]", err);
+      res.status(500).json({ message: "リセットに失敗しました" });
+    }
+  });
+
   // ─── Admin: Dashboard stats ─────────────────────────────────────────────
   app.get("/api/admin/stats", requireAdmin, async (_req, res) => {
     try {

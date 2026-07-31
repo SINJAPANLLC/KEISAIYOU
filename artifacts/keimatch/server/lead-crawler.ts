@@ -1427,6 +1427,45 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
   return { searched: totalSearched, found: totalFound };
 }
 
+function buildSalesEmailHtml(subject: string, body: string, companyName: string): string {
+  const lines = body.split("\n");
+  let html = "";
+  for (const line of lines) {
+    const escaped = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    if (line.startsWith("■") || line.startsWith("━")) {
+      html += `<p style="margin:16px 0 6px;font-size:13px;font-weight:700;color:#d05a2a;border-left:3px solid #d05a2a;padding-left:8px;">${escaped}</p>`;
+    } else if (line.startsWith("☑") || line.startsWith("✅") || line.startsWith("▶")) {
+      html += `<p style="margin:4px 0;font-size:13px;color:#1e293b;padding-left:6px;">${escaped}</p>`;
+    } else if (line.startsWith("http")) {
+      html += `<div style="margin:18px 0;text-align:center;"><a href="${line}" style="display:inline-block;background:#d05a2a;color:#fff;font-weight:bold;font-size:14px;padding:12px 32px;border-radius:6px;text-decoration:none;">無料で登録する →</a></div>`;
+    } else if (line.trim() === "") {
+      html += `<div style="height:8px;"></div>`;
+    } else {
+      html += `<p style="margin:0 0 4px;font-size:14px;line-height:1.8;color:#334155;">${escaped}</p>`;
+    }
+  }
+  return `<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Hiragino Sans','Yu Gothic UI',Meiryo,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px;background:#f4f4f5;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+      <tr><td style="background:linear-gradient(135deg,#c04f24,#e8734a);border-radius:10px 10px 0 0;padding:24px 32px;">
+        <p style="margin:0;font-size:18px;font-weight:700;color:#fff;line-height:1.4;">${subject.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>
+      </td></tr>
+      <tr><td style="padding:0;"><img src="https://keisaiyou-sinjapan.com/promo-banner.jpg" alt="KEI SAIYOU 軽貨物採用これだけ" width="600" style="display:block;width:100%;height:auto;" /></td></tr>
+      <tr><td style="background:#fff;padding:28px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
+        ${html}
+      </td></tr>
+      <tr><td style="background:#1e293b;border-radius:0 0 10px 10px;padding:18px 32px;">
+        <p style="margin:0;font-size:13px;font-weight:700;color:#fff;">KEI SAIYOU</p>
+        <p style="margin:2px 0 0;font-size:11px;color:rgba(255,255,255,0.5);">合同会社SIN JAPAN｜info@sinjapan.jp｜046-212-2325</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
+}
+
 export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: number }> {
   const todaySent = await storage.getTodaySentLeadCount();
   const remaining = DAILY_SEND_LIMIT - todaySent;
@@ -1501,9 +1540,27 @@ URL: https://keisaiyou-sinjapan.com
 　本メールへその旨ご返信いただければ、
 　速やかに配信を停止いたします。`;
 
-  const leads = await storage.getNewEmailLeadsForSending(remaining);
+  // 優先順位: new → followed_up (30日以上前) → failed
+  let leads = await storage.getNewEmailLeadsForSending(remaining);
+  if (leads.length < remaining) {
+    const { db } = await import("./db");
+    const { emailLeads } = await import("@shared/schema") as any;
+    const { eq, and, lt, sql: sqlFn, isNotNull, ne } = await import("drizzle-orm");
+    const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const extra = await db.select().from(emailLeads)
+      .where(and(
+        eq(emailLeads.status, "followed_up"),
+        lt(emailLeads.sentAt, cutoff30),
+        isNotNull(emailLeads.email),
+        ne(emailLeads.email, "")
+      ))
+      .orderBy(emailLeads.sentAt)
+      .limit(remaining - leads.length);
+    leads = [...leads, ...extra];
+  }
+
   if (leads.length === 0) {
-    console.log("[Lead Email] No new leads to send");
+    console.log("[Lead Email] No leads to send (new=0, followed_up(30d+)=0)");
     return { sent: 0, failed: 0 };
   }
 
@@ -1515,7 +1572,8 @@ URL: https://keisaiyou-sinjapan.com
 
     try {
       const personalizedBody = body.replace(/\{company\}/g, lead.companyName);
-      const result = await sendEmail(lead.email, subject, personalizedBody);
+      const htmlBody = buildSalesEmailHtml(subject, personalizedBody, lead.companyName);
+      const result = await sendEmail(lead.email, subject, htmlBody);
 
       if (result.success) {
         await storage.updateEmailLead(lead.id, {

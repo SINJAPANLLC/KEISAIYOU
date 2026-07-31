@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Upload, Users, Send, Trash2, Search, Plus, Clock, Globe, RefreshCw, Eye, Mail, Zap, SendHorizonal } from "lucide-react";
+import { Upload, Users, Send, Trash2, Search, Plus, Clock, Globe, RefreshCw, Eye, Mail, Zap, SendHorizonal, RotateCcw, PlayCircle, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -98,6 +98,8 @@ info@keisaiyou-sinjapan.com`,
   },
 ];
 
+const PROMO_IMAGE_URL = "https://keisaiyou-sinjapan.com/promo-banner.jpg";
+
 function buildEmailHtml(subject: string, body: string, previewCompany = "サンプル株式会社"): string {
   const personalized = body
     .replace(/\{\{companyName\}\}/g, previewCompany)
@@ -177,6 +179,9 @@ function buildEmailHtml(subject: string, body: string, previewCompany = "サン�
         <p style="margin:0;font-size:20px;font-weight:700;color:#fff;line-height:1.4;">${subject || "（件名未入力）"}</p>
       </td></tr>
 
+      <!-- Promo image -->
+      <tr><td style="padding:0;"><img src="${PROMO_IMAGE_URL}" alt="KEI SAIYOU 軽貨物採用これだけ" width="600" style="display:block;width:100%;height:auto;" /></td></tr>
+
       <!-- Body -->
       <tr><td style="background:#fff;padding:32px 36px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
         ${bodyHtml}
@@ -236,6 +241,41 @@ export default function AdminEmailMarketing() {
     queryFn: () => apiRequest("GET", "/api/admin/sales/leads").then((r) => r.json()),
     refetchInterval: megaCrawlStatus?.running ? 8000 : false,
   });
+
+  type SalesStats = { total: number; new: number; sent: number; followedUp: number; failed: number; todaySent: number; sendHours: number[] };
+  const { data: salesStats, refetch: refetchStats } = useQuery<SalesStats>({
+    queryKey: ["/api/admin/sales/stats"],
+    queryFn: () => apiRequest("GET", "/api/admin/sales/stats").then((r) => r.json()),
+    refetchInterval: 60000,
+  });
+
+  const [runningDaily, setRunningDaily] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleRunDaily = async () => {
+    setRunningDaily(true);
+    try {
+      const res = await apiRequest("POST", "/api/admin/sales/run-daily");
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] });
+      refetchStats();
+      toast({ title: `自動送信実行: ${data.sent ?? 0}件送信、${data.failed ?? 0}件失敗` });
+    } catch { toast({ variant: "destructive", title: "実行に失敗しました" }); }
+    finally { setRunningDaily(false); }
+  };
+
+  const handleResetLeads = async () => {
+    if (!confirm("followed_up のリード全件を「未送信（new）」に戻しますか？")) return;
+    setResetting(true);
+    try {
+      const res = await apiRequest("POST", "/api/admin/sales/leads/reset");
+      const data = await res.json();
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] });
+      refetchStats();
+      toast({ title: `${data.reset}件を未送信にリセットしました` });
+    } catch { toast({ variant: "destructive", title: "リセットに失敗しました" }); }
+    finally { setResetting(false); }
+  };
 
   // Poll mega-crawl status
   useEffect(() => {
@@ -386,15 +426,45 @@ export default function AdminEmailMarketing() {
         {/* Header */}
         <div className="px-6 py-4 hero-gradient relative overflow-hidden shrink-0">
           <div className="hero-grid absolute inset-0 opacity-30" />
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <p className="text-white/80 text-xs mb-0.5">SALES</p>
-              <h1 className="text-xl font-bold text-white">営業メール管理</h1>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-white/80 text-xs mb-0.5">SALES</p>
+                <h1 className="text-xl font-bold text-white">営業メール管理</h1>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={handleRunDaily} disabled={runningDaily}
+                  className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
+                  {runningDaily ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}今すぐ自動送信
+                </button>
+                <button onClick={handleResetLeads} disabled={resetting}
+                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white/90 text-xs px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
+                  {resetting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}リセット
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2 text-white/80 text-xs">
-              <Users className="w-3.5 h-3.5" />{leads.length}件
-              <span className="ml-2"><Mail className="w-3.5 h-3.5 inline mr-0.5" />{leads.filter((l) => l.status === "sent").length}件送信済</span>
-            </div>
+            {salesStats && (
+              <div className="grid grid-cols-5 gap-2 mb-2">
+                {([
+                  { label: "総リード", value: salesStats.total, color: "text-white" },
+                  { label: "未送信", value: salesStats.new, color: "text-yellow-300" },
+                  { label: "送信済", value: salesStats.sent, color: "text-green-300" },
+                  { label: "FU済", value: salesStats.followedUp, color: "text-blue-300" },
+                  { label: "今日送信", value: salesStats.todaySent, color: "text-orange-200" },
+                ] as const).map((s) => (
+                  <div key={s.label} className="bg-white/10 rounded-md px-2 py-1.5 text-center">
+                    <p className={`text-[10px] ${s.color} mb-0.5`}>{s.label}</p>
+                    <p className="text-white font-bold text-sm">{s.value.toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-white/60 text-[10px]">
+              自動送信スケジュール: {salesStats?.sendHours.join("・")}時JST（毎日）
+              {salesStats && salesStats.new === 0 && salesStats.followedUp > 0 && (
+                <span className="ml-2 text-yellow-300">⚠ 未送信0件 — 「リセット」でfollowed_upをnewに戻せます</span>
+              )}
+            </p>
           </div>
         </div>
 
@@ -593,8 +663,8 @@ export default function AdminEmailMarketing() {
             <div className="p-3 border-t border-border shrink-0 space-y-2">
               {/* Send all new leads */}
               {(() => {
-                const newLeadsCount = leads.filter((l) => l.status === "new" && l.email).length;
-                return newLeadsCount > 0 ? (
+                const sendableCount = leads.filter((l) => (l.status === "new" || l.status === "followed_up") && l.email).length;
+                return sendableCount > 0 ? (
                   <Button
                     onClick={handleSendAll}
                     disabled={sendingAll || !emailForm.subject || !emailForm.body}
@@ -603,7 +673,7 @@ export default function AdminEmailMarketing() {
                   >
                     {sendingAll
                       ? <><RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />送信中...</>
-                      : <><SendHorizonal className="w-3.5 h-3.5 mr-1.5" />未送信 {newLeadsCount}件に一括送信</>}
+                      : <><SendHorizonal className="w-3.5 h-3.5 mr-1.5" />送信可能 {sendableCount}件に一括送信</>}
                   </Button>
                 ) : null;
               })()}
