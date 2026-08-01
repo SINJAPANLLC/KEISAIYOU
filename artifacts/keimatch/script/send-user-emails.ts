@@ -19,70 +19,36 @@ async function getAdminSetting(key: string): Promise<string | undefined> {
 }
 
 async function main() {
-  const subject = await getAdminSetting("lead_email_subject")
-    || "軽貨物ドライバーの採用、うまくいっていますか？｜KEI SAIYOU";
-  const bodyTemplate = await getAdminSetting("lead_email_body")
-    || `{companyName}
-ご担当者様
+  // 管理画面「初回営業」テンプレート（画像付き）
+  const subject = "軽貨物ドライバーの採用コスト、下げませんか？";
+  const bodyTemplate = `{{companyName}} ご担当者様
+
+はじめまして。軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」と申します。
 
 突然のご連絡、大変失礼いたします。
-軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」を運営しております、合同会社SIN JAPANと申します。
 
-貴社のホームページを拝見し、軽貨物配送事業を展開されていることを知り、ドライバー採用のご支援ができればとご連絡差し上げました。
-
-━━━━━━━━━━━━━━━━━━━━
 ■ こんなお悩みはありませんか？
-━━━━━━━━━━━━━━━━━━━━
-☑ ドライバーが集まらず、配送件数を増やせない
-☑ 求人サイトの掲載費が高く、採用コストが重い
-☑ Indeed・ハローワークだけでは応募数が足りない
-☑ 応募があっても、条件の合う人が来ない
 
-━━━━━━━━━━━━━━━━━━━━
-■「KEI SAIYOU」でできること
-━━━━━━━━━━━━━━━━━━━━
-✅ 完全成果報酬型：採用コストを大幅削減
-　→ 月額・掲載費0円。応募1件あたり3,300円（税込）のみ
+▶ ドライバーがなかなか集まらない
+▶ 求人媒体の月額費用が高い
+▶ 採用できなかった月も費用がかかる
 
-✅ Indeed連携で即日から応募が来る
-　→ 日本最大の求人サイトに掲載。黒ナンバー取得者にアプローチ
+■ KEI SAIYOUなら解決できます
 
-✅ 応募者情報を一元管理
-　→ 氏名・電話番号・職歴・保有免許・履歴書をまとめて確認
+KEI SAIYOUは「応募が来たときだけ課金」の完全成功報酬型サービスです。
 
-✅ AIで求人票を自動作成
-　→ エリア・給与を入力するだけで魅力的な文章を自動生成
+▶ 初期費用０・月額固定費０
+▶ 応募1件あたり ¥3,000（税別）のみ
+▶ 1分で求人掲載スタート
 
-━━━━━━━━━━━━━━━━━━━━
-■ 今すぐ無料で求人掲載
-━━━━━━━━━━━━━━━━━━━━
-▼ 無料登録・詳細はこちら
+まずは無料でご登録いただき、求人を掲載してみてください。
 https://keisaiyou-sinjapan.com/register
 
-初期費用・月額費用は一切かかりません。
-応募が来たときだけ、1件3,300円（税込）のみです。
+ご不明な点がございましたら、お気軽にご返信ください。
 
-━━━━━━━━━━━━━━━━━━━━
-
-ご多忙のところ恐縮ですが、
-貴社のドライバー採用活動にお役立ていただければ幸いです。
-
-ご質問・ご不明な点がございましたら、
-本メールへのご返信にてお気軽にお問い合わせください。
-
-━━━━━━━━━━━━━━━━━━━━
-KEI SAIYOU 運営事務局
-合同会社SIN JAPAN
-〒243-0303 神奈川県愛甲郡愛川町中津7287
-TEL: 046-212-2325
-URL: https://keisaiyou-sinjapan.com
-━━━━━━━━━━━━━━━━━━━━
-
-※本メールは貴社ホームページに掲載されている
-　連絡先情報をもとにお送りしております。
-※今後のメール配信を希望されない場合は、
-　本メールへその旨ご返信いただければ、
-　速やかに配信を停止いたします。`;
+━
+KEI SAIYOU（合同会社SIN JAPAN）
+info@keisaiyou-sinjapan.com`;
 
   // 管理者以外・メールあり のユーザー全員取得
   const targetUsers = await db.select({
@@ -97,11 +63,11 @@ URL: https://keisaiyou-sinjapan.com
     )
   );
 
-  // 残り分のみ送信（OFFSET指定）
   const OFFSET = parseInt(process.env.OFFSET || "0");
-  const targets = targetUsers.slice(OFFSET);
+  const LIMIT  = parseInt(process.env.LIMIT  || "50");
+  const targets = targetUsers.slice(OFFSET, OFFSET + LIMIT);
 
-  console.log(`送信対象: ${targets.length}件 (全${targetUsers.length}件 offset=${OFFSET})`);
+  console.log(`送信対象: ${targets.length}件 (全${targetUsers.length}件 offset=${OFFSET} limit=${LIMIT})`);
   console.log(`件名: ${subject}`);
   console.log("---");
 
@@ -111,9 +77,34 @@ URL: https://keisaiyou-sinjapan.com
   for (const user of targets) {
     if (!user.email) continue;
     const name = user.companyName || "ご担当者";
-    const body = bodyTemplate.replace(/\{companyName\}/g, name).replace(/\{company\}/g, name);
+    const personalizedBody = bodyTemplate.replace(/\{\{companyName\}\}/g, name).replace(/\{companyName\}/g, name);
+    // 画像付きHTMLメールを生成
+    const htmlLines = personalizedBody.split("\n").map(line => {
+      const e = line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      if (line.startsWith("■")) return `<p style="margin:14px 0 4px;font-size:13px;font-weight:700;color:#d05a2a;border-left:3px solid #d05a2a;padding-left:8px;">${e}</p>`;
+      if (line.startsWith("▶")) return `<p style="margin:4px 0;font-size:13px;color:#1e293b;padding-left:6px;">${e}</p>`;
+      if (line.startsWith("http")) return `<div style="margin:16px 0;text-align:center;"><a href="${line}" style="display:inline-block;background:#d05a2a;color:#fff;font-weight:bold;font-size:14px;padding:12px 32px;border-radius:6px;text-decoration:none;">無料で登録する →</a></div>`;
+      if (line.trim() === "") return `<div style="height:6px;"></div>`;
+      if (line.startsWith("━")) return `<hr style="border:none;border-top:1px solid #e2e8f0;margin:12px 0;" />`;
+      return `<p style="margin:0 0 4px;font-size:14px;line-height:1.8;color:#334155;">${e}</p>`;
+    }).join("");
+    const htmlBody = `<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:'Hiragino Sans','Yu Gothic UI',Meiryo,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px;">
+  <tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+    <tr><td style="background:linear-gradient(135deg,#c04f24,#e8734a);border-radius:10px 10px 0 0;padding:24px 32px;">
+      <p style="margin:0;font-size:17px;font-weight:700;color:#fff;">${subject}</p>
+    </td></tr>
+    <tr><td style="padding:0;"><img src="https://keisaiyou-sinjapan.com/promo-banner.jpg" alt="KEI SAIYOU" width="600" style="display:block;width:100%;height:auto;" /></td></tr>
+    <tr><td style="background:#fff;padding:28px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">${htmlLines}</td></tr>
+    <tr><td style="background:#1e293b;border-radius:0 0 10px 10px;padding:16px 32px;">
+      <p style="margin:0;font-size:13px;font-weight:700;color:#fff;">KEI SAIYOU</p>
+      <p style="margin:2px 0 0;font-size:11px;color:rgba(255,255,255,0.5);">合同会社SIN JAPAN｜info@keisaiyou-sinjapan.com</p>
+    </td></tr>
+  </table></td></tr>
+</table></body></html>`;
     try {
-      const result = await sendEmail(user.email, subject, body);
+      const result = await sendEmail(user.email, subject, htmlBody);
       if (result.success) {
         sent++;
         console.log(`✅ ${sent}/${targetUsers.length} ${user.email} (${name})`);
