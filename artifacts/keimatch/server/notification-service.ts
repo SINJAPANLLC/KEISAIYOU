@@ -232,6 +232,8 @@ export async function sendEmail(
         "X-Entity-Ref-ID": generateMessageId(),
         "Precedence": "bulk",
         "Message-ID": generateMessageId(),
+        "List-Unsubscribe": `<mailto:info@keisaiyou-sinjapan.com?subject=unsubscribe>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
       },
     });
     return { success: true };
