@@ -2,6 +2,12 @@ import nodemailer from "nodemailer";
 import crypto from "crypto";
 
 let transporter: nodemailer.Transporter | null = null;
+const EMAIL_DOMAIN = "keisaiyou-sinjapan.com";
+const SITE_URL = "https://keisaiyou-sinjapan.com";
+
+export type EmailSendOptions = {
+  unsubscribeUrl?: string;
+};
 
 function getEmailTransporter(): nodemailer.Transporter | null {
   if (transporter) return transporter;
@@ -28,10 +34,31 @@ function getEmailTransporter(): nodemailer.Transporter | null {
 
 function generateMessageId(): string {
   const rand = crypto.randomBytes(16).toString("hex");
-  return `<${rand}@keisaiyou-sinjapan.com>`;
+  return `<${rand}@${EMAIL_DOMAIN}>`;
 }
 
-function wrapInEmailTemplate(subject: string, bodyText: string): string {
+export function createUnsubscribeToken(leadId: string): string | null {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) return null;
+  const signature = crypto.createHmac("sha256", secret).update(leadId).digest("hex");
+  return Buffer.from(`${leadId}.${signature}`).toString("base64url");
+}
+
+export function verifyUnsubscribeToken(token: string): string | null {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret || !token) return null;
+  try {
+    const [leadId, signature] = Buffer.from(token, "base64url").toString("utf8").split(".");
+    if (!leadId || !signature) return null;
+    const expected = crypto.createHmac("sha256", secret).update(leadId).digest("hex");
+    if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+    return leadId;
+  } catch {
+    return null;
+  }
+}
+
+function wrapInEmailTemplate(subject: string, bodyText: string, unsubscribeUrl?: string): string {
   const bodyHtml = bodyText
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -51,10 +78,10 @@ function wrapInEmailTemplate(subject: string, bodyText: string): string {
         </table>
       </td>
     </tr>
-  `);
+  `, unsubscribeUrl);
 }
 
-function buildBaseTemplate(subject: string, contentRows: string): string {
+function buildBaseTemplate(subject: string, contentRows: string, unsubscribeUrl?: string): string {
   return `<!DOCTYPE html>
 <html lang="ja" xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -103,10 +130,10 @@ function buildBaseTemplate(subject: string, contentRows: string): string {
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #e4e4e7;">
         <tr>
           <td style="padding-top:20px;color:#a1a1aa;font-size:11px;line-height:1.7;text-align:center;">
-            本メールはKEI SAIYOUから自動送信されています。<br>
-            心当たりのない場合はお手数ですが本メールを破棄してください。<br><br>
+            本メールはKEI SAIYOUからお送りしています。<br>
+            ${unsubscribeUrl ? `<a href="${unsubscribeUrl}" style="color:#71717a;text-decoration:underline;">今後のご案内を停止する</a><br><br>` : ""}
             <strong style="color:#71717a;">合同会社SIN JAPAN</strong><br>
-            <a href="https://keisaiyou-sinjapan.com" style="color:#d05a2a;text-decoration:none;">keisaiyou-sinjapan.com</a>
+            <a href="${SITE_URL}" style="color:#d05a2a;text-decoration:none;">keisaiyou-sinjapan.com</a>
           </td>
         </tr>
       </table>
@@ -201,6 +228,7 @@ export async function sendEmail(
   to: string,
   subject: string,
   body: string,
+  options: EmailSendOptions = {},
 ): Promise<{ success: boolean; error?: string }> {
   const transport = getEmailTransporter();
   if (!transport) {
@@ -208,7 +236,7 @@ export async function sendEmail(
   }
 
   const fromName = "KEI SAIYOU";
-  const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER || "info@keisaiyou-sinjapan.com";
+  const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER || `info@${EMAIL_DOMAIN}`;
   const from = `"${fromName}" <${fromAddress}>`;
   const replyTo = fromAddress;
   const isAlreadyHtml = /<\/?(?:div|table|tr|td|h[1-6]|p|br|a|span|img)\b/i.test(body);
@@ -217,7 +245,7 @@ export async function sendEmail(
     ? body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s{2,}/g, " ").trim()
     : body;
 
-  const htmlBody = isAlreadyHtml ? body : wrapInEmailTemplate(subject, body);
+  const htmlBody = isAlreadyHtml ? body : wrapInEmailTemplate(subject, body, options.unsubscribeUrl);
 
   try {
     await transport.sendMail({
@@ -228,12 +256,12 @@ export async function sendEmail(
       text: plainText,
       html: htmlBody,
       headers: {
-        "X-Mailer": "KEI-SAIYOU-Mailer/1.0",
         "X-Entity-Ref-ID": generateMessageId(),
-        "Precedence": "bulk",
         "Message-ID": generateMessageId(),
-        "List-Unsubscribe": `<mailto:info@keisaiyou-sinjapan.com?subject=unsubscribe>`,
-        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        ...(options.unsubscribeUrl ? {
+          "List-Unsubscribe": `<${options.unsubscribeUrl}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        } : {}),
       },
     });
     return { success: true };
@@ -256,7 +284,7 @@ export async function sendAdminNotification(
     return { success: false, error: "メール設定が未構成です" };
   }
 
-  const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER || "info@keisaiyou-sinjapan.com";
+  const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER || `info@${EMAIL_DOMAIN}`;
   const from = `"KEI SAIYOU" <${fromAddress}>`;
 
   try {

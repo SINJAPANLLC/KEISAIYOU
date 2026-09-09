@@ -100,13 +100,12 @@ export default function Faq() {
   const categories = Array.from(new Set(faqItems.map((item) => item.category)));
 
   return (
-    <div>
-      <div className="hero-gradient relative py-14">
-        <div className="hero-grid absolute inset-0 pointer-events-none" />
-        <div className="relative max-w-3xl mx-auto px-4 text-center text-white">
-          <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/60 mb-3">FAQ</p>
+    <div className="min-h-screen bg-white">
+      <div className="relative bg-white border-b border-border py-16 lg:py-20">
+        <div className="relative max-w-3xl mx-auto px-4 text-left text-foreground">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary mb-3">FAQ</p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" data-testid="text-page-title">よくある質問</h1>
-          <p className="text-white/80">KEI SAIYOUに関するよくあるご質問をまとめました</p>
+          <p className="text-foreground/60">KEI SAIYOUに関するよくあるご質問をまとめました</p>
         </div>
       </div>
 
@@ -129,7 +128,7 @@ export default function Faq() {
           </div>
         ))}
 
-        <div className="mt-8 p-6 rounded-2xl bg-muted/50 text-center">
+        <div className="mt-8 p-6 rounded-2xl bg-white border border-border text-center">
           <p className="font-semibold mb-2">解決しない場合は</p>
           <p className="text-sm text-muted-foreground mb-4">お気軽にお問い合わせください。担当者がご対応いたします。</p>
           <a

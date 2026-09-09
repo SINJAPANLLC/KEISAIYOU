@@ -92,7 +92,7 @@ const PgStore = connectPgSimple(session);
 app.use(
   session({
     store: new PgStore({
-      pool: dbPool,
+       pool: dbPool as any,
       createTableIfMissing: true,
     }),
     secret: process.env.SESSION_SECRET || "keikamotsu-match-secret-key",

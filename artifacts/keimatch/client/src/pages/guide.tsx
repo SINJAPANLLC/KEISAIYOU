@@ -49,13 +49,12 @@ export default function Guide() {
   ];
 
   return (
-    <div>
-      <div className="hero-gradient relative py-14">
-        <div className="hero-grid absolute inset-0 pointer-events-none" />
-        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
-          <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/60 mb-3">GUIDE</p>
+    <div className="min-h-screen bg-white">
+      <div className="relative bg-white border-b border-border py-16 lg:py-20">
+        <div className="relative max-w-4xl mx-auto px-4 text-left text-foreground">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary mb-3">GUIDE</p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" data-testid="text-page-title">ご利用ガイド</h1>
-          <p className="text-white/80">KEI SAIYOUの使い方をステップごとにご説明します</p>
+          <p className="text-foreground/60">KEI SAIYOUの使い方をステップごとにご説明します</p>
         </div>
       </div>
 
@@ -73,7 +72,7 @@ export default function Guide() {
                   data-testid={`card-step-${index}`}
                 >
                   <div className="flex-shrink-0 flex flex-col items-center">
-                    <div className="w-[78px] h-[78px] rounded-2xl hero-gradient flex flex-col items-center justify-center shadow-md">
+                    <div className="w-[78px] h-[78px] rounded-2xl bg-primary flex flex-col items-center justify-center shadow-md">
                       <span className="text-[10px] font-bold text-white/70 tracking-widest">{step.number}</span>
                       <Icon className="w-6 h-6 text-white mt-0.5" />
                     </div>
@@ -92,8 +91,7 @@ export default function Guide() {
           </div>
         </div>
 
-        <div className="mt-14 hero-gradient relative rounded-3xl overflow-hidden p-8 sm:p-10 text-center">
-          <div className="hero-grid absolute inset-0 pointer-events-none" />
+        <div className="mt-14 bg-primary relative rounded-3xl overflow-hidden p-8 sm:p-10 text-center">
           <div className="relative">
             <p className="text-white/70 text-sm font-semibold tracking-wider uppercase mb-3">まずは無料で始めよう</p>
             <p className="text-2xl sm:text-3xl font-extrabold text-white mb-6">

@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Briefcase, Menu, X, LogIn, LogOut, UserPlus, Bell, User, Check, CheckCheck, Trash2, Settings, Building2, Phone, MapPin, Home } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Notification } from "@shared/schema";
@@ -9,13 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import logoImage from "@assets/logo-keisaiyou.png";
+import logoWhite from "@assets/logo-white.png";
 
-function BrandLogo({ size = "normal" }: { size?: "small" | "normal" }) {
+function BrandLogo({ size = "normal", variant = "colored" }: { size?: "small" | "normal", variant?: "colored" | "white" }) {
   return (
     <img
-      src={logoImage}
+      src={variant === "white" ? logoWhite : logoImage}
       alt="KEI SAIYOU"
-      className={size === "small" ? "h-7 w-auto" : "h-8 sm:h-9 w-auto"}
+      className={size === "small" ? "h-6 w-auto object-contain" : "h-7 sm:h-8 w-auto object-contain"}
     />
   );
 }
@@ -85,25 +86,24 @@ function NotificationDropdown() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" data-testid="button-notifications">
+        <Button variant="ghost" size="icon" className="relative hover:bg-black/5 rounded-none" data-testid="button-notifications">
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
             <span
-              className="absolute top-1 right-1 min-w-[8px] h-2 rounded-full"
-              style={{ backgroundColor: "hsl(20, 85%, 56%)" }}
+              className="absolute top-2 right-2 min-w-[6px] h-1.5 rounded-full bg-primary"
               data-testid="badge-notification-dot"
             />
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0" data-testid="dropdown-notifications">
+      <PopoverContent align="end" className="w-80 p-0 rounded-none border-border" data-testid="dropdown-notifications">
         <div className="flex items-center justify-between gap-2 p-3 border-b border-border">
-          <h3 className="text-sm font-semibold" data-testid="text-notification-title">通知</h3>
+          <h3 className="text-sm font-medium" data-testid="text-notification-title">通知</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs"
+              className="text-xs h-7 rounded-none"
               onClick={() => markAllAsRead.mutate()}
               data-testid="button-mark-all-read"
             >
@@ -114,32 +114,32 @@ function NotificationDropdown() {
         </div>
         <div className="max-h-80 overflow-y-auto" data-testid="list-notifications">
           {notifications.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground" data-testid="text-no-notifications">
+            <div className="p-6 text-center text-sm text-muted-foreground font-light" data-testid="text-no-notifications">
               通知はありません
             </div>
           ) : (
             notifications.map((notif) => (
               <div
                 key={notif.id}
-                className={`flex items-start gap-3 p-3 border-b border-border last:border-b-0 ${
-                  !notif.isRead ? "bg-primary/5" : ""
+                className={`flex items-start gap-3 p-4 border-b border-border last:border-b-0 ${
+                  !notif.isRead ? "bg-primary/[0.03]" : ""
                 }`}
                 data-testid={`notification-item-${notif.id}`}
               >
                 <div className="mt-0.5 shrink-0">{typeIcon(notif.type)}</div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-xs leading-relaxed ${!notif.isRead ? "font-medium" : "text-muted-foreground"}`}>
+                  <p className={`text-xs leading-relaxed ${!notif.isRead ? "font-medium text-foreground" : "text-foreground/70 font-light"}`}>
                     {notif.title}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{notif.message}</p>
-                  <p className="text-[10px] text-muted-foreground mt-1">{formatTime(notif.createdAt)}</p>
+                  <p className="text-xs text-foreground/50 mt-1 truncate font-light">{notif.message}</p>
+                  <p className="text-[10px] text-foreground/40 mt-2 tracking-wide">{formatTime(notif.createdAt)}</p>
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
                   {!notif.isRead && (
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className="h-6 w-6 rounded-none"
                       onClick={(e) => { e.stopPropagation(); markAsRead.mutate(notif.id); }}
                       data-testid={`button-read-${notif.id}`}
                     >
@@ -149,7 +149,7 @@ function NotificationDropdown() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className="h-6 w-6 rounded-none"
                     onClick={(e) => { e.stopPropagation(); deleteNotification.mutate(notif.id); }}
                     data-testid={`button-delete-notification-${notif.id}`}
                   >
@@ -174,63 +174,63 @@ function ProfileDropdown() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="flex items-center gap-2 rounded-md px-2 py-1.5 hover-elevate cursor-pointer"
+          className="flex items-center gap-2 px-3 py-1.5 hover:bg-black/5 transition-colors cursor-pointer"
           data-testid="button-profile"
         >
-          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <User className="w-3.5 h-3.5 text-primary" />
+          <div className="w-6 h-6 bg-primary/10 flex items-center justify-center shrink-0">
+            <User className="w-3 h-3 text-primary" />
           </div>
           <span className="hidden sm:inline text-foreground text-xs font-medium" data-testid="text-header-username">
             {user?.contactName || user?.companyName}
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-0" data-testid="dropdown-profile">
-        <div className="p-3 border-b border-border">
-          <p className="text-sm font-semibold text-foreground" data-testid="text-profile-name">{user?.contactName || user?.companyName}</p>
-          <p className="text-xs text-muted-foreground mt-0.5" data-testid="text-profile-email">{user?.email}</p>
+      <PopoverContent align="end" className="w-64 p-0 rounded-none border-border" data-testid="dropdown-profile">
+        <div className="p-4 border-b border-border">
+          <p className="text-sm font-medium text-foreground" data-testid="text-profile-name">{user?.contactName || user?.companyName}</p>
+          <p className="text-xs text-foreground/50 mt-1 font-light" data-testid="text-profile-email">{user?.email}</p>
           {isAdmin && (
-            <Badge variant="outline" className="mt-1.5 text-[10px]">管理者</Badge>
+            <Badge variant="outline" className="mt-2 text-[10px] rounded-none tracking-widest font-normal">管理者</Badge>
           )}
         </div>
-        <div className="p-1.5">
-          <div className="space-y-0.5">
-            <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="p-2">
+          <div className="space-y-1">
+            <div className="px-3 py-2 flex items-center gap-3 text-xs text-foreground/60 font-light">
               <Building2 className="w-3.5 h-3.5" />
               <span data-testid="text-profile-company">{user?.companyName}</span>
             </div>
             {user?.phone && (
-              <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="px-3 py-2 flex items-center gap-3 text-xs text-foreground/60 font-light">
                 <Phone className="w-3.5 h-3.5" />
                 <span data-testid="text-profile-phone">{user?.phone}</span>
               </div>
             )}
             {user?.address && (
-              <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="px-3 py-2 flex items-center gap-3 text-xs text-foreground/60 font-light">
                 <MapPin className="w-3.5 h-3.5" />
                 <span data-testid="text-profile-address">{user?.address}</span>
               </div>
             )}
           </div>
-          <div className="border-t border-border mt-1.5 pt-1.5 space-y-0.5">
+          <div className="border-t border-border mt-2 pt-2 space-y-1">
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-xs"
+              className="w-full justify-start text-xs rounded-none font-medium"
               onClick={() => { setOpen(false); navigate("/settings"); }}
               data-testid="button-profile-settings"
             >
-              <Settings className="w-3.5 h-3.5 mr-2" />
+              <Settings className="w-3.5 h-3.5 mr-3" />
               プロフィール設定
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-start text-xs text-destructive"
+              className="w-full justify-start text-xs text-destructive rounded-none font-medium"
               onClick={() => { setOpen(false); logout.mutate(); }}
               data-testid="button-profile-logout"
             >
-              <LogOut className="w-3.5 h-3.5 mr-2" />
+              <LogOut className="w-3.5 h-3.5 mr-3" />
               ログアウト
             </Button>
           </div>
@@ -243,23 +243,32 @@ function ProfileDropdown() {
 export default function Header() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
-  const navItems: { href: string; label: string }[] = [];
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
+  const isHome = location === "/";
+
+  // Minimalist logged-in header
   if (isAuthenticated) {
     return (
-      <header className="shrink-0 z-50 bg-background border-b border-border">
+      <header className="shrink-0 z-50 bg-white border-b border-border">
         <div className="px-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4 h-12">
+          <div className="flex items-center justify-between gap-4 h-14">
             <div className="flex items-center gap-4">
-              <Link href="/home" className="flex items-center shrink-0" data-testid="text-logo">
+              <Link href="/home" className="flex items-center shrink-0 hover:opacity-80 transition-opacity" data-testid="text-logo">
                 <BrandLogo size="small" />
               </Link>
             </div>
 
             <div className="flex items-center gap-2">
               <NotificationDropdown />
+              <div className="h-4 w-px bg-border hidden sm:block mx-1"></div>
               <ProfileDropdown />
             </div>
           </div>
@@ -268,70 +277,38 @@ export default function Header() {
     );
   }
 
+  const headerVariant = isHome ? (scrolled ? "orange" : "transparent") : "white";
+
+  // High-end editorial public header
   return (
-    <header className="sticky top-0 z-50 bg-background border-b-2 border-primary">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between gap-4 flex-wrap h-16">
-          <Link href={isAuthenticated ? "/home" : "/"} className="flex items-center shrink-0" data-testid="text-logo">
-            <BrandLogo />
+    <header className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+      headerVariant === "transparent" ? "bg-transparent py-4 border-b border-transparent" :
+      headerVariant === "orange" ? "bg-primary border-b border-white/10 py-2 shadow-sm" :
+      "bg-white/95 backdrop-blur-md border-b border-border py-2 shadow-sm"
+    }`}>
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+        <div className="flex items-center justify-between gap-4 h-12">
+          <Link href="/" className="flex items-center shrink-0 hover:opacity-80 transition-opacity" data-testid="text-logo">
+            <BrandLogo variant={isHome ? "white" : "colored"} />
           </Link>
 
-          {navItems.length > 0 && (
-            <nav className="hidden md:flex items-center gap-0.5" data-testid="nav-desktop">
-              {navItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <Button
-                    variant="ghost"
-                    className={`text-sm font-medium px-3 ${location === item.href ? "text-primary" : ""}`}
-                    data-testid={`link-nav-${item.href.replace("/", "") || "lp"}`}
-                  >
-                    {item.label}
-                  </Button>
-                </Link>
-              ))}
-            </nav>
-          )}
-
-          <div className="hidden md:flex items-center gap-2">
-            {isAuthenticated ? (
-              <>
-                <Link href="/home">
-                  <Button variant="ghost" data-testid="button-header-home">
-                    <Home className="w-4 h-4 mr-1.5" />
-                    ホーム
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  onClick={() => logout.mutate()}
-                  data-testid="button-logout"
-                >
-                  <LogOut className="w-4 h-4 mr-1.5" />
-                  ログアウト
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button variant="ghost" className="text-sm" data-testid="button-header-login">
-                    <LogIn className="w-4 h-4 mr-1.5" />
-                    ログイン
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button data-testid="button-header-register">
-                    <UserPlus className="w-4 h-4 mr-1.5" />
-                    無料会員登録
-                  </Button>
-                </Link>
-              </>
-            )}
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/login">
+              <Button variant="ghost" className={`text-sm font-medium tracking-wide hover:bg-black/5 rounded-none px-4 ${isHome ? "text-white hover:bg-white/10" : "text-foreground"}`} data-testid="button-header-login">
+                ログイン
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button className={isHome ? "bg-white text-primary hover:bg-white/90 rounded-none text-sm font-bold tracking-wider px-6 h-10" : "bg-primary text-white hover:bg-primary/90 rounded-none text-sm font-bold tracking-wider px-6 h-10"} data-testid="button-header-register">
+                無料で求人を掲載する
+              </Button>
+            </Link>
           </div>
 
           <Button
             size="icon"
             variant="ghost"
-            className="md:hidden"
+            className={`md:hidden rounded-none ${isHome ? "text-white hover:bg-white/10" : "text-foreground hover:bg-black/5"}`}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             data-testid="button-mobile-menu"
           >
@@ -341,52 +318,19 @@ export default function Header() {
       </div>
 
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background p-4 space-y-2">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} onClick={() => setMobileMenuOpen(false)}>
-              <Button
-                variant="ghost"
-                className={`w-full justify-start text-sm font-medium ${location === item.href ? "text-primary" : ""}`}
-              >
-                {item.label}
-              </Button>
-            </Link>
-          ))}
-          <div className="pt-2 border-t border-border space-y-2">
-            {isAuthenticated ? (
-              <>
-                <Link href="/home" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start">
-                    <Home className="w-4 h-4 mr-1.5" />
-                    ホーム
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => { logout.mutate(); setMobileMenuOpen(false); }}
-                >
-                  <LogOut className="w-4 h-4 mr-1.5" />
-                  ログアウト
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="ghost" className="w-full justify-start">
-                    <LogIn className="w-4 h-4 mr-1.5" />
-                    ログイン
-                  </Button>
-                </Link>
-                <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full">
-                    <UserPlus className="w-4 h-4 mr-1.5" />
-                    無料会員登録
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
+        <div className="md:hidden absolute top-full left-0 w-full border-t border-border bg-white shadow-xl flex flex-col p-4 gap-2">
+          <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+            <Button variant="ghost" className="w-full justify-start rounded-none h-12 text-sm font-medium text-foreground">
+              <LogIn className="w-4 h-4 mr-3 text-foreground/50" />
+              ログイン
+            </Button>
+          </Link>
+          <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+            <Button className="w-full justify-start rounded-none h-12 text-sm font-bold bg-primary text-white hover:bg-primary/90">
+              <UserPlus className="w-4 h-4 mr-3" />
+              無料で求人を掲載する
+            </Button>
+          </Link>
         </div>
       )}
     </header>

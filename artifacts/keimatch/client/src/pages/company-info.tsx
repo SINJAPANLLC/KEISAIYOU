@@ -12,13 +12,12 @@ export default function CompanyInfo() {
   ];
 
   return (
-    <div>
-      <div className="hero-gradient relative py-14">
-        <div className="hero-grid absolute inset-0 pointer-events-none" />
-        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
-          <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/60 mb-3">COMPANY</p>
+    <div className="min-h-screen bg-white">
+      <div className="relative bg-white border-b border-border py-16 lg:py-20">
+        <div className="relative max-w-4xl mx-auto px-4 text-left text-foreground">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary mb-3">COMPANY</p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" data-testid="text-page-title">会社情報</h1>
-          <p className="text-white/80">合同会社SIN JAPANについて</p>
+          <p className="text-foreground/60">合同会社SIN JAPANについて</p>
         </div>
       </div>
 
@@ -68,7 +67,7 @@ export default function CompanyInfo() {
           </div>
         </div>
 
-        <div className="bg-muted/40 rounded-2xl p-6">
+        <div className="bg-white border border-border rounded-2xl p-6">
           <h2 className="text-lg font-semibold mb-4">お問い合わせ</h2>
           <div className="grid sm:grid-cols-3 gap-4">
             {[

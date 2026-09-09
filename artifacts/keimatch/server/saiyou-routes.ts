@@ -16,10 +16,15 @@ import {
   refundRequests,
   contactInquiries,
 } from "@shared/schema";
-import { sendEmail, sendAdminNotification } from "./notification-service";
+import { createUnsubscribeToken, sendEmail, sendAdminNotification, verifyUnsubscribeToken } from "./notification-service";
 import { chargeSquareCard } from "./square";
-import { storage } from "./storage";
+import { storage, normalizeLeadEmail, leadEmailDomain } from "./storage";
 import bcrypt from "bcrypt";
+
+const routeParam = (req: Request, name: string): string => {
+  const value = req.params[name];
+  return Array.isArray(value) ? value[0] : value;
+};
 
 function requireAuth(req: Request, res: Response, next: Function) {
   if (!req.session?.userId) return res.status(401).json({ message: "ログインが必要です" });
@@ -33,6 +38,29 @@ function requireAdmin(req: Request, res: Response, next: Function) {
 }
 
 export function registerSaiyouRoutes(app: Express) {
+  const renderUnsubscribeResult = (message: string, title: string) => `<!doctype html>
+    <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>${title}｜KEI SAIYOU</title></head>
+    <body style="margin:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;color:#1e293b">
+      <main style="max-width:520px;margin:64px auto;padding:36px 28px;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(15,23,42,.08);text-align:center">
+        <p style="margin:0 0 10px;color:#d05a2a;font-size:13px;font-weight:700;letter-spacing:.12em">KEI SAIYOU</p>
+        <h1 style="margin:0 0 16px;font-size:22px">${title}</h1><p style="margin:0;line-height:1.8;color:#475569">${message}</p>
+      </main>
+    </body></html>`;
+
+  const unsubscribeLead = async (req: Request, res: Response) => {
+    const token = typeof req.query.token === "string" ? req.query.token : typeof req.body?.token === "string" ? req.body.token : "";
+    const leadId = verifyUnsubscribeToken(token);
+    if (!leadId) return res.status(400).type("html").send(renderUnsubscribeResult("リンクが無効、または有効期限が切れています。", "配信停止を完了できませんでした"));
+    const [lead] = await db.select().from(emailLeads).where(eq(emailLeads.id, leadId)).limit(1);
+    if (!lead) return res.status(404).type("html").send(renderUnsubscribeResult("対象のメールアドレスが見つかりませんでした。", "配信停止を完了できませんでした"));
+    await storage.suppressEmail(lead.email || "", "unsubscribe");
+    await db.update(emailLeads).set({ status: "unsubscribed" }).where(eq(emailLeads.id, leadId));
+    return res.type("html").send(renderUnsubscribeResult("今後の営業メール配信を停止しました。", "配信停止を受け付けました"));
+  };
+
+  app.get("/api/email/unsubscribe", unsubscribeLead);
+  app.post("/api/email/unsubscribe", unsubscribeLead);
 
   // ─── Resume file upload ──────────────────────────────────────────────────
   const UPLOADS_DIR = path.join(process.cwd(), "uploads");
@@ -66,7 +94,7 @@ export function registerSaiyouRoutes(app: Express) {
 
   // Authenticated: serve resume file
   app.get("/api/uploads/:filename", requireAuth, (req, res) => {
-    const filename = path.basename(req.params.filename);
+    const filename = path.basename(routeParam(req, "filename"));
     const filePath = path.join(UPLOADS_DIR, filename);
     if (!fs.existsSync(filePath)) return res.status(404).json({ message: "ファイルが見つかりません" });
     res.sendFile(filePath);
@@ -94,7 +122,7 @@ export function registerSaiyouRoutes(app: Express) {
           "/admin/refund-requests":    pendingRefunds.count || 0,
         });
       } else {
-        const myJobs = await db.select({ id: jobListings.id }).from(jobListings).where(eq(jobListings.userId, userId));
+        const myJobs = await db.select({ id: jobListings.id }).from(jobListings).where(eq(jobListings.userId, userId!));
         const jobIds = myJobs.map((j) => j.id);
         let newCount = 0;
         if (jobIds.length > 0) {
@@ -227,7 +255,7 @@ export function registerSaiyouRoutes(app: Express) {
 
   app.get("/api/jobs/:id", requireAuth, async (req, res) => {
     try {
-      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, req.params.id));
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
       if (!job) return res.status(404).json({ message: "求人が見つかりません" });
       if (job.userId !== req.session!.userId && req.session?.role !== "admin") {
         return res.status(403).json({ message: "権限がありません" });
@@ -241,7 +269,7 @@ export function registerSaiyouRoutes(app: Express) {
   app.put("/api/jobs/:id", requireAuth, async (req, res) => {
     try {
       const { title, jobCategory, employmentType, salary, area, description, requirements, workHours, holidays, benefits, monthlyLimit, status } = req.body;
-      const [existing] = await db.select().from(jobListings).where(eq(jobListings.id, req.params.id));
+      const [existing] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
       if (!existing) return res.status(404).json({ message: "求人が見つかりません" });
       if (existing.userId !== req.session!.userId && req.session?.role !== "admin") {
         return res.status(403).json({ message: "権限がありません" });
@@ -260,7 +288,7 @@ export function registerSaiyouRoutes(app: Express) {
       if (monthlyLimit) updateData.monthlyLimit = parseInt(monthlyLimit);
       if (status && req.session?.role === "admin") updateData.status = status;
       if (status === "paused" || status === "closed") updateData.status = status;
-      const [updated] = await db.update(jobListings).set(updateData).where(eq(jobListings.id, req.params.id)).returning();
+      const [updated] = await db.update(jobListings).set(updateData).where(eq(jobListings.id, routeParam(req, "id"))).returning();
       res.json(updated);
     } catch (err) {
       console.error("[jobs/update]", err);
@@ -270,12 +298,12 @@ export function registerSaiyouRoutes(app: Express) {
 
   app.delete("/api/jobs/:id", requireAuth, async (req, res) => {
     try {
-      const [existing] = await db.select().from(jobListings).where(eq(jobListings.id, req.params.id));
+      const [existing] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
       if (!existing) return res.status(404).json({ message: "求人が見つかりません" });
       if (existing.userId !== req.session!.userId && req.session?.role !== "admin") {
         return res.status(403).json({ message: "権限がありません" });
       }
-      await db.delete(jobListings).where(eq(jobListings.id, req.params.id));
+      await db.delete(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
       res.json({ success: true });
     } catch {
       res.status(500).json({ message: "削除に失敗しました" });
@@ -285,7 +313,7 @@ export function registerSaiyouRoutes(app: Express) {
   // ─── Applications (company views their applicants) ──────────────────────
   app.get("/api/jobs/:id/applications", requireAuth, async (req, res) => {
     try {
-      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, req.params.id));
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
       if (!job) return res.status(404).json({ message: "求人が見つかりません" });
       if (job.userId !== req.session!.userId && req.session?.role !== "admin") {
         return res.status(403).json({ message: "権限がありません" });
@@ -293,7 +321,7 @@ export function registerSaiyouRoutes(app: Express) {
       const apps = await db
         .select()
         .from(applications)
-        .where(eq(applications.jobId, req.params.id))
+        .where(eq(applications.jobId, routeParam(req, "id")))
         .orderBy(desc(applications.createdAt));
       res.json(apps);
     } catch {
@@ -363,13 +391,13 @@ export function registerSaiyouRoutes(app: Express) {
         return res.status(400).json({ message: "無効なステータスです" });
       }
       // Verify the application belongs to this user's job
-      const [app_] = await db.select().from(applications).where(eq(applications.id, req.params.id));
+      const [app_] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id")));
       if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
       const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
       if (!job || (job.userId !== req.session!.userId && req.session?.role !== "admin")) {
         return res.status(403).json({ message: "権限がありません" });
       }
-      const [updated] = await db.update(applications).set({ reviewStatus: status }).where(eq(applications.id, req.params.id)).returning();
+      const [updated] = await db.update(applications).set({ reviewStatus: status }).where(eq(applications.id, routeParam(req, "id"))).returning();
       res.json(updated);
     } catch {
       res.status(500).json({ message: "更新に失敗しました" });
@@ -380,13 +408,13 @@ export function registerSaiyouRoutes(app: Express) {
   app.patch("/api/applications/:id/memo", requireAuth, async (req, res) => {
     try {
       const { memo } = req.body;
-      const [app_] = await db.select().from(applications).where(eq(applications.id, req.params.id));
+      const [app_] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id")));
       if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
       const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
       if (!job || (job.userId !== req.session!.userId && req.session?.role !== "admin")) {
         return res.status(403).json({ message: "権限がありません" });
       }
-      const [updated] = await db.update(applications).set({ memo: memo || null }).where(eq(applications.id, req.params.id)).returning();
+      const [updated] = await db.update(applications).set({ memo: memo || null }).where(eq(applications.id, routeParam(req, "id"))).returning();
       res.json(updated);
     } catch {
       res.status(500).json({ message: "メモの保存に失敗しました" });
@@ -400,16 +428,16 @@ export function registerSaiyouRoutes(app: Express) {
     try {
       const { reason, detail } = req.body;
       if (!reason) return res.status(400).json({ message: "理由を選択してください" });
-      const [app_] = await db.select().from(applications).where(eq(applications.id, req.params.id));
+      const [app_] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id")));
       if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
       const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
       if (!job || job.userId !== req.session!.userId) return res.status(403).json({ message: "権限がありません" });
       // Check not already requested
       const existing = await db.select().from(refundRequests)
-        .where(and(eq(refundRequests.applicationId, req.params.id), eq(refundRequests.status, "pending")));
+        .where(and(eq(refundRequests.applicationId, routeParam(req, "id")), eq(refundRequests.status, "pending")));
       if (existing.length) return res.status(409).json({ message: "すでに返金申請中です" });
       const [rr] = await db.insert(refundRequests).values({
-        applicationId: req.params.id,
+        applicationId: routeParam(req, "id"),
         companyUserId: req.session!.userId!,
         reason,
         detail: detail || null,
@@ -437,7 +465,7 @@ export function registerSaiyouRoutes(app: Express) {
   app.get("/api/applications/:id/refund-request", requireAuth, async (req, res) => {
     try {
       const [rr] = await db.select().from(refundRequests)
-        .where(eq(refundRequests.applicationId, req.params.id))
+        .where(eq(refundRequests.applicationId, routeParam(req, "id")))
         .orderBy(desc(refundRequests.createdAt));
       res.json(rr || null);
     } catch {
@@ -475,7 +503,7 @@ export function registerSaiyouRoutes(app: Express) {
       if (!["approved", "rejected"].includes(status)) return res.status(400).json({ message: "無効なステータスです" });
       const [updated] = await db.update(refundRequests)
         .set({ status, adminNote: adminNote || null, resolvedAt: new Date() })
-        .where(eq(refundRequests.id, req.params.id))
+        .where(eq(refundRequests.id, routeParam(req, "id")))
         .returning();
       if (!updated) return res.status(404).json({ message: "申請が見つかりません" });
       // Notify the company user
@@ -588,7 +616,7 @@ export function registerSaiyouRoutes(app: Express) {
         requirements: jobListings.requirements,
         status: jobListings.status,
         userId: jobListings.userId,
-      }).from(jobListings).where(and(eq(jobListings.id, req.params.id), eq(jobListings.status, "active")));
+      }).from(jobListings).where(and(eq(jobListings.id, routeParam(req, "id")), eq(jobListings.status, "active")));
       if (!row) return res.status(404).json({ message: "求人が見つかりません" });
       const [company] = await db.select({ companyName: users.companyName }).from(users).where(eq(users.id, row.userId));
       const { userId, ...job } = row;
@@ -729,7 +757,6 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
         await db.update(jobListings).set({
           ...(paymentStatus === "success" ? { monthlySpent: job.monthlySpent + 3300 } : {}),
           lastApplicationAt: new Date(),
-          updatedAt: new Date(),
         }).where(eq(jobListings.id, jobId));
 
         // 会社の今月合計が上限に達したら全求人をpauseに
@@ -743,7 +770,7 @@ ${companyName ? `- 掲載企業: ${companyName}` : ""}
               .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${companyJobIds2.join("','")}']::varchar[]`)}) AND (${applications.paymentStatus} = 'paid' OR ${applications.paymentStatus} = 'success') AND ${applications.createdAt} >= ${monthStart2}`);
             const newTotal = (Number(paidCount[0]?.count) || 0) * 3300;
             if (newTotal >= companyMonthlyLimit) {
-              await db.update(jobListings).set({ status: "paused", updatedAt: new Date() })
+              await db.update(jobListings).set({ status: "paused" })
                 .where(sql`${jobListings.userId} = ${job.userId} AND ${jobListings.status} = 'active'`);
             }
           }
@@ -942,13 +969,12 @@ ${jobXml}
 
   app.patch("/api/admin/jobs/:id/approve", requireAdmin, async (req, res) => {
     try {
-      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, req.params.id));
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
       if (!job) return res.status(404).json({ message: "求人が見つかりません" });
       const [updated] = await db.update(jobListings).set({
         status: "active",
         publishedAt: new Date(),
-        updatedAt: new Date(),
-      }).where(eq(jobListings.id, req.params.id)).returning();
+      }).where(eq(jobListings.id, routeParam(req, "id"))).returning();
       // Notify the company
       await db.insert(notifications).values({
         userId: job.userId,
@@ -981,8 +1007,7 @@ ${jobXml}
     try {
       const [updated] = await db.update(jobListings).set({
         status: "closed",
-        updatedAt: new Date(),
-      }).where(eq(jobListings.id, req.params.id)).returning();
+      }).where(eq(jobListings.id, routeParam(req, "id"))).returning();
       if (!updated) return res.status(404).json({ message: "求人が見つかりません" });
       res.json(updated);
     } catch {
@@ -994,8 +1019,7 @@ ${jobXml}
     try {
       const [updated] = await db.update(jobListings).set({
         status: "paused",
-        updatedAt: new Date(),
-      }).where(eq(jobListings.id, req.params.id)).returning();
+      }).where(eq(jobListings.id, routeParam(req, "id"))).returning();
       if (!updated) return res.status(404).json({ message: "求人が見つかりません" });
       res.json(updated);
     } catch {
@@ -1018,8 +1042,7 @@ ${jobXml}
         ...(requirements !== undefined && { requirements }),
         ...(benefits !== undefined && { benefits }),
         ...(monthlyLimit !== undefined && { monthlyLimit: Number(monthlyLimit) }),
-        updatedAt: new Date(),
-      }).where(eq(jobListings.id, req.params.id)).returning();
+      }).where(eq(jobListings.id, routeParam(req, "id"))).returning();
       if (!updated) return res.status(404).json({ message: "求人が見つかりません" });
       res.json(updated);
     } catch {
@@ -1043,19 +1066,30 @@ ${jobXml}
       if (!Array.isArray(rows) || !rows.length) {
         return res.status(400).json({ message: "データが空です" });
       }
-      const inserted = await db.insert(emailLeads).values(
-        rows.map((r: any) => ({
+      const normalizedRows = rows.map((r: any) => ({
           companyName: r.companyName || r.company_name || "不明",
-          email: r.email || null,
+          email: normalizeLeadEmail(r.email),
           phone: r.phone || null,
           website: r.website || null,
           address: r.address || null,
+          prefecture: r.prefecture || null,
           industry: r.industry || "軽貨物",
           source: r.source || "manual",
           status: "new",
-        }))
-      ).returning();
-      res.json({ inserted: inserted.length });
+        }));
+      // Dedupe email and company domain for manual/CSV imports as well as crawls.
+      const eligible = [];
+      const seenDomains = new Set<string>();
+      for (const row of normalizedRows) {
+        if (!row.email || await storage.isEmailSuppressed(row.email)) continue;
+        const domain = leadEmailDomain(row.email);
+        if (!domain || seenDomains.has(domain)) continue;
+        if (await storage.getEmailLeadByEmail(row.email) || await storage.getEmailLeadByDomain(domain)) continue;
+        seenDomains.add(domain);
+        eligible.push(row);
+      }
+      const inserted = await storage.createEmailLeads(eligible);
+      res.json({ inserted });
     } catch (err: any) {
       console.error("[sales/leads]", err);
       res.status(500).json({ message: "インポートに失敗しました" });
@@ -1064,7 +1098,7 @@ ${jobXml}
 
   app.delete("/api/admin/sales/leads/:id", requireAdmin, async (req, res) => {
     try {
-      await db.delete(emailLeads).where(eq(emailLeads.id, req.params.id));
+      await db.delete(emailLeads).where(eq(emailLeads.id, routeParam(req, "id")));
       res.json({ success: true });
     } catch {
       res.status(500).json({ message: "削除に失敗しました" });
@@ -1252,7 +1286,7 @@ ${jobXml}
   // 管理者：求職者ステータス更新
   app.patch("/api/admin/drivers/:id", requireAdmin, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = routeParam(req, "id");
       const { status, memo } = req.body;
       await db.execute(sql`
         UPDATE driver_registrations
@@ -1438,23 +1472,39 @@ ${jobXml}
       if (!leadIds?.length || !subject || !body) {
         return res.status(400).json({ message: "送信対象・件名・本文を入力してください" });
       }
-      const leads = await db.select().from(emailLeads).where(inArray(emailLeads.id, leadIds));
-      const withEmail = leads.filter((l) => l.email);
+      const { getLeadSendRampStatus } = await import("./lead-crawler") as any;
+      const ramp = await getLeadSendRampStatus();
+      const batchLimit = ramp.dailyLimit;
+      const targetIds = [...new Set(leadIds)].slice(0, batchLimit);
+      // Atomic claim applies the shared JST quota across manual and scheduled sends.
+      const withEmail = await storage.claimEmailLeadsForSending(targetIds as string[] , ramp.dailyLimit);
       let sentCount = 0;
       let failedCount = 0;
       for (const lead of withEmail) {
         try {
+          if (!lead.email || await storage.isEmailSuppressed(lead.email)) {
+            await storage.updateEmailLead(lead.id, { status: "unsubscribed" });
+            continue;
+          }
           const personalizedBody = body
             .replace(/{{companyName}}/g, lead.companyName)
             .replace(/{{company_name}}/g, lead.companyName);
-          await sendEmail(lead.email!, subject, personalizedBody);
-          await db.update(emailLeads).set({ status: "sent", sentAt: new Date(), sentSubject: subject }).where(eq(emailLeads.id, lead.id));
-          sentCount++;
+          const token = createUnsubscribeToken(lead.id);
+          const unsubscribeUrl = token ? `https://keisaiyou-sinjapan.com/api/email/unsubscribe?token=${encodeURIComponent(token)}` : undefined;
+          const result = await sendEmail(lead.email!, subject, personalizedBody, { unsubscribeUrl });
+          if (result.success) {
+            await db.update(emailLeads).set({ status: "sent", sentAt: new Date(), sentSubject: subject }).where(eq(emailLeads.id, lead.id));
+            sentCount++;
+          } else {
+            await storage.updateEmailLead(lead.id, { status: "failed" });
+            failedCount++;
+          }
         } catch {
           failedCount++;
         }
+        await new Promise((resolve) => setTimeout(resolve, 1800));
       }
-      res.json({ sentCount, failedCount, total: withEmail.length });
+      res.json({ sentCount, failedCount, total: withEmail.length, batchLimit, ramp, skipped: leadIds.length - targetIds.length });
     } catch (err: any) {
       console.error("[sales/send]", err);
       res.status(500).json({ message: "送信に失敗しました" });
@@ -1464,6 +1514,8 @@ ${jobXml}
   // ─── Admin: Sales stats ──────────────────────────────────────────────────
   app.get("/api/admin/sales/stats", requireAdmin, async (_req, res) => {
     try {
+      const { getLeadSendRampStatus } = await import("./lead-crawler") as any;
+      const ramp = await getLeadSendRampStatus();
       const today = new Date(); today.setHours(0, 0, 0, 0);
       const [newC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "new"));
       const [sentC] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "sent"));
@@ -1475,7 +1527,7 @@ ${jobXml}
       res.json({
         total: totalC?.c || 0, new: newC?.c || 0, sent: sentC?.c || 0,
         followedUp: fuC?.c || 0, failed: failC?.c || 0, todaySent: todayC?.c || 0,
-        sendHours: [8, 10, 12, 14, 16, 18],
+        sendHours: [10], ramp,
       });
     } catch (err) {
       res.status(500).json({ message: "取得失敗" });
@@ -1510,11 +1562,8 @@ ${jobXml}
   app.post("/api/admin/sales/leads/reset", requireAdmin, async (req, res) => {
     try {
       const { ids } = req.body;
-      if (ids?.length) {
-        await db.update(emailLeads).set({ status: "new", sentAt: null as any }).where(inArray(emailLeads.id, ids));
-      } else {
-        await db.update(emailLeads).set({ status: "new", sentAt: null as any }).where(eq(emailLeads.status, "followed_up"));
-      }
+      if (!ids?.length) return res.status(400).json({ message: "再送するリードを選択してください" });
+      await db.update(emailLeads).set({ status: "new", sentAt: null as any }).where(inArray(emailLeads.id, ids));
       const [result] = await db.select({ c: sql<number>`count(*)::int` }).from(emailLeads).where(eq(emailLeads.status, "new"));
       res.json({ reset: result?.c || 0 });
     } catch (err) {
@@ -1619,7 +1668,7 @@ ${jobXml}
   // Admin: Force stop company
   app.post("/api/admin/users/:id/force-stop", requireAdmin, async (req, res) => {
     try {
-      await db.update(jobListings).set({ status: "paused", updatedAt: new Date() }).where(eq(jobListings.userId, req.params.id));
+      await db.update(jobListings).set({ status: "paused" }).where(eq(jobListings.userId, routeParam(req, "id")));
       res.json({ success: true });
     } catch {
       res.status(500).json({ message: "強制停止に失敗しました" });
@@ -1646,12 +1695,12 @@ ${jobXml}
   // Company: Request invoice payment for failed application
   app.post("/api/my/applications/:id/request-invoice", requireAuth, async (req, res) => {
     try {
-      const [application] = await db.select().from(applications).where(eq(applications.id, req.params.id)).limit(1);
+      const [application] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id"))).limit(1);
       if (!application) return res.status(404).json({ message: "応募が見つかりません" });
       const [job] = await db.select().from(jobListings).where(eq(jobListings.id, application.jobId)).limit(1);
       if (!job || job.userId !== req.session!.userId!) return res.status(403).json({ message: "権限がありません" });
       if (application.paymentStatus !== "failed") return res.status(400).json({ message: "決済失敗の応募のみ申請できます" });
-      await db.update(applications).set({ paymentStatus: "invoice_requested", updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+      await db.update(applications).set({ paymentStatus: "invoice_requested" }).where(eq(applications.id, routeParam(req, "id")));
       res.json({ success: true });
     } catch {
       res.status(500).json({ message: "申請に失敗しました" });
@@ -1661,9 +1710,9 @@ ${jobXml}
   // Admin: Approve invoice payment request
   app.post("/api/admin/applications/:id/approve-invoice", requireAdmin, async (req, res) => {
     try {
-      const [application] = await db.select().from(applications).where(eq(applications.id, req.params.id)).limit(1);
+      const [application] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id"))).limit(1);
       if (!application) return res.status(404).json({ message: "応募が見つかりません" });
-      await db.update(applications).set({ paymentStatus: "invoice_pending", viewable: true, updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+      await db.update(applications).set({ paymentStatus: "invoice_pending", viewable: true }).where(eq(applications.id, routeParam(req, "id")));
       res.json({ success: true });
     } catch {
       res.status(500).json({ message: "承認に失敗しました" });
@@ -1673,7 +1722,7 @@ ${jobXml}
   // Admin: Retry payment for failed application
   app.post("/api/admin/applications/:id/retry-payment", requireAdmin, async (req, res) => {
     try {
-      const [application] = await db.select().from(applications).where(eq(applications.id, req.params.id)).limit(1);
+      const [application] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id"))).limit(1);
       if (!application) return res.status(404).json({ message: "応募が見つかりません" });
       const [job] = await db.select().from(jobListings).where(eq(jobListings.id, application.jobId)).limit(1);
       if (!job) return res.status(404).json({ message: "求人が見つかりません" });
@@ -1683,8 +1732,7 @@ ${jobXml}
         await db.update(applications).set({
           paymentStatus: "invoice_pending",
           viewable: true,
-          updatedAt: new Date(),
-        }).where(eq(applications.id, req.params.id));
+        }).where(eq(applications.id, routeParam(req, "id")));
         return res.json({ success: true, message: "カード未登録のため請求書払いに変更しました" });
       }
       let chargeResult: { paymentId: string; status: string } | null = null;
@@ -1701,9 +1749,9 @@ ${jobXml}
       }
       const success = chargeResult?.status === "COMPLETED";
       if (success) {
-        await db.update(applications).set({ paymentStatus: "paid", viewable: true, updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+        await db.update(applications).set({ paymentStatus: "paid", viewable: true }).where(eq(applications.id, routeParam(req, "id")));
       } else {
-        await db.update(applications).set({ paymentError: chargeError || `status:${chargeResult?.status}`, updatedAt: new Date() }).where(eq(applications.id, req.params.id));
+        await db.update(applications).set({ paymentError: chargeError || `status:${chargeResult?.status}` }).where(eq(applications.id, routeParam(req, "id")));
       }
       res.json({ success, error: chargeError });
     } catch (e: any) {
@@ -1747,7 +1795,6 @@ ${jobXml}
           await db.update(applications).set({
             paymentStatus: "invoice_pending",
             viewable: true,
-            updatedAt: new Date(),
           }).where(eq(applications.id, app_.id));
           fixed++;
         }
@@ -1765,7 +1812,7 @@ ${jobXml}
       const update: any = {};
       if (status) update.status = status;
       if (prefecture !== undefined) update.prefecture = prefecture;
-      const [updated] = await db.update(emailLeads).set(update).where(eq(emailLeads.id, req.params.id)).returning();
+      const [updated] = await db.update(emailLeads).set(update).where(eq(emailLeads.id, routeParam(req, "id"))).returning();
       res.json(updated);
     } catch {
       res.status(500).json({ message: "更新に失敗しました" });
@@ -1838,7 +1885,7 @@ ${jobXml}
       }
 
       // 2. Auto-pause jobs at monthly limit (safety check)
-      await db.update(jobListings).set({ status: "paused", updatedAt: new Date() }).where(
+      await db.update(jobListings).set({ status: "paused" }).where(
         and(
           eq(jobListings.status, "active"),
           sql`${jobListings.monthlySpent} >= ${jobListings.monthlyLimit}`

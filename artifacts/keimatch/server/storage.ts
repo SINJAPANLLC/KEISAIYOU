@@ -26,16 +26,16 @@ import {
   partners, transportRecords, seoArticles, payments, adminSettings, notificationTemplates,
   passwordResetTokens, auditLogs, type AuditLog, contactInquiries, planChangeRequests, userAddRequests,
   invoices, agents, aiTrainingExamples, aiCorrectionLogs, youtubeVideos, youtubeAutoPublishJobs,
-  emailCampaigns, emailLeads
+  emailCampaigns, emailLeads, emailSuppressions
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, ilike, or, gte } from "drizzle-orm";
+import { eq, desc, and, sql, ilike, or, gte, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  createUser(user: any): Promise<User>;
   deleteSessionsByUserId(userId: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
   approveUser(id: string): Promise<User | undefined>;
@@ -212,7 +212,7 @@ export interface IStorage {
   getEmailLeads(status?: string, limit?: number, offset?: number): Promise<EmailLead[]>;
   getEmailLeadCount(status?: string): Promise<number>;
   getEmailLeadByEmail(email: string): Promise<EmailLead | undefined>;
-  createEmailLead(data: InsertEmailLead): Promise<EmailLead>;
+  createEmailLead(data: InsertEmailLead): Promise<EmailLead | undefined>;
   createEmailLeads(data: InsertEmailLead[]): Promise<number>;
   updateEmailLead(id: string, data: Partial<EmailLead>): Promise<EmailLead | undefined>;
   deleteEmailLead(id: string): Promise<boolean>;
@@ -221,6 +221,10 @@ export interface IStorage {
   getFailedEmailLeadsForRetry(limit: number): Promise<EmailLead[]>;
   getSentLeadsForFollowUp(limit: number, daysAfterSent: number): Promise<EmailLead[]>;
   getEmailLeadByDomain(domain: string): Promise<EmailLead | undefined>;
+  isEmailSuppressed(email: string): Promise<boolean>;
+  suppressEmail(email: string, reason: string): Promise<void>;
+  claimNewEmailLeadsForSending(dailyLimit: number): Promise<EmailLead[]>;
+  claimEmailLeadsForSending(ids: string[], dailyLimit: number): Promise<EmailLead[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -245,7 +249,7 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createUser(insertUser: any): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
@@ -597,7 +601,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublishedSeoArticles(): Promise<SeoArticle[]> {
-    return db.select().from(seoArticles).where(eq(seoArticles.status, "published")).orderBy(desc(seoArticles.createdAt));
+    return db.select().from(seoArticles).where(eq(seoArticles.status, "published")).orderBy(desc(seoArticles.publishedAt), desc(seoArticles.createdAt));
   }
 
   async getSeoArticleBySlug(slug: string): Promise<SeoArticle | undefined> {
@@ -608,7 +612,7 @@ export class DatabaseStorage implements IStorage {
   async getSeoArticlesByCategory(category: string): Promise<SeoArticle[]> {
     return db.select().from(seoArticles)
       .where(and(eq(seoArticles.status, "published"), eq(seoArticles.category, category)))
-      .orderBy(desc(seoArticles.createdAt));
+      .orderBy(desc(seoArticles.publishedAt), desc(seoArticles.createdAt));
   }
 
   async getPopularSeoArticles(limit = 10): Promise<SeoArticle[]> {
@@ -1227,18 +1231,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEmailLeadByEmail(email: string): Promise<EmailLead | undefined> {
-    const [lead] = await db.select().from(emailLeads).where(eq(emailLeads.email, email));
+    const normalized = normalizeLeadEmail(email);
+    if (!normalized) return undefined;
+    const [lead] = await db.select().from(emailLeads).where(eq(emailLeads.email, normalized));
     return lead;
   }
 
-  async createEmailLead(data: InsertEmailLead): Promise<EmailLead> {
-    const [lead] = await db.insert(emailLeads).values(data).returning();
+  async createEmailLead(data: InsertEmailLead): Promise<EmailLead | undefined> {
+    const normalized = normalizeLeadData(data);
+    if (normalized.email && await this.isEmailSuppressed(normalized.email)) throw new Error("Email is globally suppressed");
+    const [lead] = await db.insert(emailLeads).values(normalized).onConflictDoNothing().returning();
     return lead;
   }
 
   async createEmailLeads(data: InsertEmailLead[]): Promise<number> {
     if (data.length === 0) return 0;
-    const result = await db.insert(emailLeads).values(data).onConflictDoNothing().returning();
+    const normalized = data.map(normalizeLeadData);
+    const emails = normalized.map(row => row.email).filter((email): email is string => !!email);
+    const suppressed = emails.length
+      ? await db.select({ email: emailSuppressions.email }).from(emailSuppressions).where(sql`${emailSuppressions.email} = ANY(${emails})`)
+      : [];
+    const blocked = new Set(suppressed.map(row => row.email));
+    const seenEmails = new Set<string>();
+    const seenDomains = new Set<string>();
+    const eligible = normalized.filter(row => {
+      if (!row.email || blocked.has(row.email) || seenEmails.has(row.email)) return false;
+      const domain = leadEmailDomain(row.email);
+      if (!domain || seenDomains.has(domain)) return false;
+      seenEmails.add(row.email); seenDomains.add(domain);
+      return true;
+    });
+    const result = await db.insert(emailLeads).values(eligible).onConflictDoNothing().returning();
     return result.length;
   }
 
@@ -1259,11 +1282,53 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
+  async claimNewEmailLeadsForSending(dailyLimit: number): Promise<EmailLead[]> {
+    return this.claimLeadsWithDailyQuota(undefined, dailyLimit);
+  }
+
+  async claimEmailLeadsForSending(ids: string[], dailyLimit: number): Promise<EmailLead[]> {
+    if (!ids.length) return [];
+    return this.claimLeadsWithDailyQuota(ids, dailyLimit);
+  }
+
+  private async claimLeadsWithDailyQuota(ids: string[] | undefined, dailyLimit: number): Promise<EmailLead[]> {
+    const { start, slot } = jstDayWindow();
+    return db.transaction(async (tx) => {
+      // Serializes quota calculation across every app instance for this JST day.
+      await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`lead-email-quota:${slot}`}))`);
+      // A worker may have died after claiming. Return the lead to the queue, while
+      // retaining its claim timestamp so the uncertain attempt still consumes today.
+      await tx.execute(sql`
+        UPDATE email_leads SET status = 'new'
+        WHERE status = 'sending' AND send_claimed_at < NOW() - INTERVAL '30 minutes'
+      `);
+      const countResult = await tx.execute(sql`
+        SELECT count(*)::int AS count FROM email_leads
+        WHERE send_claimed_at >= ${start}
+      `);
+      const used = Number((countResult as any).rows?.[0]?.count ?? (countResult as any)[0]?.count ?? 0);
+      const remaining = Math.max(0, dailyLimit - used);
+      if (!remaining) return [];
+      const idFilter = ids?.length ? sql`AND l.id = ANY(${ids})` : sql``;
+      const result = await tx.execute(sql`
+        WITH candidates AS (
+          SELECT l.id FROM email_leads l
+          WHERE l.status = 'new' AND l.email IS NOT NULL AND l.email != ''
+            AND NOT EXISTS (SELECT 1 FROM email_suppressions s WHERE s.email = l.email)
+            ${idFilter}
+          ORDER BY l.created_at FOR UPDATE SKIP LOCKED LIMIT ${remaining}
+        )
+        UPDATE email_leads l SET status = 'sending', send_claimed_at = NOW()
+        FROM candidates c WHERE l.id = c.id RETURNING l.*
+      `);
+      return ((result as any).rows || result) as EmailLead[];
+    });
+  }
+
   async getTodaySentLeadCount(): Promise<number> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const { start } = jstDayWindow();
     const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(emailLeads)
-      .where(and(eq(emailLeads.status, "sent"), gte(emailLeads.sentAt, today)));
+      .where(and(eq(emailLeads.status, "sent"), gte(emailLeads.sentAt, start)));
     return result?.count || 0;
   }
 
@@ -1296,6 +1361,44 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     return lead;
   }
+
+  async isEmailSuppressed(email: string): Promise<boolean> {
+    const normalized = normalizeLeadEmail(email);
+    if (!normalized) return false;
+    const [row] = await db.select({ id: emailSuppressions.id }).from(emailSuppressions)
+      .where(eq(emailSuppressions.email, normalized)).limit(1);
+    return !!row;
+  }
+
+  async suppressEmail(email: string, reason: string): Promise<void> {
+    const normalized = normalizeLeadEmail(email);
+    if (!normalized) return;
+    await db.insert(emailSuppressions).values({ email: normalized, reason }).onConflictDoNothing();
+  }
 }
 
 export const storage = new DatabaseStorage();
+
+export function normalizeLeadEmail(email: string | null | undefined): string | null {
+  const value = email?.trim().toLowerCase() || "";
+  return value || null;
+}
+export function leadEmailDomain(email: string): string | null {
+  return normalizeLeadEmail(email)?.split("@")[1] || null;
+}
+function normalizeLeadData(data: InsertEmailLead): InsertEmailLead {
+  const email = normalizeLeadEmail(data.email);
+  return { ...data, email, companyDomain: normalizeCompanyDomain(data.website, email) };
+}
+function normalizeCompanyDomain(website: string | null | undefined, email: string | null): string | null {
+  try {
+    const host = new URL(website || "").hostname.toLowerCase().replace(/^www\./, "");
+    if (host) return host;
+  } catch {}
+  return email ? leadEmailDomain(email)?.replace(/^www\./, "") || null : null;
+}
+function jstDayWindow(): { start: Date; slot: string } {
+  const jst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const slot = jst.toISOString().slice(0, 10);
+  return { start: new Date(`${slot}T00:00:00+09:00`), slot };
+}

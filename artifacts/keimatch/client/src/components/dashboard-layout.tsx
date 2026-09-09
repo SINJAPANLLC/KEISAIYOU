@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import {
   Home, Plus, Shield, Building2, Users, DollarSign, MessageSquare,
   Activity, Wrench, Settings, Menu, X, PanelLeftClose, PanelLeftOpen,
-  Briefcase, Bell, Mail, CreditCard, LogOut, RefreshCw, Car,
+  Briefcase, Bell, Mail, CreditCard, LogOut, RefreshCw, Car, BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useState, useEffect } from "react";
@@ -31,6 +31,7 @@ const adminMenuItems: MenuItem[] = [
   { href: "/admin/listings",          label: "企業案件管理",     icon: Briefcase },
   { href: "/admin/applications",      label: "企業応募者管理",   icon: Users },
   { href: "/admin/drivers",           label: "自社応募者管理",   icon: Car },
+  { href: "/admin/blog",              label: "ブログ管理",       icon: BookOpen },
   { href: "/admin/email-marketing",   label: "営業メール",       icon: Mail },
   { href: "/admin/notifications",     label: "通知管理",         icon: Bell },
   { href: "/admin/contact-inquiries", label: "お問い合わせ",     icon: MessageSquare },
@@ -195,7 +196,7 @@ export default function DashboardLayout({
       {/* Desktop sidebar */}
       {sidebarOpen ? (
         <aside
-          className="hidden lg:flex flex-col w-56 shrink-0 border-r border-border bg-muted/20"
+          className="hidden lg:flex flex-col w-56 shrink-0 border-r border-border bg-white"
           data-testid="panel-sidebar"
         >
           <div className="flex items-center justify-end px-2 pt-2">
@@ -212,7 +213,7 @@ export default function DashboardLayout({
           <SidebarContent />
         </aside>
       ) : (
-        <div className="hidden lg:flex flex-col items-center pt-2 px-1 shrink-0 border-r border-border bg-muted/20">
+        <div className="hidden lg:flex flex-col items-center pt-2 px-1 shrink-0 border-r border-border bg-white">
           <Button
             variant="ghost"
             size="icon"

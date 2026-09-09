@@ -42,13 +42,12 @@ export default function Contact() {
   };
 
   return (
-    <div>
-      <div className="hero-gradient relative py-14">
-        <div className="hero-grid absolute inset-0 pointer-events-none" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center text-white">
-          <p className="text-xs font-bold tracking-[0.2em] uppercase text-white/60 mb-3">CONTACT</p>
+    <div className="min-h-screen bg-white">
+      <div className="relative bg-white border-b border-border py-16 lg:py-20">
+        <div className="relative max-w-5xl mx-auto px-4 text-left text-foreground">
+          <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary mb-3">CONTACT</p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3" data-testid="text-page-title">お問い合わせ</h1>
-          <p className="text-white/80">ご不明な点がございましたらお気軽にお問い合わせください</p>
+          <p className="text-foreground/60">ご不明な点がございましたらお気軽にお問い合わせください</p>
         </div>
       </div>
 
@@ -128,7 +127,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="bg-muted/50 rounded-2xl p-5">
+            <div className="bg-white border border-border rounded-2xl p-5">
               <h3 className="font-semibold mb-2">よくある質問</h3>
               <p className="text-sm text-muted-foreground mb-3">よくある質問はFAQページをご覧ください。</p>
               <a href="/faq" className="text-sm text-primary font-medium hover:underline">FAQページへ →</a>

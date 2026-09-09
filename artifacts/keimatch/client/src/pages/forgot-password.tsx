@@ -32,12 +32,10 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-2/5 hero-gradient relative flex-col justify-between p-10">
+    <div className="min-h-screen flex bg-white">
+      <div className="hidden lg:flex lg:w-2/5 bg-primary relative flex-col justify-between p-10">
         <div className="hero-grid absolute inset-0 pointer-events-none" />
-        <div className="relative">
-          <img src="/logo-white.png" alt="KEI SAIYOU" className="h-10 w-auto" />
-        </div>
+        <div />
         <div className="relative space-y-6">
           <p className="text-3xl font-extrabold text-white leading-snug">
             軽貨物ドライバー採用は<br />これだけでいい

@@ -76,11 +76,8 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-2/5 hero-gradient relative flex-col justify-between p-10">
-        <div className="hero-grid absolute inset-0 pointer-events-none" />
-        <div className="relative">
-          <img src="/logo-white.png" alt="KEI SAIYOU" className="h-10 w-auto" />
-        </div>
+      <div className="hidden lg:flex lg:w-2/5 bg-primary relative flex-col justify-between p-10">
+        <div aria-hidden="true" />
         <div className="relative space-y-6">
           <p className="text-3xl font-extrabold text-white leading-snug">
             軽貨物ドライバー採用は<br />これだけでいい
@@ -101,7 +98,7 @@ export default function Register() {
         <div className="relative text-white/40 text-xs">© 合同会社SIN JAPAN</div>
       </div>
 
-      <div className="flex-1 overflow-y-auto flex items-start justify-center bg-white px-6 py-12">
+      <div className="flex-1 overflow-y-auto flex items-start justify-center bg-white px-6 pt-28 pb-12">
         <div className="w-full max-w-md">
           <div className="lg:hidden flex justify-center mb-8">
             <img src="/logo-keisaiyou.png" alt="KEI SAIYOU" className="h-10 w-auto" />

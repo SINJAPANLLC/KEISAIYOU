@@ -3,7 +3,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import type { Server } from "http";
 import { storage } from "./storage";
 import { db, dbPool } from "./db";
-import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, notificationTemplates, landingPages } from "@shared/schema";
+import { insertCargoListingSchema, insertTruckListingSchema, insertUserSchema, insertAnnouncementSchema, insertPartnerSchema, insertTransportRecordSchema, insertNotificationTemplateSchema, insertContactInquirySchema, insertAgentSchema, insertSeoArticleSchema, notificationTemplates, landingPages } from "@shared/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
@@ -15,6 +15,11 @@ import crypto from "crypto";
 import { sendEmail, sendLineMessage, isEmailConfigured, isLineConfigured, replaceTemplateVariables } from "./notification-service";
 import { pingGoogleSitemap } from "./auto-article-generator";
 import OpenAI from "openai";
+
+const routeParam = (req: Request, name: string): string => {
+  const value = req.params[name];
+  return Array.isArray(value) ? value[0] : value;
+};
 
 let _openai: OpenAI | null = null;
 function getOpenAI(): OpenAI {
@@ -63,7 +68,7 @@ function isAgentAutoEmail(email: string): boolean {
 
 const openai = new Proxy({} as any, {
   get(_target, prop) {
-    return getOpenAI()[prop];
+     return (getOpenAI() as any)[prop];
   }
 });
 
@@ -461,7 +466,7 @@ export async function registerRoutes(
 
   app.get("/api/companies/:userId", async (req, res) => {
     try {
-      const targetUserId = req.params.userId;
+      const targetUserId = routeParam(req, "userId");
       const [user, userCargo, userTrucks] = await Promise.all([
         storage.getUser(targetUserId),
         storage.getCargoListingsByUserId(targetUserId),
@@ -664,7 +669,7 @@ export async function registerRoutes(
 
   app.patch("/api/admin/plan-change-requests/:id/approve", requireAdmin, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = routeParam(req, "id");
       const adminNote = req.body?.adminNote;
       const requests = await storage.getPlanChangeRequests();
       const request = requests.find(r => r.id === id);
@@ -691,7 +696,7 @@ export async function registerRoutes(
 
   app.patch("/api/admin/plan-change-requests/:id/reject", requireAdmin, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = routeParam(req, "id");
       const adminNote = req.body?.adminNote;
       const requests = await storage.getPlanChangeRequests();
       const request = requests.find(r => r.id === id);
@@ -799,7 +804,7 @@ export async function registerRoutes(
 
   app.patch("/api/admin/user-add-requests/:id/approve", requireAdmin, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = routeParam(req, "id");
       const adminNote = req.body?.adminNote;
       const requests = await storage.getUserAddRequests();
       const request = requests.find(r => r.id === id);
@@ -842,7 +847,7 @@ export async function registerRoutes(
 
   app.patch("/api/admin/user-add-requests/:id/reject", requireAdmin, async (req, res) => {
     try {
-      const { id } = req.params;
+      const id = routeParam(req, "id");
       const adminNote = req.body?.adminNote;
       const requests = await storage.getUserAddRequests();
       const request = requests.find(r => r.id === id);
@@ -945,7 +950,7 @@ export async function registerRoutes(
 
   app.get("/api/cargo/by-user/:userId", requireAuth, async (req, res) => {
     try {
-      const listings = await storage.getCargoListingsByUserId(req.params.userId as string);
+      const listings = await storage.getCargoListingsByUserId(routeParam(req, "userId") as string);
       const activeListings = listings.filter(l => l.status === "active").map(({ privateNote, ...rest }) => rest);
       res.json(activeListings);
     } catch (error) {
@@ -955,11 +960,11 @@ export async function registerRoutes(
 
   app.get("/api/cargo/:id", requireAuth, async (req, res) => {
     try {
-      const listing = await storage.getCargoListing(req.params.id);
+      const listing = await storage.getCargoListing(routeParam(req, "id"));
       if (!listing) {
         return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
-      storage.incrementCargoViewCount(req.params.id).catch(() => {});
+      storage.incrementCargoViewCount(routeParam(req, "id")).catch(() => {});
       if (listing.userId !== req.session.userId) {
         const { privateNote, ...publicListing } = listing;
         return res.json(publicListing);
@@ -1056,7 +1061,7 @@ export async function registerRoutes(
       if (!status || !["active", "completed", "cancelled"].includes(status)) {
         return res.status(400).json({ message: "無効なステータスです" });
       }
-      const cargoId = req.params.id as string;
+      const cargoId = routeParam(req, "id") as string;
       const listing = await storage.getCargoListing(cargoId);
       if (!listing) {
         return res.status(404).json({ message: "荷物情報が見つかりません" });
@@ -1092,7 +1097,7 @@ export async function registerRoutes(
 
   app.patch("/api/cargo/:id", requireAuth, async (req, res) => {
     try {
-      const cargoId = req.params.id as string;
+      const cargoId = routeParam(req, "id") as string;
       const listing = await storage.getCargoListing(cargoId);
       if (!listing) {
         return res.status(404).json({ message: "荷物情報が見つかりません" });
@@ -1109,7 +1114,7 @@ export async function registerRoutes(
 
   app.delete("/api/cargo/:id", requireAuth, async (req, res) => {
     try {
-      const deleted = await storage.deleteCargoListing(req.params.id as string);
+      const deleted = await storage.deleteCargoListing(routeParam(req, "id") as string);
       if (!deleted) {
         return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
@@ -1119,7 +1124,7 @@ export async function registerRoutes(
         userName: currentUser?.companyName || currentUser?.username || "",
         action: "delete",
         targetType: "cargo",
-        targetId: req.params.id,
+        targetId: routeParam(req, "id"),
         details: "荷物削除",
         ipAddress: (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "",
       }).catch(() => {});
@@ -1131,7 +1136,7 @@ export async function registerRoutes(
 
   app.get("/api/dispatch-requests/:cargoId", requireAuth, async (req, res) => {
     try {
-      const request = await storage.getDispatchRequestByCargoId(req.params.cargoId as string);
+      const request = await storage.getDispatchRequestByCargoId(routeParam(req, "cargoId") as string);
       res.json(request || null);
     } catch (error) {
       res.status(500).json({ message: "配車依頼書の取得に失敗しました" });
@@ -1156,7 +1161,7 @@ export async function registerRoutes(
   app.patch("/api/dispatch-requests/:id", requireAuth, async (req, res) => {
     try {
       const { userId, id, cargoId, createdAt, sentAt, status, ...safeFields } = req.body;
-      const updated = await storage.updateDispatchRequest(req.params.id as string, safeFields);
+      const updated = await storage.updateDispatchRequest(routeParam(req, "id") as string, safeFields);
       if (!updated) {
         return res.status(404).json({ message: "配車依頼書が見つかりません" });
       }
@@ -1168,15 +1173,15 @@ export async function registerRoutes(
 
   app.patch("/api/dispatch-requests/:id/send", requireAuth, async (req, res) => {
     try {
-      const dispatchRequest = await storage.getDispatchRequest(req.params.id as string);
+      const dispatchRequest = await storage.getDispatchRequest(routeParam(req, "id") as string);
       if (!dispatchRequest) {
         return res.status(404).json({ message: "配車依頼書が見つかりません" });
       }
 
-      const updated = await storage.updateDispatchRequest(req.params.id as string, {
+      const updated = await storage.updateDispatchRequest(routeParam(req, "id") as string, {
         status: "sent",
         sentAt: new Date(),
-      } as any);
+      });
       if (!updated) {
         return res.status(404).json({ message: "配車依頼書が見つかりません" });
       }
@@ -1360,7 +1365,7 @@ export async function registerRoutes(
 
   app.get("/api/trucks/:id", requireAuth, async (req, res) => {
     try {
-      const listing = await storage.getTruckListing(req.params.id);
+      const listing = await storage.getTruckListing(routeParam(req, "id"));
       if (!listing) {
         return res.status(404).json({ message: "空き車両情報が見つかりません" });
       }
@@ -1447,7 +1452,7 @@ export async function registerRoutes(
 
   app.patch("/api/trucks/:id", requireAuth, async (req, res) => {
     try {
-      const truckId = req.params.id as string;
+      const truckId = routeParam(req, "id") as string;
       const listing = await storage.getTruckListing(truckId);
       if (!listing) {
         return res.status(404).json({ message: "空き車両情報が見つかりません" });
@@ -1469,7 +1474,7 @@ export async function registerRoutes(
 
   app.delete("/api/trucks/:id", requireAuth, async (req, res) => {
     try {
-      const deleted = await storage.deleteTruckListing(req.params.id as string);
+      const deleted = await storage.deleteTruckListing(routeParam(req, "id") as string);
       if (!deleted) {
         return res.status(404).json({ message: "空き車両情報が見つかりません" });
       }
@@ -1479,7 +1484,7 @@ export async function registerRoutes(
         userName: currentUser?.companyName || currentUser?.username || "",
         action: "delete",
         targetType: "truck",
-        targetId: req.params.id,
+        targetId: routeParam(req, "id"),
         details: "空き車両削除",
         ipAddress: (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "",
       }).catch(() => {});
@@ -1521,7 +1526,7 @@ export async function registerRoutes(
 
   app.patch("/api/admin/users/:id/approve", requireAdmin, async (req, res) => {
     try {
-      const user = await storage.approveUser(req.params.id as string);
+      const user = await storage.approveUser(routeParam(req, "id") as string);
       if (!user) {
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
@@ -1572,7 +1577,7 @@ export async function registerRoutes(
       if (!plan || !["free", "premium", "premium_full"].includes(plan)) {
         return res.status(400).json({ message: "無効なプランです" });
       }
-      const user = await storage.updateUserProfile(req.params.id as string, { plan });
+      const user = await storage.updateUserProfile(routeParam(req, "id") as string, { plan });
       if (!user) {
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
@@ -1585,11 +1590,11 @@ export async function registerRoutes(
 
   app.patch("/api/admin/users/:id", requireAdmin, async (req, res) => {
     try {
-      const targetUser = await storage.getUser(req.params.id as string);
+      const targetUser = await storage.getUser(routeParam(req, "id") as string);
       if (!targetUser) {
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
-      const updatedUser = await storage.updateUserProfile(req.params.id as string, req.body);
+      const updatedUser = await storage.updateUserProfile(routeParam(req, "id") as string, req.body);
       if (!updatedUser) {
         return res.status(404).json({ message: "更新に失敗しました" });
       }
@@ -1599,7 +1604,7 @@ export async function registerRoutes(
         userName: admin?.companyName || "管理者",
         action: "edit",
         targetType: "user",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `ユーザー「${targetUser.companyName}」の情報を編集`,
         ipAddress: req.ip,
       });
@@ -1661,21 +1666,21 @@ export async function registerRoutes(
       if (!role || !["admin", "user"].includes(role)) {
         return res.status(400).json({ message: "無効な役割です" });
       }
-      const targetUser = await storage.getUser(req.params.id as string);
+      const targetUser = await storage.getUser(routeParam(req, "id") as string);
       if (!targetUser) {
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
       if (targetUser.id === req.session.userId) {
         return res.status(400).json({ message: "自分自身の役割は変更できません" });
       }
-      await storage.updateUserProfile(req.params.id as string, { role });
+      await storage.updateUserProfile(routeParam(req, "id") as string, { role });
       const admin = await storage.getUser(req.session.userId as string);
       await storage.createAuditLog({
         userId: req.session.userId as string,
         userName: admin?.companyName || "管理者",
         action: "update",
         targetType: "user",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `ユーザー「${targetUser.companyName}」の役割を${role === "admin" ? "管理者" : "一般ユーザー"}に変更`,
         ipAddress: req.ip,
       });
@@ -1687,8 +1692,8 @@ export async function registerRoutes(
 
   app.delete("/api/admin/users/:id", requireAdmin, async (req, res) => {
     try {
-      const user = await storage.getUser(req.params.id as string);
-      const deleted = await storage.deleteUser(req.params.id as string);
+      const user = await storage.getUser(routeParam(req, "id") as string);
+      const deleted = await storage.deleteUser(routeParam(req, "id") as string);
       if (!deleted) {
         return res.status(404).json({ message: "ユーザーが見つかりません" });
       }
@@ -1698,7 +1703,7 @@ export async function registerRoutes(
         userName: admin?.companyName || "管理者",
         action: "delete",
         targetType: "user",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `ユーザー「${user?.companyName}」を削除`,
         ipAddress: req.ip,
       });
@@ -1799,21 +1804,21 @@ export async function registerRoutes(
 
   app.patch("/api/admin/cargo/:id", requireAdmin, async (req, res) => {
     try {
-      const listing = await storage.getCargoListing(req.params.id as string);
+      const listing = await storage.getCargoListing(routeParam(req, "id") as string);
       if (!listing) {
         return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
       const cargoAllowed = ["title", "departureArea", "departureAddress", "arrivalArea", "arrivalAddress", "desiredDate", "arrivalDate", "departureTime", "arrivalTime", "cargoType", "weight", "vehicleType", "bodyType", "temperatureControl", "price", "highwayFee", "transportType", "consolidation", "driverWork", "packageCount", "loadingMethod", "urgency", "description", "status"];
       const safeBody: Record<string, any> = {};
       for (const key of cargoAllowed) { if (key in req.body) safeBody[key] = req.body[key]; }
-      const updated = await storage.updateCargoListing(req.params.id as string, safeBody);
+      const updated = await storage.updateCargoListing(routeParam(req, "id") as string, safeBody);
       const admin = await storage.getUser(req.session.userId as string);
       await storage.createAuditLog({
         userId: req.session.userId as string,
         userName: admin?.companyName || "管理者",
         action: "edit",
         targetType: "cargo",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `荷物「${listing.title}」を管理者が編集`,
         ipAddress: req.ip,
       });
@@ -1825,18 +1830,18 @@ export async function registerRoutes(
 
   app.delete("/api/admin/cargo/:id", requireAdmin, async (req, res) => {
     try {
-      const listing = await storage.getCargoListing(req.params.id as string);
+      const listing = await storage.getCargoListing(routeParam(req, "id") as string);
       if (!listing) {
         return res.status(404).json({ message: "荷物情報が見つかりません" });
       }
-      await storage.deleteCargoListing(req.params.id as string);
+      await storage.deleteCargoListing(routeParam(req, "id") as string);
       const admin = await storage.getUser(req.session.userId as string);
       await storage.createAuditLog({
         userId: req.session.userId as string,
         userName: admin?.companyName || "管理者",
         action: "delete",
         targetType: "cargo",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `荷物「${listing.title}」を管理者が削除`,
         ipAddress: req.ip,
       });
@@ -1848,21 +1853,21 @@ export async function registerRoutes(
 
   app.patch("/api/admin/trucks/:id", requireAdmin, async (req, res) => {
     try {
-      const listing = await storage.getTruckListing(req.params.id as string);
+      const listing = await storage.getTruckListing(routeParam(req, "id") as string);
       if (!listing) {
         return res.status(404).json({ message: "空き車両情報が見つかりません" });
       }
       const truckAllowed = ["title", "currentArea", "currentAddress", "destinationArea", "destinationAddress", "vehicleType", "truckCount", "bodyType", "maxWeight", "availableDate", "price", "description", "status"];
       const safeBody: Record<string, any> = {};
       for (const key of truckAllowed) { if (key in req.body) safeBody[key] = req.body[key]; }
-      const updated = await storage.updateTruckListing(req.params.id as string, safeBody);
+      const updated = await storage.updateTruckListing(routeParam(req, "id") as string, safeBody);
       const admin = await storage.getUser(req.session.userId as string);
       await storage.createAuditLog({
         userId: req.session.userId as string,
         userName: admin?.companyName || "管理者",
         action: "edit",
         targetType: "truck",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `車両「${listing.title}」を管理者が編集`,
         ipAddress: req.ip,
       });
@@ -1874,18 +1879,18 @@ export async function registerRoutes(
 
   app.delete("/api/admin/trucks/:id", requireAdmin, async (req, res) => {
     try {
-      const listing = await storage.getTruckListing(req.params.id as string);
+      const listing = await storage.getTruckListing(routeParam(req, "id") as string);
       if (!listing) {
         return res.status(404).json({ message: "空き車両情報が見つかりません" });
       }
-      await storage.deleteTruckListing(req.params.id as string);
+      await storage.deleteTruckListing(routeParam(req, "id") as string);
       const admin = await storage.getUser(req.session.userId as string);
       await storage.createAuditLog({
         userId: req.session.userId as string,
         userName: admin?.companyName || "管理者",
         action: "delete",
         targetType: "truck",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `車両「${listing.title}」を管理者が削除`,
         ipAddress: req.ip,
       });
@@ -1950,7 +1955,7 @@ export async function registerRoutes(
       if (!status || !["unread", "read", "replied", "closed"].includes(status)) {
         return res.status(400).json({ message: "無効なステータスです" });
       }
-      const updated = await storage.updateContactInquiryStatus(req.params.id, status, adminNote);
+      const updated = await storage.updateContactInquiryStatus(routeParam(req, "id"), status, adminNote);
       if (!updated) {
         return res.status(404).json({ message: "お問い合わせが見つかりません" });
       }
@@ -1962,7 +1967,7 @@ export async function registerRoutes(
 
   app.delete("/api/admin/contact-inquiries/:id", requireAdmin, async (req, res) => {
     try {
-      const deleted = await storage.deleteContactInquiry(req.params.id);
+      const deleted = await storage.deleteContactInquiry(routeParam(req, "id"));
       if (!deleted) {
         return res.status(404).json({ message: "お問い合わせが見つかりません" });
       }
@@ -2847,7 +2852,7 @@ statusの意味:
 
   app.patch("/api/admin/ai-training/:id", requireAdmin, async (req, res) => {
     try {
-      const updated = await storage.updateAiTrainingExample(req.params.id, req.body);
+      const updated = await storage.updateAiTrainingExample(routeParam(req, "id"), req.body);
       if (!updated) return res.status(404).json({ message: "学習データが見つかりません" });
       res.json(updated);
     } catch (error) {
@@ -2857,7 +2862,7 @@ statusの意味:
 
   app.delete("/api/admin/ai-training/:id", requireAdmin, async (req, res) => {
     try {
-      await storage.deleteAiTrainingExample(req.params.id);
+      await storage.deleteAiTrainingExample(routeParam(req, "id"));
       res.json({ message: "学習データを削除しました" });
     } catch (error) {
       res.status(500).json({ message: "学習データの削除に失敗しました" });
@@ -2875,7 +2880,7 @@ statusの意味:
 
   app.post("/api/admin/ai-corrections/:id/promote", requireAdmin, async (req, res) => {
     try {
-      const example = await storage.promoteAiCorrectionToExample(req.params.id);
+      const example = await storage.promoteAiCorrectionToExample(routeParam(req, "id"));
       if (!example) return res.status(404).json({ message: "修正ログが見つかりません" });
       res.json(example);
     } catch (error) {
@@ -2885,7 +2890,7 @@ statusの意味:
 
   app.delete("/api/admin/ai-corrections/:id", requireAdmin, async (req, res) => {
     try {
-      await storage.deleteAiCorrectionLog(req.params.id);
+      await storage.deleteAiCorrectionLog(routeParam(req, "id"));
       res.json({ message: "修正ログを削除しました" });
     } catch (error) {
       res.status(500).json({ message: "修正ログの削除に失敗しました" });
@@ -2912,7 +2917,7 @@ statusの意味:
 
   app.patch("/api/notifications/:id/read", requireAuth, async (req, res) => {
     try {
-      const notif = await storage.markNotificationAsRead(req.params.id as string, req.session.userId as string);
+      const notif = await storage.markNotificationAsRead(routeParam(req, "id") as string, req.session.userId as string);
       if (!notif) {
         return res.status(404).json({ message: "通知が見つかりません" });
       }
@@ -2933,7 +2938,7 @@ statusの意味:
 
   app.delete("/api/notifications/:id", requireAuth, async (req, res) => {
     try {
-      const deleted = await storage.deleteNotification(req.params.id as string, req.session.userId as string);
+      const deleted = await storage.deleteNotification(routeParam(req, "id") as string, req.session.userId as string);
       if (!deleted) {
         return res.status(404).json({ message: "通知が見つかりません" });
       }
@@ -2978,7 +2983,7 @@ statusの意味:
 
   app.patch("/api/admin/announcements/:id", requireAdmin, async (req, res) => {
     try {
-      const updated = await storage.updateAnnouncement(req.params.id as string, req.body);
+      const updated = await storage.updateAnnouncement(routeParam(req, "id") as string, req.body);
       if (!updated) {
         return res.status(404).json({ message: "お知らせが見つかりません" });
       }
@@ -2990,7 +2995,7 @@ statusの意味:
 
   app.delete("/api/admin/announcements/:id", requireAdmin, async (req, res) => {
     try {
-      const deleted = await storage.deleteAnnouncement(req.params.id as string);
+      const deleted = await storage.deleteAnnouncement(routeParam(req, "id") as string);
       if (!deleted) {
         return res.status(404).json({ message: "お知らせが見つかりません" });
       }
@@ -3025,11 +3030,11 @@ statusの意味:
 
   app.patch("/api/partners/:id", requireAuth, async (req, res) => {
     try {
-      const partner = await storage.getPartner(req.params.id as string);
+      const partner = await storage.getPartner(routeParam(req, "id") as string);
       if (!partner || partner.userId !== req.session.userId) {
         return res.status(404).json({ message: "取引先が見つかりません" });
       }
-      const updated = await storage.updatePartner(req.params.id as string, req.body);
+      const updated = await storage.updatePartner(routeParam(req, "id") as string, req.body);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ message: "取引先の更新に失敗しました" });
@@ -3038,11 +3043,11 @@ statusの意味:
 
   app.delete("/api/partners/:id", requireAuth, async (req, res) => {
     try {
-      const partner = await storage.getPartner(req.params.id as string);
+      const partner = await storage.getPartner(routeParam(req, "id") as string);
       if (!partner || partner.userId !== req.session.userId) {
         return res.status(404).json({ message: "取引先が見つかりません" });
       }
-      await storage.deletePartner(req.params.id as string);
+      await storage.deletePartner(routeParam(req, "id") as string);
       res.json({ message: "取引先を削除しました" });
     } catch (error) {
       res.status(500).json({ message: "取引先の削除に失敗しました" });
@@ -3120,11 +3125,11 @@ statusの意味:
 
   app.patch("/api/transport-records/:id", requireAuth, async (req, res) => {
     try {
-      const record = await storage.getTransportRecord(req.params.id as string);
+      const record = await storage.getTransportRecord(routeParam(req, "id") as string);
       if (!record || record.userId !== req.session.userId) {
         return res.status(404).json({ message: "記録が見つかりません" });
       }
-      const updated = await storage.updateTransportRecord(req.params.id as string, req.body);
+      const updated = await storage.updateTransportRecord(routeParam(req, "id") as string, req.body);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ message: "記録の更新に失敗しました" });
@@ -3133,11 +3138,11 @@ statusの意味:
 
   app.delete("/api/transport-records/:id", requireAuth, async (req, res) => {
     try {
-      const record = await storage.getTransportRecord(req.params.id as string);
+      const record = await storage.getTransportRecord(routeParam(req, "id") as string);
       if (!record || record.userId !== req.session.userId) {
         return res.status(404).json({ message: "記録が見つかりません" });
       }
-      await storage.deleteTransportRecord(req.params.id as string);
+      await storage.deleteTransportRecord(routeParam(req, "id") as string);
       res.json({ message: "記録を削除しました" });
     } catch (error) {
       res.status(500).json({ message: "記録の削除に失敗しました" });
@@ -3357,7 +3362,7 @@ statusの意味:
 
   app.patch("/api/admin/notification-templates/:id", requireAdmin, async (req, res) => {
     try {
-      const id = req.params.id as string;
+      const id = routeParam(req, "id") as string;
       const template = await storage.updateNotificationTemplate(id, req.body);
       if (!template) return res.status(404).json({ message: "テンプレートが見つかりません" });
       res.json(template);
@@ -3368,7 +3373,7 @@ statusの意味:
 
   app.delete("/api/admin/notification-templates/:id", requireAdmin, async (req, res) => {
     try {
-      const id = req.params.id as string;
+      const id = routeParam(req, "id") as string;
       const deleted = await storage.deleteNotificationTemplate(id);
       if (!deleted) return res.status(404).json({ message: "テンプレートが見つかりません" });
       res.json({ message: "テンプレートを削除しました" });
@@ -3478,7 +3483,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.get("/api/columns/category/:category", async (req, res) => {
     try {
-      const articles = await storage.getSeoArticlesByCategory(req.params.category);
+      const articles = await storage.getSeoArticlesByCategory(routeParam(req, "category"));
       res.json(articles);
     } catch (error) {
       res.status(500).json({ message: "カテゴリ記事の取得に失敗しました" });
@@ -3487,7 +3492,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.get("/api/columns/:slug", async (req, res) => {
     try {
-      const article = await storage.getSeoArticleBySlug(req.params.slug);
+      const article = await storage.getSeoArticleBySlug(routeParam(req, "slug"));
       if (!article || article.status !== "published") {
         return res.status(404).json({ message: "記事が見つかりません" });
       }
@@ -3499,7 +3504,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.get("/api/columns/:slug/related", async (req, res) => {
     try {
-      const article = await storage.getSeoArticleBySlug(req.params.slug);
+      const article = await storage.getSeoArticleBySlug(routeParam(req, "slug"));
       if (!article) {
         return res.status(404).json({ message: "記事が見つかりません" });
       }
@@ -3512,13 +3517,46 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/columns/:slug/view", async (req, res) => {
     try {
-      const article = await storage.getSeoArticleBySlug(req.params.slug);
+      const article = await storage.getSeoArticleBySlug(routeParam(req, "slug"));
       if (article) {
         await storage.incrementSeoArticleViewCount(article.id);
       }
       res.json({ success: true });
     } catch (error) {
       res.json({ success: true });
+    }
+  });
+
+  // Public blog API. These endpoints deliberately never reveal drafts.
+  app.get("/api/blog", async (_req, res) => {
+    try {
+      res.json(await storage.getPublishedSeoArticles());
+    } catch {
+      res.status(500).json({ message: "ブログ記事の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/blog/:slug", async (req, res) => {
+    try {
+      const article = await storage.getSeoArticleBySlug(routeParam(req, "slug"));
+      if (!article || article.status !== "published") {
+        return res.status(404).json({ message: "記事が見つかりません" });
+      }
+      res.json(article);
+    } catch {
+      res.status(500).json({ message: "ブログ記事の取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/blog/:slug/related", async (req, res) => {
+    try {
+      const article = await storage.getSeoArticleBySlug(routeParam(req, "slug"));
+      if (!article || article.status !== "published") {
+        return res.status(404).json({ message: "記事が見つかりません" });
+      }
+      res.json(await storage.getRelatedSeoArticles(article.id, article.category || "kyukakyusha", 3));
+    } catch {
+      res.status(500).json({ message: "関連記事の取得に失敗しました" });
     }
   });
 
@@ -3585,7 +3623,7 @@ JSON形式で以下を返してください（日本語で）:
   app.patch("/api/admin/youtube-videos/:id/visibility", requireAdmin, async (req, res) => {
     try {
       const { isVisible } = req.body;
-      const video = await storage.updateYoutubeVideoVisibility(req.params.id, isVisible);
+      const video = await storage.updateYoutubeVideoVisibility(routeParam(req, "id"), isVisible);
       if (!video) return res.status(404).json({ message: "動画が見つかりません" });
       res.json(video);
     } catch (error) {
@@ -3595,7 +3633,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/youtube-videos/:id", requireAdmin, async (req, res) => {
     try {
-      await storage.deleteYoutubeVideo(req.params.id);
+      await storage.deleteYoutubeVideo(routeParam(req, "id"));
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "削除に失敗しました" });
@@ -3648,7 +3686,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.get("/api/admin/email-campaigns/:id", requireAdmin, async (req, res) => {
     try {
-      const campaign = await storage.getEmailCampaign(req.params.id);
+      const campaign = await storage.getEmailCampaign(routeParam(req, "id"));
       if (!campaign) return res.status(404).json({ message: "キャンペーンが見つかりません" });
       res.json(campaign);
     } catch (error) {
@@ -3679,7 +3717,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.patch("/api/admin/email-campaigns/:id", requireAdmin, async (req, res) => {
     try {
-      const campaign = await storage.updateEmailCampaign(req.params.id, req.body);
+      const campaign = await storage.updateEmailCampaign(routeParam(req, "id"), req.body);
       if (!campaign) return res.status(404).json({ message: "キャンペーンが見つかりません" });
       res.json(campaign);
     } catch (error) {
@@ -3689,7 +3727,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/email-campaigns/:id", requireAdmin, async (req, res) => {
     try {
-      await storage.deleteEmailCampaign(req.params.id);
+      await storage.deleteEmailCampaign(routeParam(req, "id"));
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "キャンペーンの削除に失敗しました" });
@@ -3698,7 +3736,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/email-campaigns/:id/send", requireAdmin, async (req, res) => {
     try {
-      const campaign = await storage.getEmailCampaign(req.params.id);
+      const campaign = await storage.getEmailCampaign(routeParam(req, "id"));
       if (!campaign) return res.status(404).json({ message: "キャンペーンが見つかりません" });
       if (campaign.status === "sending") return res.status(400).json({ message: "送信中です" });
 
@@ -3765,7 +3803,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/email-leads/:id", requireAdmin, async (req, res) => {
     try {
-      await storage.deleteEmailLead(req.params.id);
+      await storage.deleteEmailLead(routeParam(req, "id"));
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "リードの削除に失敗しました" });
@@ -3817,7 +3855,7 @@ JSON形式で以下を返してください（日本語で）:
         if (!lead.email || !lead.companyName) continue;
         const existing = await storage.getEmailLeadByEmail(lead.email);
         if (existing) continue;
-        await storage.createEmailLead({
+        const created = await storage.createEmailLead({
           companyName: lead.companyName,
           email: lead.email,
           fax: lead.fax || null,
@@ -3828,7 +3866,7 @@ JSON形式で以下を返してください（日本語で）:
           source: "manual_import",
           status: "new",
         });
-        added++;
+        if (created) added++;
       }
       res.json({ message: `${added}件のリードをインポートしました`, added });
     } catch (error) {
@@ -3978,12 +4016,16 @@ JSON形式で以下を返してください（日本語で）:
   });
 
   app.patch("/api/admin/seo-articles/:id", requireAdmin, async (req, res) => {
+    const parsed = insertSeoArticleSchema.partial().strict().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: fromError(parsed.error).toString() });
+    }
     try {
-      const updated = await storage.updateSeoArticle(req.params.id as string, req.body);
+      const updated = await storage.updateSeoArticle(routeParam(req, "id") as string, parsed.data);
       if (!updated) {
         return res.status(404).json({ message: "記事が見つかりません" });
       }
-      if (req.body.status === "published") {
+      if (parsed.data.status === "published") {
         pingGoogleSitemap();
       }
       res.json(updated);
@@ -3994,13 +4036,89 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/seo-articles/:id", requireAdmin, async (req, res) => {
     try {
-      const deleted = await storage.deleteSeoArticle(req.params.id as string);
+      const deleted = await storage.deleteSeoArticle(routeParam(req, "id") as string);
       if (!deleted) {
         return res.status(404).json({ message: "記事が見つかりません" });
       }
       res.json({ message: "記事を削除しました" });
     } catch (error) {
       res.status(500).json({ message: "記事の削除に失敗しました" });
+    }
+  });
+
+  const blogArticleSchema = z.object({
+    title: z.string().trim().min(1).max(200),
+    slug: z.string().trim().min(1).max(200).regex(/^[a-z0-9\u3040-\u30ff\u3400-\u9fff-]+$/i, "スラッグは英数字、日本語、ハイフンで入力してください"),
+    category: z.string().trim().min(1).max(100),
+    excerpt: z.string().trim().max(1000).nullable().optional(),
+    content: z.string().trim().min(1).max(100000),
+    imageUrl: z.string().trim().url().max(2000).nullable().optional(),
+    status: z.enum(["draft", "published"]),
+    publishedAt: z.coerce.date().nullable().optional(),
+    seoTitle: z.string().trim().max(200).nullable().optional(),
+    metaDescription: z.string().trim().max(300).nullable().optional(),
+    canonicalUrl: z.string().trim().url().max(2000).nullable().optional(),
+  }).strict();
+
+  const normalizeBlogArticle = (data: z.infer<typeof blogArticleSchema>) => ({
+    ...data,
+    excerpt: data.excerpt || null,
+    imageUrl: data.imageUrl || null,
+    seoTitle: data.seoTitle || null,
+    metaDescription: data.metaDescription || null,
+    canonicalUrl: data.canonicalUrl || null,
+    publishedAt: data.status === "published" ? (data.publishedAt || new Date()) : data.publishedAt || null,
+    topic: data.title,
+    keywords: null,
+    autoGenerated: false,
+    wordCount: data.content.replace(/\s/g, "").length,
+    faq: null,
+  });
+
+  app.get("/api/admin/blog", requireAdmin, async (_req, res) => {
+    try {
+      res.json(await storage.getSeoArticles());
+    } catch {
+      res.status(500).json({ message: "ブログ記事の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/admin/blog", requireAdmin, async (req, res) => {
+    const parsed = blogArticleSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: fromError(parsed.error).toString() });
+    try {
+      const duplicate = await storage.getSeoArticleBySlug(parsed.data.slug);
+      if (duplicate) return res.status(409).json({ message: "このスラッグは既に使用されています" });
+      const article = await storage.createSeoArticle(normalizeBlogArticle(parsed.data));
+      if (article.status === "published") pingGoogleSitemap();
+      res.status(201).json(article);
+    } catch {
+      res.status(500).json({ message: "ブログ記事の作成に失敗しました" });
+    }
+  });
+
+  app.patch("/api/admin/blog/:id", requireAdmin, async (req, res) => {
+    const parsed = blogArticleSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: fromError(parsed.error).toString() });
+    try {
+      const duplicate = await storage.getSeoArticleBySlug(parsed.data.slug);
+      if (duplicate && duplicate.id !== routeParam(req, "id")) return res.status(409).json({ message: "このスラッグは既に使用されています" });
+      const article = await storage.updateSeoArticle(routeParam(req, "id"), normalizeBlogArticle(parsed.data));
+      if (!article) return res.status(404).json({ message: "記事が見つかりません" });
+      if (article.status === "published") pingGoogleSitemap();
+      res.json(article);
+    } catch {
+      res.status(500).json({ message: "ブログ記事の更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/admin/blog/:id", requireAdmin, async (req, res) => {
+    try {
+      if (!await storage.deleteSeoArticle(routeParam(req, "id"))) return res.status(404).json({ message: "記事が見つかりません" });
+      pingGoogleSitemap();
+      res.json({ message: "ブログ記事を削除しました" });
+    } catch {
+      res.status(500).json({ message: "ブログ記事の削除に失敗しました" });
     }
   });
 
@@ -4073,7 +4191,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.get("/api/admin/agents/:id", requireAdmin, async (req, res) => {
     try {
-      const agent = await storage.getAgent(req.params.id);
+      const agent = await storage.getAgent(routeParam(req, "id"));
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
       res.json(agent);
     } catch (error) {
@@ -4109,7 +4227,7 @@ JSON形式で以下を返してください（日本語で）:
           userType: "carrier",
           role: "user",
           address: parsed.data.address || "",
-        } as any);
+        });
         await storage.approveUser(newUser.id);
         userId = newUser.id;
         passwordToReturn = defaultPassword;
@@ -4144,7 +4262,7 @@ JSON形式で以下を返してください（日本語で）:
       if (!parsed.success) {
         return res.status(400).json({ message: "入力内容に誤りがあります", errors: parsed.error.errors });
       }
-      const agent = await storage.updateAgent(req.params.id as string, parsed.data);
+      const agent = await storage.updateAgent(routeParam(req, "id") as string, parsed.data);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
 
       if (agent.userId) {
@@ -4175,15 +4293,15 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/agents/:id", requireAdmin, async (req, res) => {
     try {
-      const agent = await storage.getAgent(req.params.id);
+      const agent = await storage.getAgent(routeParam(req, "id"));
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
-      await storage.deleteAgent(req.params.id as string);
+      await storage.deleteAgent(routeParam(req, "id") as string);
       await storage.createAuditLog({
         userId: (req as any).user?.id,
         userName: (req as any).user?.contactName || (req as any).user?.companyName,
         action: "delete",
         targetType: "agent",
-        targetId: req.params.id as string,
+        targetId: routeParam(req, "id") as string,
         details: `代理店「${agent.companyName}」(${agent.prefecture})を削除`,
         ipAddress: req.ip,
       });
@@ -4195,7 +4313,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/agents/:id/create-account", requireAdmin, async (req, res) => {
     try {
-      const agentId = req.params.id as string;
+      const agentId = routeParam(req, "id") as string;
       const agent = await storage.getAgent(agentId);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
       if (agent.userId) return res.status(400).json({ message: "この代理店にはすでにアカウントがあります" });
@@ -4221,7 +4339,7 @@ JSON形式で以下を返してください（日本語で）:
         userType: "carrier",
         role: "user",
         address: agent.address || "",
-      } as any);
+      });
       await storage.approveUser(newUser.id);
       await storage.updateAgent(agent.id, { userId: newUser.id, loginEmail });
       await storage.createAuditLog({
@@ -4242,7 +4360,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/agents/:id/reset-password", requireAdmin, async (req, res) => {
     try {
-      const agent = await storage.getAgent(req.params.id as string);
+      const agent = await storage.getAgent(routeParam(req, "id") as string);
       if (!agent) return res.status(404).json({ message: "代理店が見つかりません" });
       if (!agent.userId) return res.status(400).json({ message: "この代理店にはアカウントがありません" });
 
@@ -4294,7 +4412,7 @@ JSON形式で以下を返してください（日本語で）:
           userType: "carrier",
           role: "user",
           address: agent.address || "",
-        } as any);
+        });
         await storage.approveUser(newUser.id);
         await storage.updateAgent(agent.id, { userId: newUser.id, loginEmail });
         results.push({ prefecture: agent.prefecture, loginEmail, password: defaultPassword });
@@ -4432,7 +4550,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.get("/api/admin/invoices/:id", requireAdmin, async (req, res) => {
     try {
-      const invoice = await storage.getInvoice(req.params.id as string);
+      const invoice = await storage.getInvoice(routeParam(req, "id") as string);
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
       res.json(invoice);
     } catch (error) {
@@ -4499,7 +4617,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.post("/api/admin/invoices/:id/send", requireAdmin, async (req, res) => {
     try {
-      const invoice = await storage.getInvoice(req.params.id as string);
+      const invoice = await storage.getInvoice(routeParam(req, "id") as string);
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
 
       const admins = (await storage.getAllUsers()).filter(u => u.role === "admin");
@@ -4576,7 +4694,7 @@ JSON形式で以下を返してください（日本語で）:
         return res.status(400).json({ message: "無効なステータスです" });
       }
       const paidAt = status === "paid" ? new Date() : undefined;
-      const invoice = await storage.updateInvoiceStatus(req.params.id as string, status, paidAt);
+      const invoice = await storage.updateInvoiceStatus(routeParam(req, "id") as string, status, paidAt);
       if (!invoice) return res.status(404).json({ message: "請求書が見つかりません" });
       res.json(invoice);
     } catch (error) {
@@ -4586,7 +4704,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/invoices/:id", requireAdmin, async (req, res) => {
     try {
-      const deleted = await storage.deleteInvoice(req.params.id as string);
+      const deleted = await storage.deleteInvoice(routeParam(req, "id") as string);
       if (!deleted) return res.status(404).json({ message: "請求書が見つかりません" });
       res.json({ message: "請求書を削除しました" });
     } catch (error) {
@@ -4604,6 +4722,7 @@ JSON形式で以下を返してください（日本語で）:
       { loc: "/driver/jobs",     changefreq: "daily",   priority: "0.9" },
       { loc: "/driver-register", changefreq: "monthly", priority: "0.8" },
       { loc: "/guide",           changefreq: "monthly", priority: "0.8" },
+      { loc: "/blog",            changefreq: "daily",   priority: "0.8" },
       { loc: "/faq",             changefreq: "monthly", priority: "0.8" },
       { loc: "/contact",         changefreq: "monthly", priority: "0.7" },
       { loc: "/company-info",    changefreq: "monthly", priority: "0.6" },
@@ -4611,10 +4730,11 @@ JSON形式で以下を返してください（日本語で）:
       { loc: "/privacy",         changefreq: "yearly",  priority: "0.4" },
     ];
 
+    const escapeXml = (value: string) => value.replace(/[<>&'"]/g, char => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" }[char]!));
     let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
 
     for (const page of staticPages) {
-      xml += `  <url>\n    <loc>${BASE}${page.loc}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
+      xml += `  <url>\n    <loc>${escapeXml(`${BASE}${page.loc}`)}</loc>\n    <lastmod>${now}</lastmod>\n    <changefreq>${page.changefreq}</changefreq>\n    <priority>${page.priority}</priority>\n  </url>\n`;
     }
 
     try {
@@ -4625,9 +4745,16 @@ JSON形式で以下を返してください（日本語で）:
         .from(jl).where(eqFn(jl.status, "active"));
       for (const job of publishedJobs) {
         const lastmod = job.updatedAt ? new Date(job.updatedAt).toISOString().split("T")[0] : now;
-        xml += `  <url>\n    <loc>${BASE}/apply/${job.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
+        xml += `  <url>\n    <loc>${escapeXml(`${BASE}/apply/${job.id}`)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
       }
     } catch { /* ignore */ }
+    try {
+      const articles = await storage.getPublishedSeoArticles();
+      for (const article of articles) {
+        const lastmod = (article.publishedAt || article.createdAt) ? new Date(article.publishedAt || article.createdAt).toISOString().split("T")[0] : now;
+        xml += `  <url>\n    <loc>${escapeXml(`${BASE}/blog/${encodeURIComponent(article.slug)}`)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n`;
+      }
+    } catch { /* sitemap remains available if article storage is unavailable */ }
 
     xml += `</urlset>`;
     res.set("Content-Type", "application/xml; charset=utf-8");
@@ -4778,7 +4905,7 @@ JSON形式で以下を返してください（日本語で）:
   app.patch("/api/admin/lp/:id/publish", requireAdmin, async (req, res) => {
     try {
       const { published } = req.body;
-      const lpId = req.params.id as string;
+      const lpId = routeParam(req, "id") as string;
       const updated = await db.update(landingPages).set({ published, updatedAt: new Date() }).where(eq(landingPages.id, lpId)).returning();
       if (updated.length === 0) return res.status(404).json({ message: "LPが見つかりません" });
       res.json(updated[0]);
@@ -4789,7 +4916,7 @@ JSON形式で以下を返してください（日本語で）:
 
   app.delete("/api/admin/lp/:id", requireAdmin, async (req, res) => {
     try {
-      await db.delete(landingPages).where(eq(landingPages.id, req.params.id as string));
+      await db.delete(landingPages).where(eq(landingPages.id, routeParam(req, "id") as string));
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ message: "LP削除に失敗しました" });
@@ -4799,7 +4926,7 @@ JSON形式で以下を返してください（日本語で）:
   // Public: serve published LP by slug
   app.get("/lp/:slug", async (req, res) => {
     try {
-      const result = await db.select().from(landingPages).where(eq(landingPages.slug, req.params.slug as string));
+      const result = await db.select().from(landingPages).where(eq(landingPages.slug, routeParam(req, "slug") as string));
       if (result.length === 0 || !result[0].published) {
         return res.status(404).send("<html><body><h1>ページが見つかりません</h1></body></html>");
       }

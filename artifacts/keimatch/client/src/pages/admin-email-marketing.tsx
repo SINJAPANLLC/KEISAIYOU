@@ -41,32 +41,17 @@ const KEYWORDS = [
 
 const TEMPLATES = [
   {
-    name: "初回営業",
-    subject: "軽貨物ドライバーの採用コスト、下げませんか？",
+    name: "初回営業（返信重視）",
+    subject: "軽貨物ドライバーの採用について、少しだけお伺いできますか？",
     body: `{{companyName}} ご担当者様
 
-はじめまして。軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」と申します。
+突然のご連絡失礼いたします。軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」を運営しております、合同会社SIN JAPANと申します。
 
-突然のご連絡、大変失礼いたします。
+現在、ドライバー採用や求人掲載についてお困りのことはありませんか？
 
-■ こんなお悩みはありませんか？
+KEI SAIYOUでは、初期費用・月額費用なしで求人を掲載いただけます。
 
-▶ ドライバーがなかなか集まらない
-▶ 求人媒体の月額費用が高い
-▶ 採用できなかった月も費用がかかる
-
-■ KEI SAIYOUなら解決できます
-
-KEI SAIYOUは「応募が来たときだけ課金」の完全成功報酬型サービスです。
-
-▶ 初期費用０・月額固定費０
-▶ 応募1件あたり ¥3,000（税別）のみ
-▶ 1分で求人掲載スタート
-
-まずは無料でご登録いただき、求人を掲載してみてください。
-https://keisaiyou-sinjapan.com/register
-
-ご不明な点がございましたら、お気軽にご返信ください。
+ご興味がありましたら、このメールに「資料希望」または「相談希望」とご返信ください。担当より2〜3分でご案内いたします。
 
 ━
 KEI SAIYOU（合同会社SIN JAPAN）
@@ -98,9 +83,7 @@ info@keisaiyou-sinjapan.com`,
   },
 ];
 
-const PROMO_IMAGE_PROD_URL = "https://keisaiyou-sinjapan.com/promo-banner.jpg";
-
-function buildEmailHtml(subject: string, body: string, previewCompany = "サンプル株式会社", imageUrl = PROMO_IMAGE_PROD_URL): string {
+function buildEmailHtml(subject: string, body: string, previewCompany = "サンプル株式会社"): string {
   const personalized = body
     .replace(/\{\{companyName\}\}/g, previewCompany)
     .replace(/\{\{company_name\}\}/g, previewCompany);
@@ -180,8 +163,6 @@ function buildEmailHtml(subject: string, body: string, previewCompany = "サン�
       </td></tr>
 
       <!-- Promo image -->
-      <tr><td style="padding:0;"><img src="${imageUrl}" alt="KEI SAIYOU 軽貨物採用これだけ" width="600" style="display:block;width:100%;height:auto;" /></td></tr>
-
       <!-- Body -->
       <tr><td style="background:#fff;padding:32px 36px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
         ${bodyHtml}
@@ -242,7 +223,7 @@ export default function AdminEmailMarketing() {
     refetchInterval: megaCrawlStatus?.running ? 8000 : false,
   });
 
-  type SalesStats = { total: number; new: number; sent: number; followedUp: number; failed: number; todaySent: number; sendHours: number[] };
+  type SalesStats = { total: number; new: number; sent: number; followedUp: number; failed: number; todaySent: number; sendHours: number[]; ramp?: { startDate: string; day: number; dailyLimit: number } };
   const { data: salesStats, refetch: refetchStats } = useQuery<SalesStats>({
     queryKey: ["/api/admin/sales/stats"],
     queryFn: () => apiRequest("GET", "/api/admin/sales/stats").then((r) => r.json()),
@@ -267,7 +248,6 @@ export default function AdminEmailMarketing() {
   };
 
   const [runningDaily, setRunningDaily] = useState(false);
-  const [resetting, setResetting] = useState(false);
 
   const handleRunDaily = async () => {
     setRunningDaily(true);
@@ -279,19 +259,6 @@ export default function AdminEmailMarketing() {
       toast({ title: `自動送信実行: ${data.sent ?? 0}件送信、${data.failed ?? 0}件失敗` });
     } catch { toast({ variant: "destructive", title: "実行に失敗しました" }); }
     finally { setRunningDaily(false); }
-  };
-
-  const handleResetLeads = async () => {
-    if (!confirm("followed_up のリード全件を「未送信（new）」に戻しますか？")) return;
-    setResetting(true);
-    try {
-      const res = await apiRequest("POST", "/api/admin/sales/leads/reset");
-      const data = await res.json();
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] });
-      refetchStats();
-      toast({ title: `${data.reset}件を未送信にリセットしました` });
-    } catch { toast({ variant: "destructive", title: "リセットに失敗しました" }); }
-    finally { setResetting(false); }
   };
 
   // Poll mega-crawl status
@@ -385,7 +352,7 @@ export default function AdminEmailMarketing() {
 
   const handleSendAll = async () => {
     if (!emailForm.subject || !emailForm.body) return toast({ variant: "destructive", title: "件名・本文を入力してください" });
-    const sendableLeads = leads.filter((l) => (l.status === "new" || l.status === "followed_up") && l.email);
+    const sendableLeads = leads.filter((l) => l.status === "new" && l.email).slice(0, 30);
     if (!sendableLeads.length) return toast({ variant: "destructive", title: "送信可能なリードがありません" });
     setSendingAll(true);
     try {
@@ -396,7 +363,7 @@ export default function AdminEmailMarketing() {
       });
       const data = await res.json();
       queryClient.invalidateQueries({ queryKey: ["/api/admin/sales/leads"] });
-      toast({ title: `全送信完了: ${data.sentCount}件送信、${data.failedCount}件失敗` });
+      toast({ title: `送信完了: ${data.sentCount}件送信、${data.failedCount}件失敗（上限30件）` });
     } catch { toast({ variant: "destructive", title: "送信に失敗しました" }); }
     finally { setSendingAll(false); }
   };
@@ -428,28 +395,14 @@ export default function AdminEmailMarketing() {
   });
 
   const toggleSelect = (id: string) => setSelectedIds((p) => p.includes(id) ? p.filter((x) => x !== id) : [...p, id]);
-  const emailableFiltered = filtered.filter((l) => l.email);
+  const emailableFiltered = filtered.filter((l) => l.email && l.status === "new");
   const allSelected = emailableFiltered.length > 0 && emailableFiltered.every((l) => selectedIds.includes(l.id));
   const toggleAll = () => {
     const ids = emailableFiltered.map((l) => l.id);
     setSelectedIds(allSelected ? selectedIds.filter((id) => !ids.includes(id)) : [...new Set([...selectedIds, ...ids])]);
   };
 
-  const [promoBannerUri, setPromoBannerUri] = useState(PROMO_IMAGE_PROD_URL);
-  useEffect(() => {
-    fetch("/promo-banner.jpg")
-      .then((r) => r.ok ? r.blob() : Promise.reject())
-      .then((blob) => new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      }))
-      .then(setPromoBannerUri)
-      .catch(() => {/* 本番URLをフォールバックとして使用 */});
-  }, []);
-
-  const previewHtml = useMemo(() => buildEmailHtml(emailForm.subject, emailForm.body, "サンプル株式会社", promoBannerUri), [emailForm.subject, emailForm.body, promoBannerUri]);
+  const previewHtml = useMemo(() => buildEmailHtml(emailForm.subject, emailForm.body, "サンプル株式会社"), [emailForm.subject, emailForm.body]);
 
   return (
     <DashboardLayout>
@@ -474,10 +427,6 @@ export default function AdminEmailMarketing() {
                   className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-xs font-semibold px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
                   {runningDaily ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <PlayCircle className="w-3.5 h-3.5" />}今すぐ送信
                 </button>
-                <button onClick={handleResetLeads} disabled={resetting}
-                  className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white/90 text-xs px-3 py-1.5 rounded-md transition-colors disabled:opacity-50">
-                  {resetting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}リセット
-                </button>
               </div>
             </div>
             {salesStats && (
@@ -487,7 +436,7 @@ export default function AdminEmailMarketing() {
                   { label: "未送信", value: salesStats.new, color: "text-yellow-300" },
                   { label: "送信済", value: salesStats.sent, color: "text-green-300" },
                   { label: "FU済", value: salesStats.followedUp, color: "text-blue-300" },
-                  { label: "今日送信", value: salesStats.todaySent, color: "text-orange-200" },
+                  { label: "今日送信", value: `${salesStats.todaySent}/${salesStats.ramp?.dailyLimit ?? 30}`, color: "text-orange-200" },
                 ] as const).map((s) => (
                   <div key={s.label} className="bg-white/10 rounded-md px-2 py-1.5 text-center">
                     <p className={`text-[10px] ${s.color} mb-0.5`}>{s.label}</p>
@@ -498,6 +447,7 @@ export default function AdminEmailMarketing() {
             )}
             <p className="text-white/60 text-[10px]">
               自動送信スケジュール: {salesStats?.sendHours.join("・")}時JST（毎日）
+              {salesStats?.ramp && <span className="ml-2">段階送信: {salesStats.ramp.day}日目・上限{salesStats.ramp.dailyLimit}件（開始 {salesStats.ramp.startDate} JST）</span>}
               {salesStats && salesStats.new === 0 && salesStats.followedUp > 0 && (
                 <span className="ml-2 text-yellow-300">⚠ 未送信0件 — 「リセット」でfollowed_upをnewに戻せます</span>
               )}
@@ -646,6 +596,7 @@ export default function AdminEmailMarketing() {
                   {t.name}
                 </Button>
               ))}
+              <p className="text-[11px] text-muted-foreground">初回は短文・返信誘導で送信し、画像や登録リンクはフォローアップで案内します。</p>
               <div className="ml-auto flex items-center gap-1">
                 <Button variant={activeTab === "compose" ? "default" : "outline"} size="sm" className="h-7 text-xs" onClick={() => setActiveTab("compose")}>
                   編集
@@ -700,7 +651,7 @@ export default function AdminEmailMarketing() {
             <div className="p-3 border-t border-border shrink-0 space-y-2">
               {/* Send all new leads */}
               {(() => {
-                const sendableCount = leads.filter((l) => (l.status === "new" || l.status === "followed_up") && l.email).length;
+                const sendableCount = leads.filter((l) => l.status === "new" && l.email).length;
                 return sendableCount > 0 ? (
                   <Button
                     onClick={handleSendAll}
@@ -710,7 +661,7 @@ export default function AdminEmailMarketing() {
                   >
                     {sendingAll
                       ? <><RefreshCw className="w-3.5 h-3.5 mr-1.5 animate-spin" />送信中...</>
-                      : <><SendHorizonal className="w-3.5 h-3.5 mr-1.5" />送信可能 {sendableCount}件に一括送信</>}
+                      : <><SendHorizonal className="w-3.5 h-3.5 mr-1.5" />未送信から最大30件に送信（対象 {sendableCount}件）</>}
                   </Button>
                 ) : null;
               })()}

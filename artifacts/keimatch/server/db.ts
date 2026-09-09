@@ -13,13 +13,9 @@ const pool = new pg.Pool({
   keepAlive: true,
 });
 
-pool.on('connect', (client) => {
-  client.query("SET search_path TO public");
-});
-
 pool.on('error', (err) => {
   console.error('Unexpected database pool error:', err.message);
 });
 
 export { pool as dbPool };
-export const db = drizzle(pool, { schema });
+export const db = drizzle(pool as any, { schema });

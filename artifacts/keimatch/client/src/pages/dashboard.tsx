@@ -155,18 +155,18 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Link href="/jobs/new">
-                  <Button variant="outline" className="w-full justify-start gap-2 text-sm">
-                    <Plus className="w-4 h-4 text-primary" />求人を作成する
+                  <Button variant="outline" className="w-full justify-start gap-2 border-primary bg-primary text-white text-sm hover:bg-primary/90 hover:text-white">
+                    <Plus className="w-4 h-4 text-white" />求人を作成する
                   </Button>
                 </Link>
                 <Link href="/applications">
-                  <Button variant="outline" className="w-full justify-start gap-2 text-sm">
-                    <Users className="w-4 h-4 text-primary" />応募者を確認する
+                  <Button variant="outline" className="w-full justify-start gap-2 border-primary bg-primary text-white text-sm hover:bg-primary/90 hover:text-white">
+                    <Users className="w-4 h-4 text-white" />応募者を確認する
                   </Button>
                 </Link>
                 <Link href="/payment">
-                  <Button variant="outline" className="w-full justify-start gap-2 text-sm">
-                    <CreditCard className="w-4 h-4 text-primary" />請求・決済を確認する
+                  <Button variant="outline" className="w-full justify-start gap-2 border-primary bg-primary text-white text-sm hover:bg-primary/90 hover:text-white">
+                    <CreditCard className="w-4 h-4 text-white" />請求・決済を確認する
                   </Button>
                 </Link>
               </CardContent>

@@ -1,9 +1,28 @@
 import { storage } from "./storage";
-import { sendEmail } from "./notification-service";
+import { createUnsubscribeToken, sendEmail } from "./notification-service";
 
-const DAILY_SEND_LIMIT = 1000;
-const SEND_INTERVAL_MS = 1200;
+const DAILY_SEND_LIMIT = 30;
+const SEND_INTERVAL_MS = 1800;
 const CRAWL_BATCH_SIZE = 500;
+const SITE_URL = "https://keisaiyou-sinjapan.com";
+const INITIAL_OUTREACH_SUBJECT = "軽貨物ドライバーの採用について、少しだけお伺いできますか？";
+const INITIAL_OUTREACH_BODY = `{company}
+ご担当者様
+
+突然のご連絡失礼いたします。
+軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」を運営しております、合同会社SIN JAPANと申します。
+
+現在、ドライバー採用や求人掲載についてお困りのことはありませんか？
+
+KEI SAIYOUでは、初期費用・月額費用なしで求人を掲載いただけます。
+まずは状況に合う方法をご案内できればと思っております。
+
+ご興味がありましたら、このメールに「資料希望」または「相談希望」とご返信ください。
+担当より2〜3分でご案内いたします。
+
+合同会社SIN JAPAN
+KEI SAIYOU 運営事務局
+https://keisaiyou-sinjapan.com`;
 
 const SEARCH_QUERIES = [
   "軽貨物 配送 会社概要 メール",
@@ -162,6 +181,10 @@ function isValidCompanyEmail(email: string): boolean {
     if (local === excl) return false;
   }
   return true;
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
 const STRONG_TRANSPORT_KEYWORDS = [
@@ -530,12 +553,21 @@ export async function crawlLeadsFromUrl(url: string, prefecture?: string): Promi
   }
 
   // 1ドメイン = 1リードのみ保存（最良のメールを1件選択）
-  const bestEmail = pickBestEmail(emails);
+  const bestEmail = pickBestEmail(emails.map(normalizeEmail));
   if (!bestEmail) return 0;
 
+  if (await storage.isEmailSuppressed(bestEmail)) {
+    console.log(`[Lead Crawler] Skipped (suppressed): ${bestEmail}`);
+    return 0;
+  }
   const existing = await storage.getEmailLeadByEmail(bestEmail);
   if (existing) {
     console.log(`[Lead Crawler] Skipped (email already exists): ${bestEmail}`);
+    return 0;
+  }
+  const emailDomain = bestEmail.split("@")[1];
+  if (emailDomain && await storage.getEmailLeadByDomain(emailDomain)) {
+    console.log(`[Lead Crawler] Skipped (email domain already exists): ${emailDomain}`);
     return 0;
   }
 
@@ -1427,7 +1459,11 @@ export async function crawlLeadsWithAI(maxCount?: number): Promise<{ searched: n
   return { searched: totalSearched, found: totalFound };
 }
 
-function buildSalesEmailHtml(subject: string, body: string, companyName: string): string {
+function buildSalesEmailHtml(
+  subject: string,
+  body: string,
+  options: { includePromoImage?: boolean; unsubscribeUrl?: string } = {},
+): string {
   const lines = body.split("\n");
   let html = "";
   for (const line of lines) {
@@ -1452,18 +1488,33 @@ function buildSalesEmailHtml(subject: string, body: string, companyName: string)
       <tr><td style="background:linear-gradient(135deg,#c04f24,#e8734a);border-radius:10px 10px 0 0;padding:24px 32px;">
         <p style="margin:0;font-size:18px;font-weight:700;color:#fff;line-height:1.4;">${subject.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>
       </td></tr>
-      <tr><td style="padding:0;"><img src="https://keisaiyou-sinjapan.com/promo-banner.jpg" alt="KEI SAIYOU 軽貨物採用これだけ" width="600" style="display:block;width:100%;height:auto;" /></td></tr>
+      ${options.includePromoImage ? `<tr><td style="padding:0;"><img src="${SITE_URL}/promo-banner.jpg" alt="KEI SAIYOU 軽貨物採用これだけ" width="600" style="display:block;width:100%;height:auto;" /></td></tr>` : ""}
       <tr><td style="background:#fff;padding:28px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;">
         ${html}
       </td></tr>
       <tr><td style="background:#1e293b;border-radius:0 0 10px 10px;padding:18px 32px;">
         <p style="margin:0;font-size:13px;font-weight:700;color:#fff;">KEI SAIYOU</p>
-        <p style="margin:2px 0 0;font-size:11px;color:rgba(255,255,255,0.5);">合同会社SIN JAPAN｜info@sinjapan.jp｜046-212-2325</p>
+        <p style="margin:2px 0 0;font-size:11px;color:rgba(255,255,255,0.5);">合同会社SIN JAPAN｜info@keisaiyou-sinjapan.com｜046-212-2325</p>
+        ${options.unsubscribeUrl ? `<p style="margin:8px 0 0;font-size:10px;"><a href="${options.unsubscribeUrl}" style="color:rgba(255,255,255,0.6);">今後のご案内を停止する</a></p>` : ""}
       </td></tr>
     </table>
   </td></tr>
 </table>
 </body></html>`;
+}
+
+export async function getLeadSendRampStatus(): Promise<{ startDate: string; day: number; dailyLimit: number }> {
+  const configured = await storage.getAdminSetting("lead_email_ramp_start_date");
+  const now = new Date();
+  const jstDate = new Date(now.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const startDate = /^\d{4}-\d{2}-\d{2}$/.test(configured || "") ? configured! : jstDate;
+  // Persist the first day so restarts and deployments do not reset the ramp.
+  if (!configured) await storage.setAdminSetting("lead_email_ramp_start_date", startDate);
+  const startMs = Date.parse(`${startDate}T00:00:00Z`);
+  const todayMs = Date.parse(`${jstDate}T00:00:00Z`);
+  const day = Math.max(1, Math.floor((todayMs - startMs) / 86400000) + 1);
+  const dailyLimit = day <= 2 ? 5 : day <= 4 ? 10 : day <= 7 ? 15 : DAILY_SEND_LIMIT;
+  return { startDate, day, dailyLimit };
 }
 
 export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: number }> {
@@ -1474,100 +1525,17 @@ export async function sendDailyLeadEmails(): Promise<{ sent: number; failed: num
     return { sent: 0, failed: 0 };
   }
 
-  const todaySent = await storage.getTodaySentLeadCount();
-  const remaining = DAILY_SEND_LIMIT - todaySent;
-  if (remaining <= 0) {
-    console.log(`[Lead Email] Daily limit reached (${todaySent}/${DAILY_SEND_LIMIT})`);
-    return { sent: 0, failed: 0 };
-  }
+  const ramp = await getLeadSendRampStatus();
+  const template = await storage.getAdminSetting("lead_email_initial_subject");
+  const bodyTemplate = await storage.getAdminSetting("lead_email_initial_body");
+  const subject = template || INITIAL_OUTREACH_SUBJECT;
+  const body = bodyTemplate || INITIAL_OUTREACH_BODY;
 
-  const template = await storage.getAdminSetting("lead_email_subject");
-  const bodyTemplate = await storage.getAdminSetting("lead_email_body");
-
-  const subject = template || "軽貨物ドライバーの採用、うまくいっていますか？｜KEI SAIYOU";
-  const body = bodyTemplate || `{company}
-ご担当者様
-
-突然のご連絡、大変失礼いたします。
-軽貨物ドライバー採用プラットフォーム「KEI SAIYOU」を運営しております、合同会社SIN JAPANと申します。
-
-貴社のホームページを拝見し、軽貨物配送事業を展開されていることを知り、ドライバー採用のご支援ができればとご連絡差し上げました。
-
-━━━━━━━━━━━━━━━━━━━━
-■ こんなお悩みはありませんか？
-━━━━━━━━━━━━━━━━━━━━
-☑ ドライバーが集まらず、配送件数を増やせない
-☑ 求人サイトの掲載費が高く、採用コストが重い
-☑ Indeed・ハローワークだけでは応募数が足りない
-☑ 応募があっても、条件の合う人が来ない
-
-━━━━━━━━━━━━━━━━━━━━
-■「KEI SAIYOU」でできること
-━━━━━━━━━━━━━━━━━━━━
-✅ 完全成果報酬型：採用コストを大幅削減
-　→ 月額・掲載費0円。応募1件あたり3,300円（税込）のみ
-
-✅ Indeed連携で即日から応募が来る
-　→ 日本最大の求人サイトに掲載。黒ナンバー取得者にアプローチ
-
-✅ 応募者情報を一元管理
-　→ 氏名・電話番号・職歴・保有免許・履歴書をまとめて確認
-
-✅ AIで求人票を自動作成
-　→ エリア・給与を入力するだけで魅力的な文章を自動生成
-
-━━━━━━━━━━━━━━━━━━━━
-■ 今すぐ無料で求人掲載
-━━━━━━━━━━━━━━━━━━━━
-▼ 無料登録・詳細はこちら
-https://keisaiyou-sinjapan.com/register
-
-初期費用・月額費用は一切かかりません。
-応募が来たときだけ、1件3,300円（税込）のみです。
-
-━━━━━━━━━━━━━━━━━━━━
-
-ご多忙のところ恐縮ですが、
-貴社のドライバー採用活動にお役立ていただければ幸いです。
-
-ご質問・ご不明な点がございましたら、
-本メールへのご返信にてお気軽にお問い合わせください。
-
-━━━━━━━━━━━━━━━━━━━━
-KEI SAIYOU 運営事務局
-合同会社SIN JAPAN
-〒243-0303 神奈川県愛甲郡愛川町中津7287
-TEL: 046-212-2325
-URL: https://keisaiyou-sinjapan.com
-━━━━━━━━━━━━━━━━━━━━
-
-※本メールは貴社ホームページに掲載されている
-　連絡先情報をもとにお送りしております。
-※今後のメール配信を希望されない場合は、
-　本メールへその旨ご返信いただければ、
-　速やかに配信を停止いたします。`;
-
-  // 優先順位: new → followed_up (30日以上前) → failed
-  let leads = await storage.getNewEmailLeadsForSending(remaining);
-  if (leads.length < remaining) {
-    const { db } = await import("./db");
-    const { emailLeads } = await import("@shared/schema") as any;
-    const { eq, and, lt, sql: sqlFn, isNotNull, ne } = await import("drizzle-orm");
-    const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const extra = await db.select().from(emailLeads)
-      .where(and(
-        eq(emailLeads.status, "followed_up"),
-        lt(emailLeads.sentAt, cutoff30),
-        isNotNull(emailLeads.email),
-        ne(emailLeads.email, "")
-      ))
-      .orderBy(emailLeads.sentAt)
-      .limit(remaining - leads.length);
-    leads = [...leads, ...extra];
-  }
+  // The claim transaction owns the cross-instance JST quota calculation.
+  const leads = await storage.claimNewEmailLeadsForSending(ramp.dailyLimit);
 
   if (leads.length === 0) {
-    console.log("[Lead Email] No leads to send (new=0, followed_up(30d+)=0)");
+    console.log("[Lead Email] No new leads to send");
     return { sent: 0, failed: 0 };
   }
 
@@ -1578,9 +1546,17 @@ URL: https://keisaiyou-sinjapan.com
     if (!lead.email) continue;
 
     try {
-      const personalizedBody = body.replace(/\{company\}/g, lead.companyName);
-      const htmlBody = buildSalesEmailHtml(subject, personalizedBody, lead.companyName);
-      const result = await sendEmail(lead.email, subject, htmlBody);
+      if (await storage.isEmailSuppressed(lead.email)) {
+        await storage.updateEmailLead(lead.id, { status: "unsubscribed" });
+        continue;
+      }
+      const personalizedBody = body
+        .replace(/\{company\}/g, lead.companyName)
+        .replace(/\{\{companyName\}\}/g, lead.companyName);
+      const token = createUnsubscribeToken(lead.id);
+      const unsubscribeUrl = token ? `${SITE_URL}/api/email/unsubscribe?token=${encodeURIComponent(token)}` : undefined;
+      const htmlBody = buildSalesEmailHtml(subject, personalizedBody, { unsubscribeUrl });
+      const result = await sendEmail(lead.email, subject, htmlBody, { unsubscribeUrl });
 
       if (result.success) {
         await storage.updateEmailLead(lead.id, {
@@ -1608,6 +1584,8 @@ URL: https://keisaiyou-sinjapan.com
 }
 
 export async function retryFailedLeads(): Promise<{ sent: number; failed: number }> {
+  // Retries are intentionally opt-in. This policy defaults to disabled.
+  if (await storage.getAdminSetting("lead_email_retry_enabled") !== "true") return { sent: 0, failed: 0 };
   const template = await storage.getAdminSetting("lead_email_subject");
   const bodyTemplate = await storage.getAdminSetting("lead_email_body");
   const subject = template || "軽貨物の案件獲得・空き車両活用でお困りではありませんか？｜ケイマッチ";
@@ -1623,6 +1601,10 @@ export async function retryFailedLeads(): Promise<{ sent: number; failed: number
   for (const lead of failedLeads) {
     if (!lead.email) continue;
     try {
+      if (await storage.isEmailSuppressed(lead.email)) {
+        await storage.updateEmailLead(lead.id, { status: "unsubscribed" });
+        continue;
+      }
       const personalizedBody = (body || subject).replace(/\{company\}/g, lead.companyName);
       const result = await sendEmail(lead.email, subject, personalizedBody);
       if (result.success) {
@@ -1630,10 +1612,12 @@ export async function retryFailedLeads(): Promise<{ sent: number; failed: number
         sent++;
       } else {
         await storage.updateEmailLead(lead.id, { status: "permanently_failed" });
+        await storage.suppressEmail(lead.email, "permanent_failure");
         failed++;
       }
     } catch {
       await storage.updateEmailLead(lead.id, { status: "permanently_failed" });
+      await storage.suppressEmail(lead.email, "permanent_failure");
       failed++;
     }
     await new Promise(r => setTimeout(r, SEND_INTERVAL_MS));
@@ -1644,7 +1628,13 @@ export async function retryFailedLeads(): Promise<{ sent: number; failed: number
 }
 
 export async function sendFollowUpEmails(): Promise<{ sent: number }> {
-  const followUpSubject = "【再送】軽貨物ドライバーの採用支援について｜KEI SAIYOU";
+  const followUpEnabled = await storage.getAdminSetting("lead_email_followup_enabled");
+  if (followUpEnabled !== "true") {
+    console.log("[Lead FollowUp] Disabled, skipping.");
+    return { sent: 0 };
+  }
+
+  const followUpSubject = "軽貨物ドライバーの採用について、資料をご用意できます";
   const followUpBody = await storage.getAdminSetting("lead_followup_body");
   const defaultFollowUp = `{company}
 ご担当者様
@@ -1674,7 +1664,7 @@ URL: https://keisaiyou-sinjapan.com
 
   const body = followUpBody || defaultFollowUp;
 
-  const sentLeads = await storage.getSentLeadsForFollowUp(100, 3);
+  const sentLeads = await storage.getSentLeadsForFollowUp(30, 7);
   if (sentLeads.length === 0) {
     console.log("[Lead FollowUp] No leads ready for follow-up");
     return { sent: 0 };
@@ -1684,8 +1674,15 @@ URL: https://keisaiyou-sinjapan.com
   for (const lead of sentLeads) {
     if (!lead.email) continue;
     try {
+      if (await storage.isEmailSuppressed(lead.email)) {
+        await storage.updateEmailLead(lead.id, { status: "unsubscribed" });
+        continue;
+      }
       const personalizedBody = body.replace(/\{company\}/g, lead.companyName);
-      const result = await sendEmail(lead.email, followUpSubject, personalizedBody);
+      const token = createUnsubscribeToken(lead.id);
+      const unsubscribeUrl = token ? `${SITE_URL}/api/email/unsubscribe?token=${encodeURIComponent(token)}` : undefined;
+      const htmlBody = buildSalesEmailHtml(followUpSubject, personalizedBody, { includePromoImage: true, unsubscribeUrl });
+      const result = await sendEmail(lead.email, followUpSubject, htmlBody, { unsubscribeUrl });
       if (result.success) {
         await storage.updateEmailLead(lead.id, { status: "followed_up", sentAt: new Date() });
         sent++;
@@ -1700,18 +1697,20 @@ URL: https://keisaiyou-sinjapan.com
 }
 
 export function scheduleLeadCrawler() {
-  // クロール：3時間ごと（8回/日）、メール：2時間ごと（6回/日）
+  // クロール：3時間ごと。営業メールは送信評価を守るため1日1回・上限30件。
   const CRAWL_HOURS    = [0, 3, 6, 9, 12, 15, 18, 21];      // 8回/日
-  const SEND_HOURS     = [8, 10, 12, 14, 16, 18];            // 6回/日
-  const RETRY_HOURS    = [7, 11, 15, 19];                    // 4回/日
-  const FOLLOWUP_HOURS = [9, 13, 17, 21];                    // 4回/日
+  const SEND_HOURS     = [10];                               // 1回/日
+  // Policy: never automatically retry or follow up outreach.
 
+  let lastScheduledSlot = "";
   setInterval(async () => {
     const now = new Date();
     const jstHour = (now.getUTCHours() + 9) % 24;
     const minute = now.getMinutes();
 
-    if (CRAWL_HOURS.includes(jstHour) && minute === 0) {
+    const slot = `${now.toISOString().slice(0, 10)}-${jstHour}`;
+    if (CRAWL_HOURS.includes(jstHour) && minute === 0 && lastScheduledSlot !== `crawl-${slot}`) {
+      lastScheduledSlot = `crawl-${slot}`;
       console.log(`[Lead Crawler] Starting crawl (${jstHour}:00 JST)...`);
       try {
         await crawlLeadsWithAI();
@@ -1720,7 +1719,8 @@ export function scheduleLeadCrawler() {
       }
     }
 
-    if (SEND_HOURS.includes(jstHour) && minute === 0) {
+    if (SEND_HOURS.includes(jstHour) && minute === 0 && lastScheduledSlot !== `send-${slot}`) {
+      lastScheduledSlot = `send-${slot}`;
       console.log(`[Lead Email] Starting send (${jstHour}:00 JST)...`);
       try {
         await sendDailyLeadEmails();
@@ -1729,23 +1729,6 @@ export function scheduleLeadCrawler() {
       }
     }
 
-    if (RETRY_HOURS.includes(jstHour) && minute === 0) {
-      console.log(`[Lead Retry] Starting retry (${jstHour}:00 JST)...`);
-      try {
-        await retryFailedLeads();
-      } catch (err) {
-        console.error("[Lead Retry] Retry failed:", err);
-      }
-    }
-
-    if (FOLLOWUP_HOURS.includes(jstHour) && minute === 0) {
-      console.log(`[Lead FollowUp] Starting follow-up (${jstHour}:00 JST)...`);
-      try {
-        await sendFollowUpEmails();
-      } catch (err) {
-        console.error("[Lead FollowUp] Follow-up failed:", err);
-      }
-    }
   }, 60000);
 
   const now = new Date();

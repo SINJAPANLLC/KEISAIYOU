@@ -35,6 +35,9 @@ const pageImports = {
   adminAuditLogs:         () => import("@/pages/admin-audit-logs"),
   adminSettings:          () => import("@/pages/admin-settings"),
   adminDrivers:           () => import("@/pages/admin-drivers"),
+  adminBlog:              () => import("@/pages/admin-blog"),
+  blog:                   () => import("@/pages/blog"),
+  blogArticle:            () => import("@/pages/blog-article"),
   driverRegister:         () => import("@/pages/driver-register"),
   driverJobs:             () => import("@/pages/driver-jobs"),
   guide:                  () => import("@/pages/guide"),
@@ -69,6 +72,9 @@ const AdminRefundRequests = lazy(pageImports.adminRefundRequests);
 const AdminAuditLogs      = lazy(pageImports.adminAuditLogs);
 const AdminSettings       = lazy(pageImports.adminSettings);
 const AdminDrivers        = lazy(pageImports.adminDrivers);
+const AdminBlog           = lazy(pageImports.adminBlog);
+const Blog                = lazy(pageImports.blog);
+const BlogArticle         = lazy(pageImports.blogArticle);
 const DriverRegister      = lazy(pageImports.driverRegister);
 const DriverJobs          = lazy(pageImports.driverJobs);
 const Guide               = lazy(pageImports.guide);
@@ -118,6 +124,7 @@ const DASHBOARD_PATHS = [
   "/admin/listings", "/admin/applications", "/admin/email-marketing",
   "/admin/notifications", "/admin/contact-inquiries", "/admin/refund-requests",
   "/admin/audit-logs", "/admin/settings",
+  "/admin/blog",
 ];
 
 function Router() {
@@ -138,6 +145,8 @@ function Router() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/driver-register" component={DriverRegister} />
         <Route path="/driver/jobs" component={DriverJobs} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogArticle} />
 
         {/* User (protected) */}
         <Route path="/home">{() => <ProtectedRoute component={Dashboard} />}</Route>
@@ -162,6 +171,7 @@ function Router() {
         <Route path="/admin/audit-logs">{() => <AdminRoute component={AdminAuditLogs} />}</Route>
         <Route path="/admin/settings">{() => <AdminRoute component={AdminSettings} />}</Route>
         <Route path="/admin/drivers">{() => <AdminRoute component={AdminDrivers} />}</Route>
+        <Route path="/admin/blog">{() => <AdminRoute component={AdminBlog} />}</Route>
 
         <Route component={NotFound} />
       </Switch>
