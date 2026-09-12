@@ -6,12 +6,14 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { ne, and, isNotNull, sql } from "drizzle-orm";
 import { users, adminSettings } from "../shared/schema";
-import { sendEmail } from "../server/notification-service";
+import { createRecipientUnsubscribeToken, sendEmail } from "../server/notification-service";
+import { storage } from "../server/storage";
 
 const pool = new Pool({ connectionString: process.env.KEIMATCH_DATABASE_URL || process.env.DATABASE_URL });
 const db = drizzle(pool);
 
 const SEND_INTERVAL_MS = 1200;
+const SITE_URL = "https://keisaiyou-sinjapan.com";
 
 async function getAdminSetting(key: string): Promise<string | undefined> {
   const [row] = await db.select().from(adminSettings).where(sql`${adminSettings.key} = ${key}`);
@@ -76,6 +78,10 @@ info@keisaiyou-sinjapan.com`;
 
   for (const user of targets) {
     if (!user.email) continue;
+    if (await storage.isEmailSuppressed(user.email)) {
+      console.log(`SKIP suppressed: ${user.email}`);
+      continue;
+    }
     const name = user.companyName || "ご担当者";
     const personalizedBody = bodyTemplate.replace(/\{\{companyName\}\}/g, name).replace(/\{companyName\}/g, name);
     // 画像付きHTMLメールを生成
@@ -104,7 +110,9 @@ info@keisaiyou-sinjapan.com`;
   </table></td></tr>
 </table></body></html>`;
     try {
-      const result = await sendEmail(user.email, subject, htmlBody);
+      const token = createRecipientUnsubscribeToken(user.email);
+      const unsubscribeUrl = token ? `${SITE_URL}/api/email/unsubscribe?token=${encodeURIComponent(token)}` : undefined;
+      const result = await sendEmail(user.email, subject, htmlBody, { unsubscribeUrl });
       if (result.success) {
         sent++;
         console.log(`✅ ${sent}/${targetUsers.length} ${user.email} (${name})`);

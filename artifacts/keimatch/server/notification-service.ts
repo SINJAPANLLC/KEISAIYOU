@@ -9,6 +9,13 @@ export type EmailSendOptions = {
   unsubscribeUrl?: string;
 };
 
+function signUnsubscribeSubject(subject: string): string | null {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) return null;
+  const signature = crypto.createHmac("sha256", secret).update(subject).digest("hex");
+  return Buffer.from(`${subject}.${signature}`).toString("base64url");
+}
+
 function getEmailTransporter(): nodemailer.Transporter | null {
   if (transporter) return transporter;
 
@@ -21,12 +28,24 @@ function getEmailTransporter(): nodemailer.Transporter | null {
     return null;
   }
 
+  const dkimDomain = process.env.SMTP_DKIM_DOMAIN;
+  const dkimSelector = process.env.SMTP_DKIM_SELECTOR;
+  const dkimPrivateKey = process.env.SMTP_DKIM_PRIVATE_KEY;
+
   transporter = nodemailer.createTransport({
     host,
     port,
-    secure: port === 465,
+    secure: process.env.SMTP_SECURE
+      ? process.env.SMTP_SECURE === "true"
+      : port === 465,
     auth: { user, pass },
-    tls: { rejectUnauthorized: false },
+    ...(dkimDomain && dkimSelector && dkimPrivateKey ? {
+      dkim: {
+        domainName: dkimDomain,
+        keySelector: dkimSelector,
+        privateKey: dkimPrivateKey.replace(/\\n/g, "\n"),
+      },
+    } : {}),
   });
 
   return transporter;
@@ -38,21 +57,28 @@ function generateMessageId(): string {
 }
 
 export function createUnsubscribeToken(leadId: string): string | null {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) return null;
-  const signature = crypto.createHmac("sha256", secret).update(leadId).digest("hex");
-  return Buffer.from(`${leadId}.${signature}`).toString("base64url");
+  return signUnsubscribeSubject(leadId);
+}
+
+export function createRecipientUnsubscribeToken(email: string): string | null {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return null;
+  return signUnsubscribeSubject(`email:${normalizedEmail}`);
 }
 
 export function verifyUnsubscribeToken(token: string): string | null {
   const secret = process.env.SESSION_SECRET;
   if (!secret || !token) return null;
   try {
-    const [leadId, signature] = Buffer.from(token, "base64url").toString("utf8").split(".");
-    if (!leadId || !signature) return null;
-    const expected = crypto.createHmac("sha256", secret).update(leadId).digest("hex");
+    const decoded = Buffer.from(token, "base64url").toString("utf8");
+    const separatorIndex = decoded.lastIndexOf(".");
+    if (separatorIndex <= 0) return null;
+    const subject = decoded.slice(0, separatorIndex);
+    const signature = decoded.slice(separatorIndex + 1);
+    if (!subject || !signature) return null;
+    const expected = crypto.createHmac("sha256", secret).update(subject).digest("hex");
     if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
-    return leadId;
+    return subject;
   } catch {
     return null;
   }
@@ -148,6 +174,29 @@ function buildBaseTemplate(subject: string, contentRows: string, unsubscribeUrl?
 </html>`;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function addUnsubscribeToHtml(html: string, unsubscribeUrl: string): string {
+  if (html.includes(unsubscribeUrl)) return html;
+  const escapedUrl = escapeHtml(unsubscribeUrl);
+  const optOut = `<p style="margin:16px 0 0;color:#71717a;font-size:11px;line-height:1.6;text-align:center;">配信停止をご希望の場合は、<a href="${escapedUrl}" style="color:#71717a;text-decoration:underline;">こちらから停止</a>してください。</p>`;
+  const bodyClose = html.search(/<\/body\s*>/i);
+  if (bodyClose === -1) return `${html}${optOut}`;
+  return `${html.slice(0, bodyClose)}${optOut}${html.slice(bodyClose)}`;
+}
+
+function addUnsubscribeToPlainText(text: string, unsubscribeUrl: string): string {
+  if (text.includes(unsubscribeUrl)) return text;
+  return `${text.trim()}\n\n配信停止をご希望の場合は、以下のリンクから停止してください:\n${unsubscribeUrl}`;
+}
+
 export interface AdminNotificationOptions {
   title: string;
   subtitle?: string;
@@ -241,11 +290,16 @@ export async function sendEmail(
   const replyTo = fromAddress;
   const isAlreadyHtml = /<\/?(?:div|table|tr|td|h[1-6]|p|br|a|span|img)\b/i.test(body);
 
-  const plainText = isAlreadyHtml
+  let plainText = isAlreadyHtml
     ? body.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s{2,}/g, " ").trim()
     : body;
 
-  const htmlBody = isAlreadyHtml ? body : wrapInEmailTemplate(subject, body, options.unsubscribeUrl);
+  let htmlBody = isAlreadyHtml ? body : wrapInEmailTemplate(subject, body, options.unsubscribeUrl);
+  if (options.unsubscribeUrl) {
+    htmlBody = addUnsubscribeToHtml(htmlBody, options.unsubscribeUrl);
+    plainText = addUnsubscribeToPlainText(plainText, options.unsubscribeUrl);
+  }
+  const messageId = generateMessageId();
 
   try {
     await transport.sendMail({
@@ -255,12 +309,21 @@ export async function sendEmail(
       subject,
       text: plainText,
       html: htmlBody,
+      messageId,
+      ...(process.env.SMTP_RETURN_PATH ? {
+        envelope: {
+          from: process.env.SMTP_RETURN_PATH,
+          to,
+        },
+      } : {}),
       headers: {
-        "X-Entity-Ref-ID": generateMessageId(),
-        "Message-ID": generateMessageId(),
+        "X-Entity-Ref-ID": messageId,
         ...(options.unsubscribeUrl ? {
           "List-Unsubscribe": `<${options.unsubscribeUrl}>`,
           "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+          "Precedence": "bulk",
+          "Auto-Submitted": "auto-generated",
+          "X-Auto-Response-Suppress": "All",
         } : {}),
       },
     });
@@ -286,6 +349,7 @@ export async function sendAdminNotification(
 
   const fromAddress = process.env.SMTP_FROM || process.env.SMTP_USER || `info@${EMAIL_DOMAIN}`;
   const from = `"KEI SAIYOU" <${fromAddress}>`;
+  const messageId = generateMessageId();
 
   try {
     await transport.sendMail({
@@ -295,12 +359,12 @@ export async function sendAdminNotification(
       subject,
       text: fullPlain,
       html,
+      messageId,
       headers: {
         "X-Mailer": "KEI-SAIYOU-Mailer/1.0",
-        "X-Entity-Ref-ID": generateMessageId(),
+        "X-Entity-Ref-ID": messageId,
         "X-Priority": "1",
         "Importance": "High",
-        "Message-ID": generateMessageId(),
       },
     });
     return { success: true };

@@ -62,7 +62,6 @@
 }
 .hero-enter-figure {
   transform-origin: center bottom;
-  animation: heroFigurePop .9s cubic-bezier(.2, .9, .25, 1.15) .3s both;
 }
 .hero-enter-cta {
   transform-origin: left center;
@@ -74,12 +73,6 @@
   72% { opacity: 1; transform: scale(1.06); }
   100% { opacity: 1; transform: scale(1); }
 }
-@keyframes heroFigurePop {
-  0% { opacity: 0; transform: translateY(34px) scale(.72); }
-  70% { opacity: 1; transform: translateY(-4px) scale(1.04); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .hero-enter-label,
   .hero-enter-copy,

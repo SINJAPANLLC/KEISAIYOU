@@ -1,9 +1,11 @@
 import { db } from "../server/db";
 import { emailLeads } from "../shared/schema";
-import { sendEmail } from "../server/notification-service";
+import { createUnsubscribeToken, sendEmail } from "../server/notification-service";
+import { storage } from "../server/storage";
 import { and, eq, isNotNull, ne } from "drizzle-orm";
 
 const LIMIT = 30;
+const SITE_URL = "https://keisaiyou-sinjapan.com";
 const SUBJECT = "軽貨物ドライバーの採用コスト、下げませんか？";
 const BODY_TEMPLATE = `{{companyName}} ご担当者様
 
@@ -53,8 +55,15 @@ async function main() {
   console.log(`送信対象: ${leads.length}件`);
   let sent = 0, failed = 0;
   for (const lead of leads) {
+    if (await storage.isEmailSuppressed(lead.email!)) {
+      await db.update(emailLeads).set({ status: "unsubscribed" }).where(eq(emailLeads.id, lead.id));
+      console.log(`skipped (suppressed): ${lead.email}`);
+      continue;
+    }
     const body = BODY_TEMPLATE.replace(/\{\{companyName\}\}/g, lead.companyName);
-    const result = await sendEmail(lead.email!, SUBJECT, htmlFor(body));
+    const token = createUnsubscribeToken(lead.id);
+    const unsubscribeUrl = token ? `${SITE_URL}/api/email/unsubscribe?token=${encodeURIComponent(token)}` : undefined;
+    const result = await sendEmail(lead.email!, SUBJECT, htmlFor(body), { unsubscribeUrl });
     if (result.success) {
       await db.update(emailLeads).set({ status: "sent", sentAt: new Date(), sentSubject: SUBJECT }).where(eq(emailLeads.id, lead.id));
       sent++; console.log(`sent ${sent}/${leads.length}: ${lead.email}`);

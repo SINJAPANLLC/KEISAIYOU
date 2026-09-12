@@ -141,11 +141,18 @@ export default function Home() {
         {/* FULL-BODY SUBJECT ASSET */}
         <div className="absolute bottom-0 left-[54%] sm:left-1/2 -translate-x-1/2 w-[92%] sm:w-[72%] lg:w-[43%] xl:w-[46%] max-w-[700px] h-[74svh] sm:h-[84svh] lg:h-[85%] xl:h-[88%] z-10 pointer-events-none">
            <div className="hero-enter-figure w-full h-full flex justify-center">
-             <img
-                src="/keisaiyou-woman-full.png"
-                alt="KEI SAIYOUを利用する笑顔の女性ドライバーの全身写真"
-                className="w-full h-full object-contain object-bottom"
-             />
+              <picture className="block w-full h-full">
+                <source srcSet="/keisaiyou-woman-full.webp" type="image/webp" />
+                <img
+                  src="/keisaiyou-woman-full.png"
+                  width="1024"
+                  height="1536"
+                  alt="KEI SAIYOUを利用する笑顔の女性ドライバーの全身写真"
+                  loading="eager"
+                  decoding="async"
+                  className="block w-full h-full object-contain object-bottom"
+                />
+              </picture>
            </div>
         </div>
 
