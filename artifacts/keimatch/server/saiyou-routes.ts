@@ -1,4 +1,683 @@
-pp.post("/api/apply", async (req, res) => {
+import type { Express, Request, Response } from "express";
+import { db } from "./db";
+import { eq, desc, and, sql, lt, inArray } from "drizzle-orm";
+import OpenAI from "openai";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import {
+  jobListings,
+  applications,
+  users,
+  notifications,
+  emailLeads,
+  emailCampaigns,
+  payments,
+  refundRequests,
+  contactInquiries,
+} from "@shared/schema";
+import { createUnsubscribeToken, sendEmail, sendAdminNotification, verifyUnsubscribeToken } from "./notification-service";
+import { chargeSquareCard } from "./square";
+import { storage, normalizeLeadEmail, leadEmailDomain } from "./storage";
+import bcrypt from "bcrypt";
+
+const routeParam = (req: Request, name: string): string => {
+  const value = req.params[name];
+  return Array.isArray(value) ? value[0] : value;
+};
+
+function requireAuth(req: Request, res: Response, next: Function) {
+  if (!req.session?.userId) return res.status(401).json({ message: "ログインが必要です" });
+  next();
+}
+
+function requireAdmin(req: Request, res: Response, next: Function) {
+  if (!req.session?.userId) return res.status(401).json({ message: "ログインが必要です" });
+  if (req.session?.role !== "admin") return res.status(403).json({ message: "権限がありません" });
+  next();
+}
+
+export function registerSaiyouRoutes(app: Express) {
+  const renderUnsubscribeResult = (message: string, title: string) => `<!doctype html>
+    <html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>${title}｜KEI SAIYOU</title></head>
+    <body style="margin:0;background:#f6f6f6;font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sans-serif;color:#1e293b">
+      <main style="max-width:520px;margin:64px auto;padding:36px 28px;background:#fff;border-radius:12px;box-shadow:0 8px 28px rgba(15,23,42,.08);text-align:center">
+        <p style="margin:0 0 10px;color:#d05a2a;font-size:13px;font-weight:700;letter-spacing:.12em">KEI SAIYOU</p>
+        <h1 style="margin:0 0 16px;font-size:22px">${title}</h1><p style="margin:0;line-height:1.8;color:#475569">${message}</p>
+      </main>
+    </body></html>`;
+
+  const unsubscribeLead = async (req: Request, res: Response) => {
+    const token = typeof req.query.token === "string" ? req.query.token : typeof req.body?.token === "string" ? req.body.token : "";
+    const unsubscribeSubject = verifyUnsubscribeToken(token);
+    if (!unsubscribeSubject) return res.status(400).type("html").send(renderUnsubscribeResult("リンクが無効、または有効期限が切れています。", "配信停止を完了できませんでした"));
+    if (unsubscribeSubject.startsWith("email:")) {
+      const email = normalizeLeadEmail(unsubscribeSubject.slice("email:".length));
+      if (!email) return res.status(400).type("html").send(renderUnsubscribeResult("メールアドレスを確認できませんでした。", "配信停止を完了できませんでした"));
+      await storage.suppressEmail(email, "unsubscribe");
+      await db.update(emailLeads)
+        .set({ status: "unsubscribed" })
+        .where(sql`lower(trim(${emailLeads.email})) = ${email}`);
+      return res.type("html").send(renderUnsubscribeResult("今後の営業メール配信を停止しました。", "配信停止を受け付けました"));
+    }
+    const leadId = unsubscribeSubject;
+    const [lead] = await db.select().from(emailLeads).where(eq(emailLeads.id, leadId)).limit(1);
+    if (!lead) return res.status(404).type("html").send(renderUnsubscribeResult("対象のメールアドレスが見つかりませんでした。", "配信停止を完了できませんでした"));
+    await storage.suppressEmail(lead.email || "", "unsubscribe");
+    await db.update(emailLeads).set({ status: "unsubscribed" }).where(eq(emailLeads.id, leadId));
+    return res.type("html").send(renderUnsubscribeResult("今後の営業メール配信を停止しました。", "配信停止を受け付けました"));
+  };
+
+  app.get("/api/email/unsubscribe", unsubscribeLead);
+  app.post("/api/email/unsubscribe", unsubscribeLead);
+
+  // ─── Resume file upload ──────────────────────────────────────────────────
+  const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+  const resumeStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOADS_DIR),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+      cb(null, id);
+    },
+  });
+  const resumeUpload = multer({
+    storage: resumeStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+    fileFilter: (_req, file, cb) => {
+      const allowed = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png"];
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, allowed.includes(ext));
+    },
+  });
+
+  // Public: upload resume (returns URL)
+  app.post("/api/upload/resume", resumeUpload.single("resume"), (req, res) => {
+    if (!req.file) return res.status(400).json({ message: "ファイルが見つかりません" });
+    const appBaseUrl = process.env.APP_BASE_URL || "https://keisaiyou-sinjapan.com";
+    const url = `${appBaseUrl}/api/uploads/${req.file.filename}`;
+    res.json({ url, filename: req.file.originalname });
+  });
+
+  // Authenticated: serve resume file
+  app.get("/api/uploads/:filename", requireAuth, (req, res) => {
+    const filename = path.basename(routeParam(req, "filename"));
+    const filePath = path.join(UPLOADS_DIR, filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: "ファイルが見つかりません" });
+    res.sendFile(filePath);
+  });
+
+  // ─── Sidebar badge counts ────────────────────────────────────────────────
+  app.get("/api/sidebar-badges", requireAuth, async (req, res) => {
+    try {
+      const isAdmin = req.session?.role === "admin";
+      const userId = req.session!.userId;
+
+      if (isAdmin) {
+        const [[pendingUsers], [pendingJobs], [newApps], [unreadInquiries], [pendingRefunds]] = await Promise.all([
+          db.select({ count: sql<number>`count(*)::int` }).from(users).where(eq(users.approved, false)),
+          db.select({ count: sql<number>`count(*)::int` }).from(jobListings).where(eq(jobListings.status, "pending")),
+          db.select({ count: sql<number>`count(*)::int` }).from(applications).where(eq(applications.reviewStatus, "new")),
+          db.select({ count: sql<number>`count(*)::int` }).from(contactInquiries).where(eq(contactInquiries.status, "unread")),
+          db.select({ count: sql<number>`count(*)::int` }).from(refundRequests).where(eq(refundRequests.status, "pending")),
+        ]);
+        res.json({
+          "/admin/users":              pendingUsers.count || 0,
+          "/admin/listings":           pendingJobs.count || 0,
+          "/admin/applications":       newApps.count || 0,
+          "/admin/contact-inquiries":  unreadInquiries.count || 0,
+          "/admin/refund-requests":    pendingRefunds.count || 0,
+        });
+      } else {
+        const myJobs = await db.select({ id: jobListings.id }).from(jobListings).where(eq(jobListings.userId, userId!));
+        const jobIds = myJobs.map((j) => j.id);
+        let newCount = 0;
+        if (jobIds.length > 0) {
+          const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(applications)
+            .where(and(
+              sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${jobIds.join("','")}']::varchar[]`)})`,
+              eq(applications.reviewStatus, "new"),
+            ));
+          newCount = row?.count || 0;
+        }
+        res.json({ "/applications": newCount });
+      }
+    } catch (err) {
+      console.error("[sidebar-badges]", err);
+      res.json({});
+    }
+  });
+
+  // ─── Registration (overrides old route behaviour) ───────────────────────
+  // Patch: set approved=true so companies can log in immediately.
+  // The actual POST /api/register is in routes.ts; we override it here:
+  app.post("/api/saiyou/register", async (req, res) => {
+    try {
+      const { companyName, contactName, email, phone, prefecture, password } = req.body;
+      if (!companyName || !email || !phone || !password) {
+        return res.status(400).json({ message: "必須項目を入力してください" });
+      }
+      const existing = await db.select().from(users).where(eq(users.email, email));
+      if (existing.length > 0) {
+        return res.status(400).json({ message: "このメールアドレスは既に登録されています" });
+      }
+      const hashed = await bcrypt.hash(password, 10);
+      const [user] = await db.insert(users).values({
+        username: email,
+        email,
+        password: hashed,
+        companyName,
+        contactName: contactName || "",
+        phone,
+        prefecture,
+        userType: "carrier",
+        role: "user",
+        approved: true,
+      }).returning();
+      const { password: _, ...safeUser } = user;
+      req.session.userId = user.id;
+      req.session.role = user.role;
+      res.status(201).json(safeUser);
+    } catch (err: any) {
+      console.error("[saiyou/register]", err);
+      res.status(500).json({ message: "登録に失敗しました" });
+    }
+  });
+
+  // ─── Job Listings (company) ─────────────────────────────────────────────
+  app.get("/api/jobs", requireAuth, async (req, res) => {
+    try {
+      const jobs = await db
+        .select()
+        .from(jobListings)
+        .where(eq(jobListings.userId, req.session!.userId!))
+        .orderBy(desc(jobListings.createdAt));
+      res.json(jobs);
+    } catch (err) {
+      res.status(500).json({ message: "求人一覧の取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/jobs", requireAuth, async (req, res) => {
+    try {
+      const { title, jobCategory, employmentType, salary, area, description, requirements, workHours, holidays, benefits, monthlyLimit } = req.body;
+      if (!title || !employmentType || !salary || !area || !description) {
+        return res.status(400).json({ message: "必須項目を入力してください" });
+      }
+      const [job] = await db.insert(jobListings).values({
+        userId: req.session!.userId!,
+        title,
+        jobCategory: jobCategory || null,
+        employmentType,
+        salary,
+        area,
+        description,
+        requirements: requirements || "",
+        workHours: workHours || null,
+        holidays: holidays || null,
+        benefits: benefits || null,
+        monthlyLimit: parseInt(monthlyLimit) || 30000,
+        status: "pending",
+      }).returning();
+
+      // Notify admin
+      const admins = await db.select().from(users).where(eq(users.role, "admin"));
+      for (const admin of admins) {
+        await db.insert(notifications).values({
+          userId: admin.id,
+          type: "job_applied",
+          title: "掲載申請",
+          message: `新しい求人「${title}」の掲載申請があります`,
+          relatedId: job.id,
+        });
+      }
+      // 管理者メール通知（求人掲載申請）
+      setImmediate(async () => {
+        try {
+          const poster = await db.select().from(users).where(eq(users.id, req.session!.userId!)).then(r => r[0]);
+          await sendAdminNotification(
+            `KEI SAIYOU - 求人掲載申請：${title}`,
+            {
+              title: "新しい求人掲載申請が届きました",
+              subtitle: "管理画面から内容を確認・承認してください",
+              badge: { text: "求人掲載申請", color: "#7c3aed" },
+              rows: [
+                { label: "会社名", value: poster?.companyName || "不明" },
+                { label: "メール", value: poster?.email || "不明" },
+                { label: "求人タイトル", value: title },
+                { label: "エリア", value: area || "未設定" },
+              ],
+              ctaText: "管理画面で承認する",
+              ctaUrl: "https://keisaiyou-sinjapan.com/admin/jobs",
+            }
+          );
+        } catch (e) { console.error("[admin-notify] job post:", e); }
+      });
+      res.status(201).json(job);
+    } catch (err) {
+      console.error("[jobs/create]", err);
+      res.status(500).json({ message: "求人の作成に失敗しました" });
+    }
+  });
+
+  app.get("/api/jobs/:id", requireAuth, async (req, res) => {
+    try {
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
+      if (!job) return res.status(404).json({ message: "求人が見つかりません" });
+      if (job.userId !== req.session!.userId && req.session?.role !== "admin") {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      res.json(job);
+    } catch {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.put("/api/jobs/:id", requireAuth, async (req, res) => {
+    try {
+      const { title, jobCategory, employmentType, salary, area, description, requirements, workHours, holidays, benefits, monthlyLimit, status } = req.body;
+      const [existing] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
+      if (!existing) return res.status(404).json({ message: "求人が見つかりません" });
+      if (existing.userId !== req.session!.userId && req.session?.role !== "admin") {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const updateData: any = { updatedAt: new Date() };
+      if (title) updateData.title = title;
+      if (jobCategory !== undefined) updateData.jobCategory = jobCategory || null;
+      if (employmentType) updateData.employmentType = employmentType;
+      if (salary) updateData.salary = salary;
+      if (area) updateData.area = area;
+      if (description) updateData.description = description;
+      if (requirements !== undefined) updateData.requirements = requirements;
+      if (workHours !== undefined) updateData.workHours = workHours || null;
+      if (holidays !== undefined) updateData.holidays = holidays || null;
+      if (benefits !== undefined) updateData.benefits = benefits || null;
+      if (monthlyLimit) updateData.monthlyLimit = parseInt(monthlyLimit);
+      if (status && req.session?.role === "admin") updateData.status = status;
+      if (status === "paused" || status === "closed") updateData.status = status;
+      const [updated] = await db.update(jobListings).set(updateData).where(eq(jobListings.id, routeParam(req, "id"))).returning();
+      res.json(updated);
+    } catch (err) {
+      console.error("[jobs/update]", err);
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  app.delete("/api/jobs/:id", requireAuth, async (req, res) => {
+    try {
+      const [existing] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
+      if (!existing) return res.status(404).json({ message: "求人が見つかりません" });
+      if (existing.userId !== req.session!.userId && req.session?.role !== "admin") {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      await db.delete(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "削除に失敗しました" });
+    }
+  });
+
+  // ─── Applications (company views their applicants) ──────────────────────
+  app.get("/api/jobs/:id/applications", requireAuth, async (req, res) => {
+    try {
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, routeParam(req, "id")));
+      if (!job) return res.status(404).json({ message: "求人が見つかりません" });
+      if (job.userId !== req.session!.userId && req.session?.role !== "admin") {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const apps = await db
+        .select()
+        .from(applications)
+        .where(eq(applications.jobId, routeParam(req, "id")))
+        .orderBy(desc(applications.createdAt));
+      res.json(apps);
+    } catch {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/my/applications", requireAuth, async (req, res) => {
+    try {
+      const myJobs = await db.select().from(jobListings).where(eq(jobListings.userId, req.session!.userId!));
+      if (!myJobs.length) return res.json([]);
+      const jobIds = myJobs.map((j) => j.id);
+      const apps = await db
+        .select({
+          id: applications.id,
+          jobId: applications.jobId,
+          name: applications.name,
+          phone: applications.phone,
+          email: applications.email,
+          gender: applications.gender,
+          birthDate: applications.birthDate,
+          address: applications.address,
+          workHistory: applications.workHistory,
+          resumeUrl: applications.resumeUrl,
+          message: applications.message,
+          memo: applications.memo,
+          paymentStatus: applications.paymentStatus,
+          viewable: applications.viewable,
+          reviewStatus: applications.reviewStatus,
+          createdAt: applications.createdAt,
+        })
+        .from(applications)
+        .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${jobIds.join("','")}']::varchar[]`)})`)
+        .orderBy(desc(applications.createdAt));
+      // Enrich with job title
+      const jobMap = Object.fromEntries(myJobs.map((j) => [j.id, j.title]));
+      const enriched = apps.map((a) => ({ ...a, jobTitle: jobMap[a.jobId] || "" }));
+      res.json(enriched);
+    } catch (err) {
+      console.error("[my/applications]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Update monthly limit (会社単位)
+  app.patch("/api/user/monthly-limit", requireAuth, async (req, res) => {
+    try {
+      const { monthlyLimit } = req.body;
+      if (!monthlyLimit || isNaN(Number(monthlyLimit))) {
+        return res.status(400).json({ message: "無効な値です" });
+      }
+      await db.update(users)
+        .set({ monthlyLimit: Number(monthlyLimit) })
+        .where(eq(users.id, req.session!.userId!));
+      res.json({ success: true });
+    } catch {
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  // Update application review status (企業が応募者ステータスを変更)
+  app.patch("/api/applications/:id/review-status", requireAuth, async (req, res) => {
+    try {
+      const { status } = req.body;
+      const VALID_STATUSES = ["new", "contacted", "interviewing", "hired", "rejected"];
+      if (!VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ message: "無効なステータスです" });
+      }
+      // Verify the application belongs to this user's job
+      const [app_] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id")));
+      if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
+      if (!job || (job.userId !== req.session!.userId && req.session?.role !== "admin")) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const [updated] = await db.update(applications).set({ reviewStatus: status }).where(eq(applications.id, routeParam(req, "id"))).returning();
+      res.json(updated);
+    } catch {
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  // Update application memo
+  app.patch("/api/applications/:id/memo", requireAuth, async (req, res) => {
+    try {
+      const { memo } = req.body;
+      const [app_] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id")));
+      if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
+      if (!job || (job.userId !== req.session!.userId && req.session?.role !== "admin")) {
+        return res.status(403).json({ message: "権限がありません" });
+      }
+      const [updated] = await db.update(applications).set({ memo: memo || null }).where(eq(applications.id, routeParam(req, "id"))).returning();
+      res.json(updated);
+    } catch {
+      res.status(500).json({ message: "メモの保存に失敗しました" });
+    }
+  });
+
+  // ─── Refund Requests ─────────────────────────────────────────────────────
+
+  // Company submits a refund request
+  app.post("/api/applications/:id/refund-request", requireAuth, async (req, res) => {
+    try {
+      const { reason, detail } = req.body;
+      if (!reason) return res.status(400).json({ message: "理由を選択してください" });
+      const [app_] = await db.select().from(applications).where(eq(applications.id, routeParam(req, "id")));
+      if (!app_) return res.status(404).json({ message: "応募が見つかりません" });
+      const [job] = await db.select().from(jobListings).where(eq(jobListings.id, app_.jobId));
+      if (!job || job.userId !== req.session!.userId) return res.status(403).json({ message: "権限がありません" });
+      // Check not already requested
+      const existing = await db.select().from(refundRequests)
+        .where(and(eq(refundRequests.applicationId, routeParam(req, "id")), eq(refundRequests.status, "pending")));
+      if (existing.length) return res.status(409).json({ message: "すでに返金申請中です" });
+      const [rr] = await db.insert(refundRequests).values({
+        applicationId: routeParam(req, "id"),
+        companyUserId: req.session!.userId!,
+        reason,
+        detail: detail || null,
+        refundAmount: 3000,
+      }).returning();
+      // Notify admins
+      const admins = await db.select().from(users).where(eq(users.role, "admin"));
+      for (const admin of admins) {
+        await db.insert(notifications).values({
+          userId: admin.id,
+          type: "system",
+          title: "返金申請",
+          message: `「${app_.name}」への返金申請が届きました（理由: ${reason}）`,
+          relatedId: rr.id,
+        });
+      }
+      res.status(201).json(rr);
+    } catch (err) {
+      console.error("[refund/create]", err);
+      res.status(500).json({ message: "返金申請に失敗しました" });
+    }
+  });
+
+  // Company: check if refund request already exists for an application
+  app.get("/api/applications/:id/refund-request", requireAuth, async (req, res) => {
+    try {
+      const [rr] = await db.select().from(refundRequests)
+        .where(eq(refundRequests.applicationId, routeParam(req, "id")))
+        .orderBy(desc(refundRequests.createdAt));
+      res.json(rr || null);
+    } catch {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Admin: list all refund requests
+  app.get("/api/admin/refund-requests", requireAuth, async (req, res) => {
+    try {
+      if (req.session?.role !== "admin") return res.status(403).json({ message: "権限がありません" });
+      const rows = await db.select().from(refundRequests).orderBy(desc(refundRequests.createdAt));
+      // Enrich with application + company info
+      const enriched = await Promise.all(rows.map(async (rr) => {
+        const [app_] = await db.select().from(applications).where(eq(applications.id, rr.applicationId));
+        const [company] = app_ ? await db.select().from(users).where(eq(users.id, rr.companyUserId)) : [null];
+        return {
+          ...rr,
+          applicantName: app_?.name || "削除済",
+          companyName: company?.companyName || company?.email || "不明",
+        };
+      }));
+      res.json(enriched);
+    } catch (err) {
+      console.error("[refund/admin/list]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // Admin: approve or reject a refund request
+  app.patch("/api/admin/refund-requests/:id", requireAuth, async (req, res) => {
+    try {
+      if (req.session?.role !== "admin") return res.status(403).json({ message: "権限がありません" });
+      const { status, adminNote } = req.body;
+      if (!["approved", "rejected"].includes(status)) return res.status(400).json({ message: "無効なステータスです" });
+      const [updated] = await db.update(refundRequests)
+        .set({ status, adminNote: adminNote || null, resolvedAt: new Date() })
+        .where(eq(refundRequests.id, routeParam(req, "id")))
+        .returning();
+      if (!updated) return res.status(404).json({ message: "申請が見つかりません" });
+      // Notify the company user
+      await db.insert(notifications).values({
+        userId: updated.companyUserId,
+        type: "system",
+        title: status === "approved" ? "返金申請が承認されました" : "返金申請が却下されました",
+        message: status === "approved"
+          ? `返金申請が承認されました。¥3,000（税別）を返金処理します。${adminNote ? `\n管理者メモ: ${adminNote}` : ""}`
+          : `返金申請が却下されました。${adminNote ? `理由: ${adminNote}` : ""}`,
+        relatedId: updated.id,
+      });
+      res.json(updated);
+    } catch (err) {
+      console.error("[refund/admin/patch]", err);
+      res.status(500).json({ message: "更新に失敗しました" });
+    }
+  });
+
+  // Billing history for current user (会社単位の月次上限)
+  app.get("/api/my/billing", requireAuth, async (req, res) => {
+    try {
+      const [company] = await db.select({ monthlyLimit: users.monthlyLimit }).from(users).where(eq(users.id, req.session!.userId!));
+      const companyMonthlyLimit = company?.monthlyLimit ?? 30000;
+      const myJobs = await db.select().from(jobListings).where(eq(jobListings.userId, req.session!.userId!));
+      const jobMap = Object.fromEntries(myJobs.map((j) => [j.id, j]));
+      if (!myJobs.length) return res.json({ history: [], monthlyTotal: 0, monthlyLimit: companyMonthlyLimit });
+      const jobIds = myJobs.map((j) => j.id);
+      const apps = await db.select().from(applications)
+        .where(sql`${applications.jobId} = ANY(${sql.raw(`ARRAY['${jobIds.join("','")}']::varchar[]`)})`)
+        .orderBy(desc(applications.createdAt));
+      const now = new Date();
+      const thisMonth = apps.filter((a) => {
+        const d = new Date(a.createdAt);
+        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+      });
+      const monthlyTotal = thisMonth.filter((a) => a.paymentStatus === "paid" || a.paymentStatus === "success").length * 3300;
+      const history = apps.map((a) => ({
+        id: a.id,
+        applicantName: a.name,
+        jobTitle: jobMap[a.jobId]?.title || "",
+        amount: 3300,
+        status: a.paymentStatus,
+        squarePaymentId: a.squarePaymentId,
+        chargedAt: a.createdAt,
+      }));
+      res.json({ history, monthlyTotal, monthlyLimit: companyMonthlyLimit });
+    } catch (err) {
+      console.error("[my/billing]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  // ─── Public: Application form ───────────────────────────────────────────
+  // Public: list all active jobs for driver-facing job board
+  app.get("/api/public/jobs", async (req, res) => {
+    try {
+      const { area, category, employment } = req.query as Record<string, string>;
+      const conditions = [eq(jobListings.status, "active")];
+      if (area) conditions.push(sql`${jobListings.area} ILIKE ${"%" + area + "%"}`);
+      if (category) conditions.push(eq(jobListings.jobCategory, category));
+      if (employment) conditions.push(eq(jobListings.employmentType, employment));
+
+      const rows = await db.select({
+        id: jobListings.id,
+        title: jobListings.title,
+        jobCategory: jobListings.jobCategory,
+        employmentType: jobListings.employmentType,
+        salary: jobListings.salary,
+        area: jobListings.area,
+        workHours: jobListings.workHours,
+        holidays: jobListings.holidays,
+        benefits: jobListings.benefits,
+        requiresLicense: jobListings.requiresLicense,
+        requiresBlackNumber: jobListings.requiresBlackNumber,
+        requiresVehicle: jobListings.requiresVehicle,
+        requiresExperience: jobListings.requiresExperience,
+        publishedAt: jobListings.publishedAt,
+        userId: jobListings.userId,
+      }).from(jobListings).where(and(...conditions)).orderBy(desc(jobListings.publishedAt));
+
+      // Join company names
+      const userIds = [...new Set(rows.map((r) => r.userId))];
+      let companyMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const companies = await db.select({ id: users.id, companyName: users.companyName }).from(users).where(inArray(users.id, userIds));
+        companies.forEach((c) => { if (c.companyName) companyMap[c.id] = c.companyName; });
+      }
+
+      const result = rows.map(({ userId, ...job }) => ({
+        ...job,
+        companyName: companyMap[userId] || null,
+      }));
+      res.json(result);
+    } catch (err) {
+      console.error("[public/jobs]", err);
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.get("/api/public/jobs/:id", async (req, res) => {
+    try {
+      const [row] = await db.select({
+        id: jobListings.id,
+        title: jobListings.title,
+        employmentType: jobListings.employmentType,
+        salary: jobListings.salary,
+        area: jobListings.area,
+        description: jobListings.description,
+        requirements: jobListings.requirements,
+        status: jobListings.status,
+        userId: jobListings.userId,
+      }).from(jobListings).where(and(eq(jobListings.id, routeParam(req, "id")), eq(jobListings.status, "active")));
+      if (!row) return res.status(404).json({ message: "求人が見つかりません" });
+      const [company] = await db.select({ companyName: users.companyName }).from(users).where(eq(users.id, row.userId));
+      const { userId, ...job } = row;
+      res.json({ ...job, companyName: company?.companyName || null });
+    } catch {
+      res.status(500).json({ message: "取得に失敗しました" });
+    }
+  });
+
+  app.post("/api/ai/generate-job-description", requireAuth, async (req, res) => {
+    try {
+      const { title, jobCategory, employmentType, area, salary, workHours, holidays, companyName } = req.body;
+      if (!title || !jobCategory || !area || !salary) {
+        return res.status(400).json({ message: "タイトル・職種・エリア・給与は必須です" });
+      }
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const prompt = `あなたは軽貨物・ドライバー求人の採用コピーライターです。
+Indeed向けに最適化された求人票の「仕事内容」欄を日本語で作成してください。
+
+条件:
+- 職種: ${jobCategory}
+- 勤務エリア: ${area}
+- 雇用形態: ${employmentType || "業務委託"}
+- 給与・報酬: ${salary}
+${workHours ? `- 勤務時間: ${workHours}` : ""}
+${holidays ? `- 休日: ${holidays}` : ""}
+${companyName ? `- 掲載企業: ${companyName}` : ""}
+
+ルール:
+1. 「KEI SAIYOU」「KEI MATCH」などプラットフォーム名は一切記載しない
+2. Indeed SEO向けキーワードを自然に含める（例: 軽貨物ドライバー、業務委託、高収入、自由な働き方 等）
+3. 見出しを使い読みやすく構成する（【仕事内容】【働き方の特徴】【こんな方に向いています】等）
+4. 応募者目線で魅力的に、かつ具体的に書く
+5. 400〜600文字程度
+6. 余計な前置きや「はい」「承知しました」は不要。本文のみ返答する`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 800,
+        temperature: 0.7,
+      });
+      const description = completion.choices[0]?.message?.content?.trim() || "";
+      res.json({ description });
+    } catch (err: any) {
+      console.error("[AI generate]", err.message);
+      res.status(500).json({ message: "AI生成に失敗しました" });
+    }
+  });
+
+  app.post("/api/apply", async (req, res) => {
     try {
       const { jobId, name, phone, email, gender, birthDate, address, workHistory, resumeUrl, licenseType, hasBlackNumber, availableAreas, message } = req.body;
       if (!jobId || !name || !phone || !email) {
